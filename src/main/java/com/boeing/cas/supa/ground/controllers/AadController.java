@@ -53,49 +53,52 @@ public class AadController {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	@RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
-	public ResponseEntity<ModelMap> getDirectoryObjects(ModelMap model, HttpServletRequest httpRequest) {
+	public ResponseEntity<Object> getDirectoryObjects(HttpServletRequest httpRequest) {
 		logger.info("get directory objects");
 		HttpSession session = httpRequest.getSession();
 		logger.info("obtained session");
 		AuthenticationResult result = null;
 		logger.info("obtained authentication result");
-		ResponseEntity<ModelMap> response = null;
+		ResponseEntity<Object> response = null;
         try {
         	result = (AuthenticationResult) session
     				.getAttribute(AzureADAuthHelper.PRINCIPAL_SESSION_NAME);
         	
         	if (result == null) {
-    			model.addAttribute("error", new Exception("AuthenticationResult not found in session."));
+    			//model.addAttribute("error", new Exception("AuthenticationResult not found in session."));
         	}
         	else {
     			List<User> data;
     			try {
-    				String tenant = "fdacustomertest.onmicrosoft.com";
-    				data = getUsernamesFromGraph(result.getAccessToken(), tenant);
-    				model.addAttribute("tenant", tenant);
-    				model.addAttribute("users", data);
-    				model.addAttribute("userInfo", result.getUserInfo());
+    				String tenant = session.getServletContext().getInitParameter("tenant");
+    				String accessToken = result.getAccessToken();
+    				System.out.println("tenant: " + tenant);
+    				System.out.println("accessToken: "+accessToken);
+    				data = getUsernamesFromGraph(result.getAccessToken(), tenant, result.getUserInfo().getUniqueId());
+//    				model.addAttribute("tenant", tenant);
+//    				model.addAttribute("users", data);
+//    				model.addAttribute("userInfo", result.getUserInfo());
     			}
     			catch (Exception e) {
-    				model.addAttribute("error", e);
+    				//model.addAttribute("error", e);
     			}
         	}
-            response = new ResponseEntity<ModelMap>(model, HttpStatus.OK);
+            response = new ResponseEntity<Object>("hahaa - ", HttpStatus.OK);
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
-            response = new ResponseEntity<ModelMap>(model, HttpStatus.INTERNAL_SERVER_ERROR);
+            response = new ResponseEntity<Object>("you suck!! - ", HttpStatus.OK);
         }
         return response;
 	}
 
-	private List<User> getUsernamesFromGraph(String accessToken, String tenant) throws Exception {
+	private List<User> getUsernamesFromGraph(String accessToken, String tenant, String uniqueID) throws Exception {
 
 		logger.info("get user names from graph");
 		logger.info("Tenant " + tenant);
 		logger.info("Access token: " + accessToken);
 
 		URL url = new URL(
-				String.format("https://graph.windows.net/%s/users?api-version=2013-04-05", tenant, accessToken));
+				String.format("https://graph.windows.net/%s/users/%s?api-version=2013-04-05", tenant, uniqueID, accessToken));
 		logger.info("URL: " + url.toString());
 
 		HttpURLConnection conn = null;
@@ -105,7 +108,7 @@ public class AadController {
 			// Set the appropriate header fields in the request header.
 			conn.setRequestProperty("api-version", "2013-04-05");
 			conn.setRequestProperty("Authorization", accessToken);
-			conn.setRequestProperty("Accept", "application/json;odata=minimalmetadata");
+			conn.setRequestProperty("Accept", "application/json;");
 			String goodRespStr = HttpClientHelper.getResponseStringFromConn(conn, true);
 			logger.info("goodRespStr ->" + goodRespStr);
 			int responseCode = conn.getResponseCode();

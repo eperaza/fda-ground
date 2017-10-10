@@ -56,7 +56,7 @@ public class FileUploadController {
 		//UserInfo userInfo = result.getUserInfo();
 		if (uploadfile.isEmpty()) {
 			//IF FILE IS EMPTY...
-			return new ResponseEntity<Object>("SUCCESS", HttpStatus.OK);
+			return new ResponseEntity<Object>("EMPTY FILE", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
 		try {

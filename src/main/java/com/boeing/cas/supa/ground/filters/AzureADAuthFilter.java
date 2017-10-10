@@ -30,6 +30,7 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -57,14 +58,19 @@ public class AzureADAuthFilter implements Filter {
 	public static final String STATE = "state";
 	public static final Integer STATE_TTL = 3600;
 	public static final String FAILED_TO_VALIDATE_MESSAGE = "Failed to validate data received from Authorization service - ";
+	
+	
+	@Value("${clientId}")
+	private String clientId;
 
-	private String clientId = "078db4f5-c642-4e25-aa3e-2137cee7855e";
+	@Value("${clientSecret}")
+	private String clientSecret;
 
-	private String clientSecret = "fkIEqvzqrAeARJx7rNojul/BA0HI7Pzj/hQA3yPV8LA=";
+	@Value("${tenant}")
+	private String tenant;
 
-	private String tenant = "fdacustomertest.onmicrosoft.com";
-
-	private String authority = "https://login.microsoftonline.com/";
+	@Value("${authority}")
+	private String authority;
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
