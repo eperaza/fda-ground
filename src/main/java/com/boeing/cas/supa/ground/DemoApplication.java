@@ -20,7 +20,7 @@ public class DemoApplication {
 		return "Ping!";
 	}
 	public static void main(String[] args) {
-
+		new File(FileUploadController.UNZIPED_FOLDER).mkdirs();
 		new File(FileUploadController.UPLOADED_FOLDER).mkdirs();
 		SpringApplication.run(DemoApplication.class, args);
 	}

@@ -47,6 +47,9 @@ public class User extends DirectoryObject {
 	protected String mail;
 	protected String mailNickname;
 	protected String mobile;
+	protected ArrayList<String> otherMails;
+
+
 	protected String password;
 	protected String passwordPolicies;
 	protected String physicalDeliveryOfficeName;
@@ -496,5 +499,8 @@ public class User extends DirectoryObject {
 
 	public void setRoles(ArrayList<Group> roles) {
 		this.roles = roles;
+	}
+	public ArrayList<String> getOtherMails() {
+		return otherMails;
 	}
 }
