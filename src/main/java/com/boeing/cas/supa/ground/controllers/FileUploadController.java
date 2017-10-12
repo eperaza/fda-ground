@@ -182,7 +182,7 @@ public class FileUploadController {
 		}
 		es.shutdown();
 		try {
-			if (!es.awaitTermination(20, TimeUnit.SECONDS)) {
+			if (!es.awaitTermination(1, TimeUnit.MINUTES)) {
 				es.shutdownNow();
 			} 
 		} catch (InterruptedException e) {
