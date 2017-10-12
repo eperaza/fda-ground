@@ -15,10 +15,10 @@ public class ADWTransferUtil {
 	private String path;
 	private static Logger LOGGER = Logger.getLogger(ADWTransferUtil.class.getName());
 	public ADWTransferUtil() {
-		System.setProperty("http.proxyHost", "www-only-ewa-proxy.web.boeing.com");
-		System.setProperty("http.proxyPort", "31061");
-		System.setProperty("https.proxyHost", "www-only-ewa-proxy.web.boeing.com");
-		System.setProperty("https.proxyPort", "31061");
+//		System.setProperty("http.proxyHost", "www-only-ewa-proxy.web.boeing.com");
+//		System.setProperty("http.proxyPort", "31061");
+//		System.setProperty("https.proxyHost", "www-only-ewa-proxy.web.boeing.com");
+//		System.setProperty("https.proxyPort", "31061");
 		InputStream input = null;
 		input = ADWTransferUtil.class.getClassLoader().getResourceAsStream("ADWCredentials.properties");
 		if(input == null)
@@ -56,7 +56,8 @@ public class ADWTransferUtil {
 			try
 			{
 				
-				ssh.loadKnownHosts();
+				//ssh.loadKnownHosts();
+				ssh.addHostKeyVerifier("39:45:c9:85:ff:8f:f5:d9:a3:a0:23:ed:02:f8:cc:b9");
 				ssh.connect(host);
 				ssh.authPassword(usr, pwd);
 				SFTPClient sftp = ssh.newSFTPClient();
