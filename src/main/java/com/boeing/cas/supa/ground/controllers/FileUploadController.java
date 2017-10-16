@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -18,11 +17,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,26 +28,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.boeing.cas.supa.ground.helpers.AzureADAuthHelper;
-import com.boeing.cas.supa.ground.helpers.EmailHelper;
-import com.boeing.cas.supa.ground.utils.ZipFilteredReader;
+import com.boeing.cas.supa.ground.helpers.EmailSender;
 import com.boeing.cas.supa.ground.pojos.FileUploadMessage;
 import com.boeing.cas.supa.ground.utils.ADWTransferUtil;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.FileUtil;
-import com.boeing.cas.supa.ground.utils.MicrosoftGraphUtil;
-import com.microsoft.aad.adal4j.AuthenticationResult;
-import com.microsoft.aad.adal4j.UserInfo;
+import com.boeing.cas.supa.ground.utils.ZipFilteredReader;
 
 @RestController
 @RequestMapping("/uploadFile")
 public class FileUploadController {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-	//Save the uploaded file to this folder
-	public static final String UPLOADED_FOLDER = System.getProperty("user.dir") + "/Airline_files/";
-	public static final String UNZIPED_FOLDER = System.getProperty("user.dir") + "/Airline_files_unzipped/";
+	private static String uploadFolder;
 
 	@RequestMapping(method = {RequestMethod.POST })
 	public ResponseEntity<Object> uploadFile(
@@ -69,7 +59,7 @@ public class FileUploadController {
 		//String tenant = session.getServletContext().getInitParameter("tenant");
 		//System.out.println("AccessToken: " + result.getAccessToken());
 		//System.out.println("Tenant: " + tenant);
-		//UserInfo userInfo = result.getUserInfo();
+		//UserInfo userInfo = result.getUserInfo()
 		if (uploadfile.isEmpty()) {
 			//IF F EMPTY...ILE IS
 			FileUploadMessage fum = new FileUploadMessage("Fail", "Fail", "Fail", "Empty File");
@@ -83,12 +73,12 @@ public class FileUploadController {
 			logger.debug("Uploaded file");
 
 		} catch (IOException e) {
-			FileUploadMessage fum = new FileUploadMessage("Fail", "Fail", "Fail", e.getMessage());
+			FileUploadMessage fum = new FileUploadMessage("Fail", "Fail", "Fail", "IO EXCEPTION:" + e.getMessage());
 			return new ResponseEntity<Object>(fum, HttpStatus.BAD_REQUEST);
 		}
 
 
-		Path path = Paths.get(UPLOADED_FOLDER + uploadfile.getOriginalFilename());
+		Path uploadFolderPath = Paths.get(uploadFolder + "/" + uploadfile.getOriginalFilename());
 		//Upload file to Azure Storage
 		logger.debug("Adding file to ADW");
 		ExecutorService es = Executors.newFixedThreadPool(3);
@@ -98,9 +88,11 @@ public class FileUploadController {
 			public Boolean call() throws Exception {
 				Boolean xfr = false;
 				try {
+					logger.info("Starting ADW Transfer");
 					ADWTransferUtil adw = new ADWTransferUtil();
-					xfr = adw.sendFile(path.toFile().getAbsolutePath());
-					logger.info("Transfer complete " + xfr);
+					logger.info(uploadFolderPath.toFile().getAbsolutePath());
+					xfr = adw.sendFile(uploadFolderPath.toFile().getAbsolutePath());
+					logger.info("Transfer to ADW complete: " + xfr);
 				}
 				catch(Exception e) {
 					logger.error("Error in ADW XFER: "+e);
@@ -114,9 +106,10 @@ public class FileUploadController {
 			public Boolean call() throws Exception {
 				Boolean upload = false;
 				try {
+					logger.info("Starting Azure upload");
 					AzureStorageUtil asu = new AzureStorageUtil();
-					upload = asu.uploadFile(path.toFile().getAbsolutePath(), uploadfile.getOriginalFilename());
-					logger.info("Upload complete " + upload);
+					upload = asu.uploadFile(uploadFolderPath.toFile().getAbsolutePath(), uploadfile.getOriginalFilename());
+					logger.info("Upload to Azure complete: " + upload);
 				}
 				catch(Exception e) {
 					logger.error("Error in Azure upload: "+e);
@@ -134,18 +127,11 @@ public class FileUploadController {
 			public Boolean call() throws Exception {
 				Boolean sent = false;
 				try {
-					Path tempDirPath = Paths.get(UNZIPED_FOLDER + uploadfile.getOriginalFilename());
-					 
-					if (!Files.exists(tempDirPath)) {
-					    try {
-					        Files.createDirectory(tempDirPath);
-					    } catch (IOException e) {
-					        System.err.println(e);
-					    }
-					}
+					Path tempDirPath = Files.createTempDirectory("");
+					System.out.println(tempDirPath);
 					if(uploadfile.getOriginalFilename().endsWith("zip")){
 						logger.debug("It is zip file");
-						ZipFilteredReader zipFilteredReader = new ZipFilteredReader(path.toFile().getAbsolutePath(), tempDirPath.toString());
+						ZipFilteredReader zipFilteredReader = new ZipFilteredReader(uploadFolderPath.toFile().getAbsolutePath(), tempDirPath.toString());
 						zipFilteredReader.filteredExpandZipFile(zipEntry -> {
 							String entryLC = zipEntry.getName().toLowerCase();
 							return !zipEntry.isDirectory() && entryLC.indexOf('/') == -1
@@ -156,8 +142,9 @@ public class FileUploadController {
 					}
 					
 					Optional<File> flightProgress = FileUtil.getFileByNameFromDirectory(tempDirPath, "flight_progress.csv");
-					sent = EmailHelper.sendEmail(Arrays.asList(flightProgress.isPresent() ? flightProgress.get() : new File("")), "mihir.shah@boeing.com",  "Test Flight Progress File");
-					logger.info("Upload complete " + sent);
+					sent = EmailSender.sendEmail(Arrays.asList(flightProgress.isPresent() ? flightProgress.get() : new File("")), "mihir.shah@boeing.com",  "Test Flight Progress File");
+					//sent = EmailHelper.sendEmail(Arrays.asList(flightProgress.isPresent() ? flightProgress.get() : new File("")), "mihir.shah@boeing.com",  "Test Flight Progress File");
+					logger.info("Email sent: " + sent);
 				}
 				catch(Exception e) {
 					logger.error("Error in email sending: "+e);
@@ -188,7 +175,8 @@ public class FileUploadController {
 		} catch (InterruptedException e) {
 			logger.error("Error in shuttingdown executionservice: "+e);
 			es.shutdownNow();
-		}		
+		}
+		
 		
 		FileUploadMessage fum = new FileUploadMessage(adwBool ? "Success" : "Fail" , azureBool ? "Success" : "Fail", emailBool ? "Success" : "Fail", "Uploaded File: " +uploadfile.getOriginalFilename());
 		return new ResponseEntity<Object>(fum, HttpStatus.OK);
@@ -200,19 +188,22 @@ public class FileUploadController {
 	private void saveUploadedFiles(List<MultipartFile> files) throws IOException {
 
 		System.out.println("files => " + files != null ? files.size() : 0);
-
+		
 		for (MultipartFile file : files) {
 
 			System.out.println("file => " + file.getOriginalFilename());
 			if (file.isEmpty()) {
+				System.out.println("files => not empty");
 				continue; //next pls
 			}
 
 			byte[] bytes = file.getBytes();
-			Path path = Paths.get(UPLOADED_FOLDER + file.getOriginalFilename());
-
+			
+			Path tempDirPath = Files.createTempDirectory("");
+			System.out.println("TEMPDIRPATH " + tempDirPath.toAbsolutePath());
+			uploadFolder = tempDirPath.toString();
+			Path path = Paths.get(uploadFolder + "/" + file.getOriginalFilename());
 			Files.write(path, bytes);
-
 		}
 
 	}
