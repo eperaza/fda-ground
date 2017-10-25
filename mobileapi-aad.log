@@ -1,0 +1,111 @@
+2017-10-16 14:40:18.992  INFO 12553 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on a5605027.aub.boeing.com with PID 12553 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-16 14:40:18.992  INFO 12553 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-16 14:40:19.418  INFO 12553 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.484 seconds (JVM running for 12548.647)
+2017-10-18 12:23:10.829  INFO 19342 --- [main] c.b.c.supa.ground.DemoApplicationTests   : Starting DemoApplicationTests on A5605027.local.tld with PID 19342 (started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-18 12:23:10.833  INFO 19342 --- [main] c.b.c.supa.ground.DemoApplicationTests   : No active profile set, falling back to default profiles: default
+2017-10-18 12:23:12.425  INFO 19342 --- [main] c.b.c.supa.ground.DemoApplicationTests   : Started DemoApplicationTests in 1.772 seconds (JVM running for 2.323)
+2017-10-18 12:24:24.081  INFO 19423 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 19423 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-18 12:24:24.084  INFO 19423 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-18 12:24:26.279  INFO 19423 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 2.388 seconds (JVM running for 2.877)
+2017-10-18 12:24:41.384  INFO 19423 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2017-10-18 12:24:41.384  INFO 19423 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : HTTP response code => 200
+2017-10-18 12:24:41.389  INFO 19423 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : CurrentURI: http://localhost:8080/
+2017-10-18 12:24:41.389  INFO 19423 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : Redirect URL (in filter): https://login.microsoftonline.com/fdacustomertest.onmicrosoft.com/oauth2/authorize?response_type=code&scope=openid&response_mode=form_post&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2F&client_id=078db4f5-c642-4e25-aa3e-2137cee7855e&resource=https%3a%2f%2fgraph.windows.net&state=74a4611d-65dd-474a-954b-65145b2e6580&nonce=fe327e44-5da4-4cec-b25c-9c719460a46c
+2017-10-18 12:25:11.134  INFO 19423 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2017-10-18 12:25:11.134  INFO 19423 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : HTTP response code => 200
+2017-10-18 12:25:11.135  INFO 19423 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : CurrentURI: http://localhost:8080/secure/aad/testAuthHelp
+2017-10-18 12:25:11.135  INFO 19423 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : Redirect URL (in filter): https://login.microsoftonline.com/fdacustomertest.onmicrosoft.com/oauth2/authorize?response_type=code&scope=openid&response_mode=form_post&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Fsecure%2Faad%2FtestAuthHelp&client_id=078db4f5-c642-4e25-aa3e-2137cee7855e&resource=https%3a%2f%2fgraph.windows.net&state=2374edb7-78e4-4097-b61f-8bf4745eb613&nonce=ad539c4d-ddf3-485c-97af-ded73b5d1155
+2017-10-19 12:24:30.473  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 16291 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-19 12:24:30.477  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-19 12:24:32.578  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 2.284 seconds (JVM running for 2.805)
+2017-10-19 12:25:04.540  WARN 16291 --- [http-nio-8080-exec-3] o.s.web.servlet.PageNotFound             : No mapping found for HTTP request with URI [/apple-touch-icon-precomposed.png] in DispatcherServlet with name 'dispatcherServlet'
+2017-10-19 12:25:04.576  WARN 16291 --- [http-nio-8080-exec-4] o.s.web.servlet.PageNotFound             : No mapping found for HTTP request with URI [/apple-touch-icon.png] in DispatcherServlet with name 'dispatcherServlet'
+2017-10-19 12:28:55.894  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 16291 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-19 12:28:55.895  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-19 12:28:56.373  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.504 seconds (JVM running for 266.616)
+2017-10-19 12:29:07.990  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 16291 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-19 12:29:07.991  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-19 12:29:08.477  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.51 seconds (JVM running for 278.721)
+2017-10-19 12:29:28.468  INFO 16291 --- [http-nio-8080-exec-1] ication$$EnhancerBySpringCGLIB$$33040a94 : Pinging the service
+2017-10-19 12:36:39.973  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 16291 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-19 12:36:39.973  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-19 12:36:40.309  INFO 16765 --- [main] c.b.c.supa.ground.DemoApplicationTests   : Starting DemoApplicationTests on A5605027.local.tld with PID 16765 (started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-19 12:36:40.309  INFO 16765 --- [main] c.b.c.supa.ground.DemoApplicationTests   : No active profile set, falling back to default profiles: default
+2017-10-19 12:36:40.526  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.581 seconds (JVM running for 730.797)
+2017-10-19 12:36:42.070  INFO 16765 --- [main] c.b.c.supa.ground.DemoApplicationTests   : Started DemoApplicationTests in 2.021 seconds (JVM running for 2.62)
+2017-10-19 12:36:46.098  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 16291 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-19 12:36:46.098  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-19 12:36:46.584  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.516 seconds (JVM running for 736.856)
+2017-10-19 13:28:28.371  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 16291 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-19 13:28:28.371  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-19 13:28:28.808  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.459 seconds (JVM running for 3839.269)
+2017-10-19 13:28:31.353  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 16291 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-19 13:28:31.353  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-19 13:28:31.705  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.37 seconds (JVM running for 3842.166)
+2017-10-19 13:39:22.972  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 16291 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-19 13:39:22.972  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-19 13:39:23.321  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.368 seconds (JVM running for 4493.822)
+2017-10-19 13:42:21.223  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 16291 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-19 13:42:21.223  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-19 13:42:21.548  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.343 seconds (JVM running for 4672.06)
+2017-10-19 13:42:26.080  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 16291 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-19 13:42:26.081  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-19 13:42:26.416  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.353 seconds (JVM running for 4676.929)
+2017-10-19 13:42:44.420  INFO 16291 --- [http-nio-8080-exec-1] ication$$EnhancerBySpringCGLIB$$33040a94 : Pinging the service
+2017-10-19 13:42:54.552  INFO 16291 --- [http-nio-8080-exec-2] c.b.c.s.g.controllers.AadController      : host=>localhost:8080
+2017-10-19 13:42:54.552  INFO 16291 --- [http-nio-8080-exec-2] c.b.c.s.g.controllers.AadController      : accept=>text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+2017-10-19 13:42:54.553  INFO 16291 --- [http-nio-8080-exec-2] c.b.c.s.g.controllers.AadController      : upgrade-insecure-requests=>1
+2017-10-19 13:42:54.553  INFO 16291 --- [http-nio-8080-exec-2] c.b.c.s.g.controllers.AadController      : cookie=>JSESSIONID=C30987711BBACCECC52E391AC4421B57
+2017-10-19 13:42:54.553  INFO 16291 --- [http-nio-8080-exec-2] c.b.c.s.g.controllers.AadController      : user-agent=>Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8
+2017-10-19 13:42:54.553  INFO 16291 --- [http-nio-8080-exec-2] c.b.c.s.g.controllers.AadController      : accept-language=>en-us
+2017-10-19 13:42:54.553  INFO 16291 --- [http-nio-8080-exec-2] c.b.c.s.g.controllers.AadController      : accept-encoding=>gzip, deflate
+2017-10-19 13:42:54.553  INFO 16291 --- [http-nio-8080-exec-2] c.b.c.s.g.controllers.AadController      : connection=>keep-alive
+2017-10-19 13:43:20.332  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 16291 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-19 13:43:20.332  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-19 13:43:20.872  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.561 seconds (JVM running for 4731.388)
+2017-10-19 13:43:21.654  INFO 19885 --- [main] c.b.c.supa.ground.DemoApplicationTests   : Starting DemoApplicationTests on A5605027.local.tld with PID 19885 (started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-19 13:43:21.657  INFO 19885 --- [main] c.b.c.supa.ground.DemoApplicationTests   : No active profile set, falling back to default profiles: default
+2017-10-19 13:43:22.553  INFO 16291 --- [http-nio-8080-exec-1] c.b.c.s.g.controllers.AadController      : host=>localhost:8080
+2017-10-19 13:43:22.553  INFO 16291 --- [http-nio-8080-exec-1] c.b.c.s.g.controllers.AadController      : accept=>text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+2017-10-19 13:43:22.554  INFO 16291 --- [http-nio-8080-exec-1] c.b.c.s.g.controllers.AadController      : upgrade-insecure-requests=>1
+2017-10-19 13:43:22.554  INFO 16291 --- [http-nio-8080-exec-1] c.b.c.s.g.controllers.AadController      : cookie=>JSESSIONID=DC183E6DE95E82C3789DC6542113F4A3
+2017-10-19 13:43:22.554  INFO 16291 --- [http-nio-8080-exec-1] c.b.c.s.g.controllers.AadController      : user-agent=>Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8
+2017-10-19 13:43:22.554  INFO 16291 --- [http-nio-8080-exec-1] c.b.c.s.g.controllers.AadController      : accept-language=>en-us
+2017-10-19 13:43:22.554  INFO 16291 --- [http-nio-8080-exec-1] c.b.c.s.g.controllers.AadController      : accept-encoding=>gzip, deflate
+2017-10-19 13:43:22.554  INFO 16291 --- [http-nio-8080-exec-1] c.b.c.s.g.controllers.AadController      : connection=>keep-alive
+2017-10-19 13:43:23.772  INFO 19885 --- [main] c.b.c.supa.ground.DemoApplicationTests   : Started DemoApplicationTests in 2.348 seconds (JVM running for 3.217)
+2017-10-19 13:43:28.344  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 16291 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-19 13:43:28.344  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-19 13:43:28.670  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.341 seconds (JVM running for 4739.186)
+2017-10-19 13:48:35.427  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 16291 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-19 13:48:35.427  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-19 13:48:35.837  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.431 seconds (JVM running for 5046.373)
+2017-10-19 13:48:36.457  INFO 20076 --- [main] c.b.c.supa.ground.DemoApplicationTests   : Starting DemoApplicationTests on A5605027.local.tld with PID 20076 (started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-19 13:48:36.458  INFO 20076 --- [main] c.b.c.supa.ground.DemoApplicationTests   : No active profile set, falling back to default profiles: default
+2017-10-19 13:48:38.005  INFO 20076 --- [main] c.b.c.supa.ground.DemoApplicationTests   : Started DemoApplicationTests in 1.721 seconds (JVM running for 2.265)
+2017-10-19 13:48:41.378  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 16291 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-19 13:48:41.378  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-19 13:48:41.712  INFO 16291 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.351 seconds (JVM running for 5052.248)
+2017-10-24 13:14:58.710  INFO 88563 --- [main] c.b.c.supa.ground.DemoApplicationTests   : Starting DemoApplicationTests on A5605027 with PID 88563 (started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-24 13:14:58.712  INFO 88563 --- [main] c.b.c.supa.ground.DemoApplicationTests   : No active profile set, falling back to default profiles: default
+2017-10-24 13:15:00.456  INFO 88563 --- [main] c.b.c.supa.ground.DemoApplicationTests   : Started DemoApplicationTests in 1.932 seconds (JVM running for 2.522)
+2017-10-24 13:33:16.720  INFO 89416 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027 with PID 89416 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-24 13:33:16.724  INFO 89416 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-24 13:33:19.029  INFO 89416 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 2.495 seconds (JVM running for 2.993)
+2017-10-24 13:33:28.402  INFO 89416 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2017-10-24 13:33:28.403  INFO 89416 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : HTTP response code => 200
+2017-10-24 13:33:28.407  INFO 89416 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : CurrentURI: http://localhost:8080/
+2017-10-24 13:33:28.408  INFO 89416 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : Redirect URL (in filter): https://login.microsoftonline.com/fdacustomertest.onmicrosoft.com/oauth2/authorize?response_type=code&scope=openid&response_mode=form_post&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2F&client_id=d02f4582-adf3-4040-8e73-40f14a12062f&resource=https%3a%2f%2fgraph.windows.net&state=1ddfabb0-5bdc-4ec9-a519-983e8be21a6d&nonce=8997d8c6-7b3b-440c-b61a-3095d738e47b
+2017-10-24 13:50:33.328  INFO 89416 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027 with PID 89416 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-24 13:50:33.328  INFO 89416 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-24 13:50:33.706  WARN 89416 --- [localhost-startStop-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Cannot deserialize session attribute [states] for session [25550AAF2BC1A8E96928E5BA7A36D1C1]
+2017-10-24 13:50:33.924  INFO 89416 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.631 seconds (JVM running for 1037.921)
+2017-10-24 13:50:39.532  INFO 89416 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027 with PID 89416 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-24 13:50:39.532  INFO 89416 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-24 13:50:40.349  INFO 89416 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.849 seconds (JVM running for 1044.345)
+2017-10-24 13:50:41.442  INFO 90247 --- [main] c.b.c.supa.ground.DemoApplicationTests   : Starting DemoApplicationTests on A5605027 with PID 90247 (started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-24 13:50:41.444  INFO 90247 --- [main] c.b.c.supa.ground.DemoApplicationTests   : No active profile set, falling back to default profiles: default
+2017-10-24 13:50:43.346  INFO 90247 --- [main] c.b.c.supa.ground.DemoApplicationTests   : Started DemoApplicationTests in 2.143 seconds (JVM running for 2.89)
+2017-10-24 13:50:46.878  INFO 89416 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027 with PID 89416 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-10-24 13:50:46.878  INFO 89416 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-10-24 13:50:47.302  INFO 89416 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.446 seconds (JVM running for 1051.299)

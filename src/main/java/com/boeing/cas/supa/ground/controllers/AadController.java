@@ -19,6 +19,7 @@
  ******************************************************************************/
 package com.boeing.cas.supa.ground.controllers;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,52 +55,73 @@ public class AadController {
 		AuthenticationResult result = null;
 		logger.info("obtained authentication result");
 		ResponseEntity<Object> response = null;
-        try {
-        	result = (AuthenticationResult) session
-    				.getAttribute(AzureADAuthHelper.PRINCIPAL_SESSION_NAME);
-        	
-        	if (result == null) {
-        		logger.error("result is null");
-    			//model.addAttribute("error", new Exception("AuthenticationResult not found in session."));
-        	}
-        	else {
-    			User user;
-    			try {
-    				String tenant = session.getServletContext().getInitParameter("tenant");
-    				String accessToken = result.getAccessToken();
-    				MicrosoftGraphUtil mgu = new MicrosoftGraphUtil(tenant, accessToken);
-    				user = mgu.getUsernamesFromGraph(result.getUserInfo().getUniqueId());
-    				List<String> userEmails = user.getOtherMails();
-    				boolean send = EmailHelper.sendEmail(null, null, null);
-    				
-    				
-    				//data = getUsernamesFromGraph(result.getAccessToken(), tenant, result.getUserInfo().getUniqueId());
-//    				model.addAttribute("tenant", tenant);
-//    				model.addAttribute("users", data);
-//    				model.addAttribute("userInfo", result.getUserInfo());
-    			}
-    			catch (Exception e) {
-    				logger.error(e.getMessage());
-    				//model.addAttribute("error", e);
-    				
-    			}
-        	}
-            response = new ResponseEntity<Object>("hahaa - ", HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error(ex.getMessage(), ex);
-            response = new ResponseEntity<Object>("you suck!! - ", HttpStatus.OK);
-        }
-        return response;
+		try {
+			result = (AuthenticationResult) session.getAttribute(AzureADAuthHelper.PRINCIPAL_SESSION_NAME);
+
+			if (result == null) {
+				logger.error("result is null");
+				// model.addAttribute("error", new
+				// Exception("AuthenticationResult not found in session."));
+			} else {
+				User user;
+				try {
+					String tenant = session.getServletContext().getInitParameter("tenant");
+					String accessToken = result.getAccessToken();
+					MicrosoftGraphUtil mgu = new MicrosoftGraphUtil(tenant, accessToken);
+					user = mgu.getUsernamesFromGraph(result.getUserInfo().getUniqueId());
+					List<String> userEmails = user.getOtherMails();
+					boolean send = EmailHelper.sendEmail(null, null, null);
+
+					// data = getUsernamesFromGraph(result.getAccessToken(),
+					// tenant, result.getUserInfo().getUniqueId());
+					// model.addAttribute("tenant", tenant);
+					// model.addAttribute("users", data);
+					// model.addAttribute("userInfo", result.getUserInfo());
+				} catch (Exception e) {
+					logger.error(e.getMessage());
+					// model.addAttribute("error", e);
+
+				}
+			}
+			response = new ResponseEntity<Object>("hahaa - ", HttpStatus.OK);
+		} catch (Exception ex) {
+			logger.error(ex.getMessage(), ex);
+			response = new ResponseEntity<Object>("you suck!! - ", HttpStatus.OK);
+		}
+		return response;
 	}
-
-
 
 	@RequestMapping(value = "/testAuth", method = { RequestMethod.GET })
 	public ResponseEntity<Map<String, Object>> getGreeting() {
-		
 		Map<String, Object> responseMap = new HashMap<>();
 		responseMap.put("greeting", "hello world");
 		return new ResponseEntity<Map<String, Object>>(responseMap, HttpStatus.OK);
 	}
-	
+
+	@RequestMapping(value = "/testAuthHelp", method = { RequestMethod.GET })
+	public ResponseEntity<Map<String, Object>> getAuthHelp(HttpServletRequest httpRequest) {
+		Enumeration<String> headerNames = httpRequest.getHeaderNames();
+		while(headerNames.hasMoreElements()){
+			String headername = headerNames.nextElement();
+			Enumeration<String> headerValues = httpRequest.getHeaders(headername);
+			while(headerValues.hasMoreElements()){
+				String headerV = headerValues.nextElement();
+				logger.info(headername + "=>" + headerV);
+			}
+		}
+		HttpSession session = httpRequest.getSession();
+		AuthenticationResult result = (AuthenticationResult) session
+				.getAttribute(AzureADAuthHelper.PRINCIPAL_SESSION_NAME);
+		if (result == null) {
+			Map<String, Object> responseMap = new HashMap<>();
+			responseMap.put("You are not authorized", "Authorization has been denied for this request");
+			return new ResponseEntity<Map<String, Object>>(responseMap, HttpStatus.UNAUTHORIZED);
+		} else {
+			Map<String, Object> responseMap = new HashMap<>();
+			responseMap.put("greeting", "hello world");
+			return new ResponseEntity<Map<String, Object>>(responseMap, HttpStatus.OK);
+		}
+
+	}
+
 }
