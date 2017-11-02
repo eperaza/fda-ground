@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @EnableAutoConfiguration
 @SpringBootApplication
+
 public class DemoApplication {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
