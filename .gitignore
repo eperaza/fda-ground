@@ -64,4 +64,5 @@ target
 transaction-logs
 .flattened-pom.xml
 secrets.yml
+.scannerwork/
 mobileapi-aad.log

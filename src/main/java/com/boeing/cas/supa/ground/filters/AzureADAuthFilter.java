@@ -2,9 +2,12 @@ package com.boeing.cas.supa.ground.filters;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -35,6 +38,9 @@ public class AzureADAuthFilter implements Filter {
 	
 	@Value("${tenantId}")
 	private String tenantId;
+	
+	@Value("${app.id.uri}")
+	private String appIdUri;
 
 
 
@@ -53,37 +59,60 @@ public class AzureADAuthFilter implements Filter {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             String xAuth = httpRequest.getHeader("Authorization");
             String subKey = httpRequest.getHeader("Ocp-Apim-Subscription-Key");
-            System.out.println(xAuth);
-            System.out.println(subKey);
+            logger.info(xAuth);
+            logger.info(subKey);
+            if(xAuth == null || xAuth.isEmpty()){
+            	throw new SecurityException("Must provide a Authorizaiton token");
+            }
+            if(subKey == null || subKey.isEmpty() ){
+            	throw new SecurityException("Must provide a subscription key");
+            }
             try {
 				if(isValid(xAuth)){
 					chain.doFilter(request, response);
 				}
 			} catch (ParseException e) {
-				throw new SecurityException();
+				logger.info(e.getMessage());
+				throw new SecurityException("Not a proper request");
 			}
 		}
-		
         logger.info("possibly modifying the response...");
     }
 
 	private boolean isValid(String xAuth) throws ParseException {
 		boolean ret = false;
-		if(xAuth == null){
-        	throw new SecurityException(); 
+		if(xAuth == null || xAuth.isEmpty()){
+        	throw new SecurityException("Not a valid Authorizaiton token"); 
         }else{
         	if(xAuth.contains("Bearer")){
         		xAuth = xAuth.replaceFirst("Bearer ", "");
         		Map<String, Object> claimsMap = JWTParser.parse(xAuth).getJWTClaimsSet().getClaims();
-        		if(!claimsMap.get("tid").equals(tenantId)){
-        			throw new SecurityException();  
-        		}else if(!approvedAppId.contains(claimsMap.get("appid"))){
-        			throw new SecurityException();  
-        		}else if(!((Date) claimsMap.get("exp")).before(new Date())){
-        			throw new SecurityException(); 
-        		}else{
-        			ret = true;
+        		if(claimsMap.get("aud") instanceof List<?>){
+        			Set<String> set = new HashSet<String>((Collection<? extends String>) claimsMap.get("aud"));
+        			if(!set.contains(appIdUri)){
+        				logger.info("Aud doesn't exist");
+        				throw new SecurityException("Not a valid Authorizaiton token: Aud doesn't exist");  
+        			}
         		}
+        		if(!claimsMap.get("tid").equals(tenantId)){
+        			logger.info("TenantId doesn't exist");
+        			throw new SecurityException("Not a valid Authorizaiton token: TenantId doesn't exist");  
+        		}
+        		if(!approvedAppId.contains(claimsMap.get("appid"))){
+        			logger.info("Not part of approved apps");
+        			throw new SecurityException("Not a valid Authorizaiton token: Not part of approved apps");  
+        		}
+        		logger.info(claimsMap.get("exp").getClass().getName());
+        		
+        		if(!((Date) claimsMap.get("exp")).after(new Date())){
+        			//logger.info((Date) claimsMap.get("exp"));
+        			logger.info("Expired token");
+        			throw new SecurityException("Not a valid Authorizaiton token: expired token"); 
+        		}
+        		logger.info("everything passed...");
+        		ret = true;
+        	}else{
+        		throw new SecurityException("Not a valid Authorizaiton token"); 
         	}
         }
 		return ret;
@@ -91,7 +120,6 @@ public class AzureADAuthFilter implements Filter {
 
 	@Override
 	public void destroy() {
-		// TODO Auto-generated method stub
 		
 	}
 }
