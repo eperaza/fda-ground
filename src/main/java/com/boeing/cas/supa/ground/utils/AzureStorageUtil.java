@@ -8,6 +8,9 @@ import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.StorageException;
@@ -19,38 +22,31 @@ import com.microsoft.azure.storage.queue.CloudQueueClient;
 import com.microsoft.azure.storage.queue.CloudQueueMessage;
 
 public class AzureStorageUtil {
-	static String storageKey = "xBAEcHehUPS1S/7vvGCBomoBuN8lzlHQ4h6fTeS2fNciGY68lq82LEmqsGk5GbZd0ZEXZKb6bxAmoOrjop8HVw==";
-	public static String storageConnectionString = "DefaultEndpointsProtocol=http;" + "AccountName=fdaadw;"
-			+ "AccountKey=" + storageKey + ";EndpointSuffix=core.windows.net;";
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private CloudStorageAccount strAccount;
 	public AzureStorageUtil() {
 		try {
 			this.strAccount = getcloudStorageAccount();
 		} catch (InvalidKeyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		} catch (IllegalArgumentException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		} catch (RuntimeException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		} catch (URISyntaxException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 	}
 	public boolean uploadFile(String fileLocation, String fileName){
-		System.out.println("Starting upload now...");
-		System.setProperty("http.proxyHost", "www-only-ewa-proxy.web.boeing.com");
-		System.setProperty("http.proxyPort", "31061");
-		System.setProperty("https.proxyHost", "www-only-ewa-proxy.web.boeing.com");
-		System.setProperty("https.proxyPort", "31061");
 		String containerName = fileName.split("_")[0].toLowerCase();		
 		boolean rval = false;
+		InputStream sourceStream = null;
 		try {
             CloudBlobClient serviceClient = strAccount.createCloudBlobClient();            
            
@@ -66,9 +62,8 @@ public class AzureStorageUtil {
              * possibly never be problem since most file name are uniquely identifiable
              */
             File sourceFile = new File(fileLocation);
-            System.out.println(sourceFile.toString());
-            blob.upload(new FileInputStream(sourceFile), sourceFile.length());
-            
+            sourceStream = new FileInputStream(sourceFile);
+            blob.upload(sourceStream, sourceFile.length());
             
             //Once the blob is uploaded add message to a storage queue
             CloudQueueClient queueClient = strAccount.createCloudQueueClient();
@@ -89,23 +84,32 @@ public class AzureStorageUtil {
             rval = true;
         }
         catch (FileNotFoundException fileNotFoundException) {
-            System.out.print("FileNotFoundException encountered: ");
-            System.out.println(fileNotFoundException.getMessage());
+        	logger.error("FileNotFoundException encountered: ");
+        	logger.error(fileNotFoundException.getMessage());
             rval = false;
         }
         catch (StorageException storageException) {
-            System.out.print("StorageException encountered: ");
-            System.out.println(storageException.getMessage());
+        	logger.error("StorageException encountered: ");
+        	logger.error(storageException.getMessage());
             rval = false;
         }
         catch (Exception e) {
-            System.out.print("Exception encountered: ");
-            System.out.println(e.getMessage());
+        	logger.error("Exception encountered: ");
+        	logger.error(e.getMessage());
             rval = false;
+        }finally{
+        	try {
+        		if(sourceStream != null){
+        			sourceStream.close();
+        		}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				logger.error(e.getMessage());
+			}
         }
 		return rval;
 	}
-	private static CloudStorageAccount getcloudStorageAccount() throws RuntimeException, IOException, IllegalArgumentException, URISyntaxException, InvalidKeyException {
+	private CloudStorageAccount getcloudStorageAccount() throws RuntimeException, IOException, IllegalArgumentException, URISyntaxException, InvalidKeyException {
 
         // Retrieve the connection string
         Properties prop = new Properties();
@@ -118,22 +122,24 @@ public class AzureStorageUtil {
                 throw new RuntimeException();
             }
         } catch (RuntimeException|IOException e) {
-            System.out.println("\nFailed to load StorageAccount.properties file.");
+        	logger.error("\nFailed to load StorageAccount.properties file.");
             throw e;
         }
-
         CloudStorageAccount storageAccount;
         try {
+        	String key = prop.getProperty("StorageKey");
+        	String storageConnectionString = "DefaultEndpointsProtocol=http;" + "AccountName=fdaadw;"
+        			+ "AccountKey=" + key + ";EndpointSuffix=core.windows.net;";
             storageAccount = CloudStorageAccount.parse(storageConnectionString);
         }
         catch (IllegalArgumentException|URISyntaxException e) {
-            System.out.println("\nConnection string specifies an invalid URI.");
-            System.out.println("Please confirm the connection string is in the Azure connection string format.");
+        	logger.error("\nConnection string specifies an invalid URI.");
+        	logger.error("Please confirm the connection string is in the Azure connection string format.");
             throw e;
         }
         catch (InvalidKeyException e) {
-            System.out.println("\nConnection string specifies an invalid key.");
-            System.out.println("Please confirm the AccountName and AccountKey in the connection string are valid.");
+        	logger.error("\nConnection string specifies an invalid key.");
+        	logger.error("Please confirm the AccountName and AccountKey in the connection string are valid.");
             throw e;
         }
 

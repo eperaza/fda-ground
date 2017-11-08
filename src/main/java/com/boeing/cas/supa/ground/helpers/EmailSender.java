@@ -1,6 +1,8 @@
 package com.boeing.cas.supa.ground.helpers;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -24,24 +26,53 @@ import javax.mail.internet.MimeMultipart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 public class EmailSender {
-	private final static Logger logger = LoggerFactory.getLogger(EmailSender.class);
-	private static final String SMTP_HOST_NAME = "smtp.sendgrid.net";
-	private static final String SMTP_AUTH_USER = "azure_98179abdc222df2e24ff62adcbedd1c0@azure.com";
-	private static final String SMTP_AUTH_PWD = "GB7US7aQ4bynfD4h65";
-	private static class SMTPAuthenticator extends javax.mail.Authenticator {
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	
+	private String smptHostName;
+	private String smptAuthUser;
+	private String smptAuthPwd;
+	
+	public EmailSender() {
+		InputStream input = null;
+		input = EmailSender.class.getClassLoader().getResourceAsStream("Mail.properties");
+		if(input == null)
+		{
+			logger.error("Could not load Mail.properties file");
+			return;
+		}
+		Properties prop = new Properties();
+		try {
+			prop.load(input);
+
+			//DEFAULTS NEED TO BE PUNTED
+			smptHostName = prop.getProperty("sendgrid.host");
+			smptAuthUser = prop.getProperty("sendgrid.user");
+			smptAuthPwd = prop.getProperty("sendgrid.password");
+			
+			logger.info("Properties files loaded successfully: "+ smptHostName +":"+smptAuthUser);
+			
+		} catch (IOException e) {
+			logger.error("Could not load Mail.properties file: " + e.getMessage());
+
+		}
+	}
+	
+	private class SMTPAuthenticator extends javax.mail.Authenticator {
 		public PasswordAuthentication getPasswordAuthentication() {
-			String username = SMTP_AUTH_USER;
-			String password = SMTP_AUTH_PWD;
+			String username = smptAuthUser;
+			String password = smptAuthPwd;
 			return new PasswordAuthentication(username, password);
 		}
 	}
-	public static boolean sendEmail(List<File> fileNames, String to, String subject){
+	
+	public boolean sendEmail(List<File> fileNames, String to, String subject){
 		boolean rval = false;
 		try{
 			Properties mailServerProperties = System.getProperties();
 			mailServerProperties.put("mail.transport.protocol", "smtp");
-			mailServerProperties.put("mail.smtp.host", SMTP_HOST_NAME);
+			mailServerProperties.put("mail.smtp.host", smptHostName);
 			mailServerProperties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
 			mailServerProperties.put("mail.smtp.port", 587);
 			mailServerProperties.put("mail.smtp.auth", "true");
@@ -66,12 +97,8 @@ public class EmailSender {
 				// Specify the local file to attach.
 				String fileName = f.getAbsolutePath();
 				Path p = Paths.get(fileName);
-				String file = p.getFileName().toString();
-				logger.info("Adding "+file+" to email");
 				DataSource source = new FileDataSource(fileName);
 				attachmentPart.setDataHandler(new DataHandler(source));
-				// This example uses the local file name as the attachment name.
-				// They could be different if you prefer.
 				attachmentPart.setFileName(p.getFileName().toString());
 				multipart.addBodyPart(attachmentPart);
 			}
@@ -94,12 +121,12 @@ public class EmailSender {
 			// Close the connection.
 			transport.close();
 			rval = true;
-			System.err.println("Mail Sent: "+subject);
+			logger.info("Mail Sent: "+subject);
 		}catch (Exception ex){
-			System.err.println("Mail Sending Error! "+ex);
-			ex.printStackTrace();
+			logger.error("Mail Sending Error! "+ex.getMessage());
 			rval = false;
 		}
 		return rval;
 	}
+	
 }

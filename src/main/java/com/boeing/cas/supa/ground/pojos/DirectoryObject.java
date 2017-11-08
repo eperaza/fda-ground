@@ -1,3 +1,5 @@
+package com.boeing.cas.supa.ground.pojos;
+
 /*******************************************************************************
  * Copyright © Microsoft Open Technologies, Inc.
  * 
@@ -17,7 +19,6 @@
  * See the Apache License, Version 2.0 for the specific language
  * governing permissions and limitations under the License.
  ******************************************************************************/
-package com.boeing.cas.supa.ground.pojos;
 
 /**
  * @author Azure Active Directory Contributor
@@ -65,3 +66,4 @@ public abstract class DirectoryObject {
 	public abstract void setDisplayName(String displayName);
 
 }
+

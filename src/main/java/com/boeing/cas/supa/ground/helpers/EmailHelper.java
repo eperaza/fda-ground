@@ -65,7 +65,6 @@ public class EmailHelper {
 		        	 String fileName = f.getAbsolutePath();
 		        	 Path p = Paths.get(fileName);
 		        	 String file = p.getFileName().toString();
-		        	 logger.info("Adding "+file+" to email");
 		        	 DataSource source = new FileDataSource(fileName);
 		        	 messageBodyPart.setDataHandler(new DataHandler(source));
 		        	 messageBodyPart.setFileName(file);
@@ -79,16 +78,15 @@ public class EmailHelper {
 		         Transport transport = getMailSession.getTransport("smtp");
 
 		 		//We need to get this from a properties file!
-		         
 		 		transport.connect("smtp.gmail.com", "fdawebby@gmail.com", "wiirocG2");
 		 		transport.sendMessage(generateMailMessage, generateMailMessage.getAllRecipients());
 		 		transport.close();
 		 		rval = true;
-				System.err.println("Mail Sent: "+subject);
+				logger.info("Mail Sent: "+subject);
 			} 
 			catch (MessagingException e) 
 			{
-				System.err.println("Mail Sending Error! "+e);
+				logger.error("Mail Sending Error! "+e);
 				e.printStackTrace();
 				rval = false;
 			}
