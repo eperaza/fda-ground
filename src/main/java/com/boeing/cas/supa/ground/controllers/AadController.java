@@ -38,15 +38,6 @@ public class AadController {
 	
 	@RequestMapping(value = "/testAuth", method = { RequestMethod.GET })
 	public ResponseEntity<Map<String, Object>> getGreeting() {
-		/*
-		 * Add as parameters HttpServletRequest httpRequest
-		 * HttpSession session = httpRequest.getSession();
-		String tenant = session.getServletContext().getInitParameter("tenant");
-		String accessToken = result.getAccessToken();
-		MicrosoftGraphUtil mgu = new MicrosoftGraphUtil(tenant, accessToken);
-		user = mgu.getUsernamesFromGraph(result.getUserInfo().getUniqueId());
-		List<String> userEmails = user.getOtherMails();
-		boolean send = EmailHelper.sendEmail(null, null, null);*/
 		logger.info("Calling the /testAuth function");
 		Map<String, Object> responseMap = new HashMap<>();
 		responseMap.put("greeting", "hello world");

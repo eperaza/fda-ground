@@ -6,14 +6,19 @@ import java.util.Arrays;
 import java.util.Optional;
 
 public class FileUtil {
+
+	private FileUtil() {
+		throw new IllegalStateException("Utility class");
+	}
+
 	public static Optional<File> getFileByNameFromDirectory(Path dirPath, String fileName) {
 
 		return Arrays.stream(
 				dirPath.toFile().listFiles(
-					f -> f.getName()
-							.equalsIgnoreCase(fileName)
+						f -> f.getName()
+						.equalsIgnoreCase(fileName)
+						)
 				)
-			)
-			.max((f1, f2) -> Long.compare(f1.lastModified(), f2.lastModified()));
+				.max((f1, f2) -> Long.compare(f1.lastModified(), f2.lastModified()));
 	}
 }

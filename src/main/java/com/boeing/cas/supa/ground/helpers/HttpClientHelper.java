@@ -32,7 +32,7 @@ import java.net.HttpURLConnection;
  */
 public class HttpClientHelper {
 
-    public HttpClientHelper() {
+    private HttpClientHelper() {
         super();
     }
 
@@ -44,12 +44,12 @@ public class HttpClientHelper {
         } else {
             reader = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
         }
-        StringBuffer stringBuffer = new StringBuffer();
+        StringBuilder stringBuilder = new StringBuilder();
         String line = "";
         while ((line = reader.readLine()) != null) {
-            stringBuffer.append(line);
+            stringBuilder.append(line);
         }
 
-        return stringBuffer.toString();
+        return stringBuilder.toString();
     }
 }

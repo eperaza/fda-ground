@@ -40,6 +40,8 @@ import com.boeing.cas.supa.ground.utils.ZipFilteredReader;
 public class FileUploadController {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	private static final String SUCCESS_MESSAGE = "Success";
+	private static final String FAILURE_MESSAGE = "Fail";
 	private static String uploadFolder;
 
 	@RequestMapping(method = {RequestMethod.POST })
@@ -63,7 +65,7 @@ public class FileUploadController {
 		}
 
 
-		Path uploadFolderPath = Paths.get(uploadFolder + "/" + uploadfile.getOriginalFilename());
+		Path uploadFolderPath = Paths.get(uploadFolder + File.separator + uploadfile.getOriginalFilename());
 		
 		//Adding file to ADW
 		logger.debug("Adding file to ADW");
@@ -150,7 +152,6 @@ public class FileUploadController {
 			adwBool = adwFuture.get();
 			emailBool = emailFuture.get();
 		} catch (InterruptedException | ExecutionException e) {
-			// TODO Auto-generated catch block
 			logger.error("Error in running executionservice: "+e.getMessage());
 		}
 		es.shutdown();
@@ -163,11 +164,11 @@ public class FileUploadController {
 			logger.error("Error in shuttingdown executionservice: "+e.getMessage());
 			es.shutdownNow();
 		}
-		FileUploadMessage fum = new FileUploadMessage(adwBool ? "Success" : "Fail" , azureBool ? "Success" : "Fail", emailBool ? "Success" : "Fail", "Uploaded File: " +uploadfile.getOriginalFilename());
+		FileUploadMessage fum = new FileUploadMessage(adwBool ? SUCCESS_MESSAGE : FAILURE_MESSAGE , azureBool ? SUCCESS_MESSAGE : FAILURE_MESSAGE, emailBool ? SUCCESS_MESSAGE : FAILURE_MESSAGE, "Uploaded File: " +uploadfile.getOriginalFilename());
 		return new ResponseEntity<>(fum, HttpStatus.OK);
 	}
 
-	private void saveUploadedFiles(List<MultipartFile> files) throws IOException {		
+	private static void saveUploadedFiles(List<MultipartFile> files) throws IOException {		
 		for (MultipartFile file : files) {
 			if (file.isEmpty()) {
 				continue; //next pls
@@ -177,7 +178,7 @@ public class FileUploadController {
 			
 			Path tempDirPath = Files.createTempDirectory("");
 			uploadFolder = tempDirPath.toString();
-			Path path = Paths.get(uploadFolder + "/" + file.getOriginalFilename());
+			Path path = Paths.get(uploadFolder + File.separator + file.getOriginalFilename());
 			Files.write(path, bytes);
 		}
 

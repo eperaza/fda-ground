@@ -79,6 +79,18 @@
   <artifactId>guava</artifactId>
   <version>23.3-jre</version>
 </dependency>
+      <dependency>
+        <groupId>com.microsoft.azure</groupId>
+        <artifactId>applicationinsights-web</artifactId>
+        <!-- or applicationinsights-core for bare API -->
+        <version>[1.0,)</version>
+      </dependency>
+<!-- <dependency>
+			<groupId>com.microsoft.azure</groupId>
+			<artifactId>applicationinsights-core</artifactId>
+			<version>1.0.10</version>
+		</dependency> -->
+		
 	</dependencies>
 
 	<build>

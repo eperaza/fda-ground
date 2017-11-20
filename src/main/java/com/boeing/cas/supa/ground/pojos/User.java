@@ -80,20 +80,7 @@ public class User extends DirectoryObject {
 		this.groups = new ArrayList<Group>();
 		this.roles = new ArrayList<Group>();
 	}
-	//
-	// public User(String displayName, String objectId){
-	// setDisplayName(displayName);
-	// setObjectId(objectId);
-	// }
-	//
-	// public User(String displayName, String objectId, String
-	// userPrincipalName, String accountEnabled){
-	// setDisplayName(displayName);
-	// setObjectId(objectId);
-	// setUserPrincipalName(userPrincipalName);
-	// setAccountEnabled(accountEnabled);
-	// }
-	//
+
 
 	/**
 	 * @return The objectId of this user.

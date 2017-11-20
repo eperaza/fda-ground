@@ -24,29 +24,21 @@ import com.microsoft.azure.storage.queue.CloudQueueMessage;
 public class AzureStorageUtil {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private CloudStorageAccount strAccount;
-	public AzureStorageUtil() {
+	public AzureStorageUtil() throws IOException {
 		try {
 			this.strAccount = getcloudStorageAccount();
-		} catch (InvalidKeyException e) {
-			logger.error(e.getMessage());
 		} catch (IllegalArgumentException e) {
-			// TODO Auto-generated catch block
 			logger.error(e.getMessage());
 		} catch (RuntimeException e) {
-			// TODO Auto-generated catch block
 			logger.error(e.getMessage());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			logger.error(e.getMessage());
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
+		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
 	}
 	public boolean uploadFile(String fileLocation, String fileName){
 		String containerName = fileName.split("_")[0].toLowerCase();		
 		boolean rval = false;
-		InputStream sourceStream = null;
+		
 		try {
             CloudBlobClient serviceClient = strAccount.createCloudBlobClient();            
            
@@ -62,8 +54,10 @@ public class AzureStorageUtil {
              * possibly never be problem since most file name are uniquely identifiable
              */
             File sourceFile = new File(fileLocation);
-            sourceStream = new FileInputStream(sourceFile);
-            blob.upload(sourceStream, sourceFile.length());
+            try(InputStream sourceStream = new FileInputStream(sourceFile)){
+                blob.upload(sourceStream, sourceFile.length());
+            }
+
             
             //Once the blob is uploaded add message to a storage queue
             CloudQueueClient queueClient = strAccount.createCloudQueueClient();
@@ -97,19 +91,10 @@ public class AzureStorageUtil {
         	logger.error("Exception encountered: ");
         	logger.error(e.getMessage());
             rval = false;
-        }finally{
-        	try {
-        		if(sourceStream != null){
-        			sourceStream.close();
-        		}
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				logger.error(e.getMessage());
-			}
         }
 		return rval;
 	}
-	private CloudStorageAccount getcloudStorageAccount() throws RuntimeException, IOException, IllegalArgumentException, URISyntaxException, InvalidKeyException {
+	private CloudStorageAccount getcloudStorageAccount() {
 
         // Retrieve the connection string
         Properties prop = new Properties();
@@ -123,7 +108,7 @@ public class AzureStorageUtil {
             }
         } catch (RuntimeException|IOException e) {
         	logger.error("\nFailed to load StorageAccount.properties file.");
-            throw e;
+            throw new RuntimeException();
         }
         CloudStorageAccount storageAccount;
         try {
@@ -132,15 +117,20 @@ public class AzureStorageUtil {
         			+ "AccountKey=" + key + ";EndpointSuffix=core.windows.net;";
             storageAccount = CloudStorageAccount.parse(storageConnectionString);
         }
-        catch (IllegalArgumentException|URISyntaxException e) {
+        catch (IllegalArgumentException e) {
         	logger.error("\nConnection string specifies an invalid URI.");
         	logger.error("Please confirm the connection string is in the Azure connection string format.");
-            throw e;
+            throw new IllegalArgumentException();
+        }
+        catch(URISyntaxException e){
+        	logger.error("\nConnection string specifies an invalid URI.");
+        	logger.error("Please confirm the connection string is in the Azure connection string format.");
+            throw new IllegalArgumentException();
         }
         catch (InvalidKeyException e) {
         	logger.error("\nConnection string specifies an invalid key.");
         	logger.error("Please confirm the AccountName and AccountKey in the connection string are valid.");
-            throw e;
+        	throw new IllegalArgumentException();
         }
 
         return storageAccount;

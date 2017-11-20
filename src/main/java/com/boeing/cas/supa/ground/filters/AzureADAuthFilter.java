@@ -24,6 +24,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import com.microsoft.applicationinsights.TelemetryClient;
 import com.nimbusds.jwt.JWTParser;
 
 @Component
@@ -54,6 +55,8 @@ public class AzureADAuthFilter implements Filter {
 			throws IOException, ServletException {
 
 		logger.info("filter doing some stuff...");
+		TelemetryClient telemetryClient = new TelemetryClient();
+		telemetryClient.trackEvent("MobileBackendAPI main() in ping");
 		
 		if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
@@ -105,7 +108,6 @@ public class AzureADAuthFilter implements Filter {
         		logger.info(claimsMap.get("exp").getClass().getName());
         		
         		if(!((Date) claimsMap.get("exp")).after(new Date())){
-        			//logger.info((Date) claimsMap.get("exp"));
         			logger.info("Expired token");
         			throw new SecurityException("Not a valid Authorizaiton token: expired token"); 
         		}
@@ -120,6 +122,6 @@ public class AzureADAuthFilter implements Filter {
 
 	@Override
 	public void destroy() {
-		
+		throw new UnsupportedOperationException();
 	}
 }
