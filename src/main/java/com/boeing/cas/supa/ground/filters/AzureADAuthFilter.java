@@ -42,7 +42,8 @@ public class AzureADAuthFilter implements Filter {
 	
 	@Value("${app.id.uri}")
 	private String appIdUri;
-
+	
+	private final TelemetryClient telemetryClient = new TelemetryClient();
 
 
 	@Override
@@ -55,16 +56,15 @@ public class AzureADAuthFilter implements Filter {
 			throws IOException, ServletException {
 
 		logger.info("filter doing some stuff...");
-		TelemetryClient telemetryClient = new TelemetryClient();
-		telemetryClient.trackEvent("MobileBackendAPI main() in ping");
 		
+		telemetryClient.trackEvent("MobileBackendAPI starting to do filter...");
+
 		if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             String xAuth = httpRequest.getHeader("Authorization");
             String subKey = httpRequest.getHeader("Ocp-Apim-Subscription-Key");
-            logger.info(xAuth);
-            logger.info(subKey);
             if(xAuth == null || xAuth.isEmpty()){
+            	
             	throw new SecurityException("Must provide a Authorizaiton token");
             }
             if(subKey == null || subKey.isEmpty() ){

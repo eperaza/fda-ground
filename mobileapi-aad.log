@@ -5415,3 +5415,93 @@ java.lang.SecurityException: Not a valid Authorizaiton token: expired token
 2017-11-21 08:33:33.121  INFO 40594 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
 2017-11-21 08:33:33.124  WARN 40594 --- [http-nio-8080-exec-3] o.s.web.servlet.PageNotFound             : No mapping found for HTTP request with URI [/secure/aad/testAuth] in DispatcherServlet with name 'dispatcherServlet'
 2017-11-21 08:33:33.126  INFO 40594 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2017-11-21 08:41:55.225  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local with PID 40594 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-11-21 08:41:55.226  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-11-21 08:41:55.731  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.53 seconds (JVM running for 734.024)
+2017-11-21 08:42:18.416  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local with PID 40594 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-11-21 08:42:18.416  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-11-21 08:42:18.882  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.488 seconds (JVM running for 757.176)
+2017-11-21 08:42:59.104  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local with PID 40594 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-11-21 08:42:59.104  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-11-21 08:42:59.580  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.496 seconds (JVM running for 797.875)
+2017-11-21 08:48:32.846  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local with PID 40594 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-11-21 08:48:32.846  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-11-21 08:48:33.235  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.408 seconds (JVM running for 1131.542)
+2017-11-21 08:55:06.705  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local with PID 40594 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-11-21 08:55:06.705  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-11-21 08:55:07.099  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.412 seconds (JVM running for 1525.42)
+2017-11-21 08:55:19.619  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local with PID 40594 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-11-21 08:55:19.619  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-11-21 08:55:20.093  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.493 seconds (JVM running for 1538.415)
+2017-11-21 12:42:36.415  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on 010-174-124-080.dhcp.cs.boeing.com with PID 40594 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-11-21 12:42:36.415  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-11-21 12:42:37.017  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.636 seconds (JVM running for 15175.958)
+2017-11-21 12:42:48.794  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on 010-174-124-080.dhcp.cs.boeing.com with PID 40594 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-11-21 12:42:48.794  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-11-21 12:42:49.211  INFO 40594 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.433 seconds (JVM running for 15188.151)
+2017-11-21 12:43:45.527  INFO 56577 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on 010-174-124-080.dhcp.cs.boeing.com with PID 56577 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-11-21 12:43:45.528  INFO 56577 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-11-21 12:43:47.924  INFO 56577 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 2.583 seconds (JVM running for 4.291)
+2017-11-21 12:53:51.284  INFO 56577 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on 010-174-124-080.dhcp.cs.boeing.com with PID 56577 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-11-21 12:53:51.286  INFO 56577 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-11-21 12:53:51.809  INFO 56577 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.551 seconds (JVM running for 608.206)
+2017-11-21 12:53:58.407  INFO 56577 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2017-11-21 12:53:58.441  INFO 56577 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2017-11-21 12:53:58.442  INFO 56577 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : Expired token
+2017-11-21 12:53:58.442 ERROR 56577 --- [http-nio-8080-exec-2] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception
+
+java.lang.SecurityException: Not a valid Authorizaiton token: expired token
+	at com.boeing.cas.supa.ground.filters.AzureADAuthFilter.isValid(AzureADAuthFilter.java:112)
+	at com.boeing.cas.supa.ground.filters.AzureADAuthFilter.doFilter(AzureADAuthFilter.java:74)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:198)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:96)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:478)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:140)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:80)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:87)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:342)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:799)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:66)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:868)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1457)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:745)
+
+2017-11-21 12:55:13.979  INFO 56577 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on 010-174-124-080.dhcp.cs.boeing.com with PID 56577 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-11-21 12:55:13.979  INFO 56577 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-11-21 12:55:14.442  INFO 56577 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.486 seconds (JVM running for 690.842)
+2017-11-21 12:55:52.085  INFO 57057 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on 010-174-124-080.dhcp.cs.boeing.com with PID 57057 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-11-21 12:55:52.086  INFO 57057 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-11-21 12:55:54.178  INFO 57057 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 2.317 seconds (JVM running for 3.855)
+2017-11-21 12:56:11.175  INFO 57057 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2017-11-21 12:56:11.204  INFO 57057 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2017-11-21 12:56:11.205  INFO 57057 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : Expired token
+2017-11-21 12:56:11.207 ERROR 57057 --- [http-nio-8080-exec-2] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception
+
+java.lang.SecurityException: Not a valid Authorizaiton token: expired token
+	at com.boeing.cas.supa.ground.filters.AzureADAuthFilter.isValid(AzureADAuthFilter.java:112)
+	at com.boeing.cas.supa.ground.filters.AzureADAuthFilter.doFilter(AzureADAuthFilter.java:74)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:198)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:96)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:478)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:140)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:80)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:87)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:342)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:799)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:66)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:868)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1457)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:745)
+
