@@ -2,7 +2,9 @@ package com.boeing.cas.supa.ground.filters;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -15,6 +17,7 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
@@ -29,6 +32,7 @@ import com.nimbusds.jwt.JWTParser;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
+@WebFilter("/*")
 public class AzureADAuthFilter implements Filter {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -42,6 +46,9 @@ public class AzureADAuthFilter implements Filter {
 	
 	@Value("${app.id.uri}")
 	private String appIdUri;
+	
+	private static final Set<String> ALLOWED_PATHS = Collections.unmodifiableSet(new HashSet<>(
+	        Arrays.asList("/login")));
 	
 	private final TelemetryClient telemetryClient = new TelemetryClient();
 
@@ -57,27 +64,29 @@ public class AzureADAuthFilter implements Filter {
 
 		logger.info("filter doing some stuff...");
 		
-		telemetryClient.trackEvent("MobileBackendAPI starting to do filter...");
-
+		
 		if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
-            String xAuth = httpRequest.getHeader("Authorization");
-            String subKey = httpRequest.getHeader("Ocp-Apim-Subscription-Key");
-            if(xAuth == null || xAuth.isEmpty()){
-            	
-            	throw new SecurityException("Must provide a Authorizaiton token");
+            String path = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length()).replaceAll("[/]+$", ""); 
+            boolean allowedPath = ALLOWED_PATHS.contains(path);
+            if(allowedPath){
+            	chain.doFilter(request, response);
+            }else {
+                String xAuth = httpRequest.getHeader("Authorization");
+                if(xAuth == null || xAuth.isEmpty()){
+                	
+                	throw new SecurityException("Must provide a Authorizaiton token");
+                }
+                try {
+    				if(isValid(xAuth)){
+    					chain.doFilter(request, response);
+    				}
+    			} catch (ParseException e) {
+    				logger.info(e.getMessage());
+    				throw new SecurityException("Not a proper request");
+    			}
             }
-            if(subKey == null || subKey.isEmpty() ){
-            	throw new SecurityException("Must provide a subscription key");
-            }
-            try {
-				if(isValid(xAuth)){
-					chain.doFilter(request, response);
-				}
-			} catch (ParseException e) {
-				logger.info(e.getMessage());
-				throw new SecurityException("Not a proper request");
-			}
+
 		}
         logger.info("possibly modifying the response...");
     }
