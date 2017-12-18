@@ -1,6 +1,7 @@
 package com.boeing.cas.supa.ground.filters;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,6 +20,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +29,8 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import com.boeing.cas.supa.ground.pojos.Error;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.applicationinsights.TelemetryClient;
 import com.nimbusds.jwt.JWTParser;
 
@@ -36,7 +40,6 @@ import com.nimbusds.jwt.JWTParser;
 public class AzureADAuthFilter implements Filter {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
 	
 	@Value("#{'${list.of.apps}'.split(',')}") 
 	private List<String> approvedAppId;
@@ -48,7 +51,7 @@ public class AzureADAuthFilter implements Filter {
 	private String appIdUri;
 	
 	private static final Set<String> ALLOWED_PATHS = Collections.unmodifiableSet(new HashSet<>(
-	        Arrays.asList("/login")));
+	        Arrays.asList("/login", "/refresh")));
 	
 	private final TelemetryClient telemetryClient = new TelemetryClient();
 
@@ -67,6 +70,7 @@ public class AzureADAuthFilter implements Filter {
 		
 		if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
+            HttpServletResponse res = (HttpServletResponse) response;
             String path = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length()).replaceAll("[/]+$", ""); 
             boolean allowedPath = ALLOWED_PATHS.contains(path);
             if(allowedPath){
@@ -75,15 +79,33 @@ public class AzureADAuthFilter implements Filter {
                 String xAuth = httpRequest.getHeader("Authorization");
                 if(xAuth == null || xAuth.isEmpty()){
                 	
-                	throw new SecurityException("Must provide a Authorizaiton token");
+                	res.setStatus(400);
+  		          res.setContentType("application/json");
+
+  		          //pass down the actual obj that exception handler normally send
+  		          ObjectMapper mapper = new ObjectMapper();
+  		          PrintWriter out = res.getWriter(); 
+  		          out.print(mapper.writeValueAsString(new Error("Authorization_Missing", "Must provide a Authorizaiton token", System.currentTimeMillis()/1000)));
+  		          out.flush();
+
+  		          return;
                 }
                 try {
     				if(isValid(xAuth)){
     					chain.doFilter(request, response);
     				}
-    			} catch (ParseException e) {
-    				logger.info(e.getMessage());
-    				throw new SecurityException("Not a proper request");
+    			} catch (Exception e){
+    		          //set the response object
+    		          res.setStatus(400);
+    		          res.setContentType("application/json");
+
+    		          //pass down the actual obj that exception handler normally send
+    		          ObjectMapper mapper = new ObjectMapper();
+    		          PrintWriter out = res.getWriter(); 
+    		          out.print(mapper.writeValueAsString(new Error("JWT_ERROR", e.getMessage(), System.currentTimeMillis()/1000)));
+    		          out.flush();
+
+    		          return;
     			}
             }
 
@@ -91,7 +113,7 @@ public class AzureADAuthFilter implements Filter {
         logger.info("possibly modifying the response...");
     }
 
-	private boolean isValid(String xAuth) throws ParseException {
+	private boolean isValid(String xAuth) throws ParseException, SecurityException {
 		boolean ret = false;
 		if(xAuth == null || xAuth.isEmpty()){
         	throw new SecurityException("Not a valid Authorizaiton token"); 

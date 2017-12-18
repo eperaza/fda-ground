@@ -43,9 +43,7 @@ public class DemoApplication {
 		String tokenName = header.getHeader("authorization");
 		String uniqueId = getUniqueIdFromJWT(tokenName);
 		MicrosoftGraphUtil mgu = new MicrosoftGraphUtil("fdacustomertest.onmicrosoft.com", tokenName.replaceFirst("Bearer ", ""));
-		System.out.println(uniqueId);
 		User user = mgu.getUsernamesFromGraph(uniqueId);
-		System.out.println(user.getDisplayName());
 		Map<String, Object> responseMap = new HashMap<>();
 		responseMap.put("greeting", "hello world");
 		return new ResponseEntity<>(responseMap, HttpStatus.OK);
@@ -71,10 +69,6 @@ public class DemoApplication {
 
 
 	public static void main(String[] args) {
-		System.setProperty("http.proxyHost", "www-only-ewa-proxy.web.boeing.com");
-        System.setProperty("http.proxyPort", "31061");
-        System.setProperty("https.proxyHost", "www-only-ewa-proxy.web.boeing.com");
-        System.setProperty("https.proxyPort", "31061");
 		TelemetryClient telemetryClient = new TelemetryClient();
 		telemetryClient.trackEvent("MobileBackendAPI main() started");
 		SpringApplication.run(DemoApplication.class, args);

@@ -6,7 +6,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -16,10 +16,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
 import com.boeing.cas.supa.ground.pojos.Credential;
+import com.boeing.cas.supa.ground.pojos.Error;
 import com.microsoft.aad.adal4j.AuthenticationContext;
-import com.microsoft.aad.adal4j.AuthenticationResult;
 import com.microsoft.aad.adal4j.AuthenticationException;
+import com.microsoft.aad.adal4j.AuthenticationResult;
 
 @RestController
 @RequestMapping("/login")
@@ -30,18 +32,21 @@ public class LoginController {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
 	@RequestMapping(method = {RequestMethod.POST })
-	public ResponseEntity<Object> uploadFile(@RequestBody Credential cred){
+	public ResponseEntity<Object> getAccessToken(@RequestBody Credential cred){
 		if (isValid(cred)) {
 			logger.info("it is valid");
-			AuthenticationResult ar = getAccessTokenFromUserCredentials(cred.getAzUsername(), cred.getAzPassword());
-			String accessToken = ar.getAccessToken();
-			String refreshToken = ar.getRefreshToken();
-			String tokenType = ar.getAccessTokenType();
-			System.out.println(accessToken);
-			System.out.println(refreshToken);
-			System.out.println(tokenType);
 			
-			
+			Object ar = getAccessTokenFromUserCredentials(cred.getAzUsername(), cred.getAzPassword());
+			if(ar != null){
+				if(ar instanceof AuthenticationResult){
+					return new ResponseEntity<>(ar, HttpStatus.OK);
+				}
+				if(ExceptionUtils.indexOfThrowable((Throwable) ar, AuthenticationException.class) >= 0){
+					Error error = AzureADClientHelper.getLoginErrorFromString(((AuthenticationException) ar).getMessage());
+					
+					return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+				}
+			}		
 		}else {
 			return new ResponseEntity<>("Not a valid request", HttpStatus.BAD_REQUEST);
 		}
@@ -54,7 +59,7 @@ public class LoginController {
 		        && cred.getAzUsername() != null
 		        && cred.getAzPassword() != null;
 	}
-	private static AuthenticationResult getAccessTokenFromUserCredentials(
+	private static Object getAccessTokenFromUserCredentials(
             String username, String password) {
         AuthenticationContext context = null;
         AuthenticationResult result = null;
@@ -76,14 +81,16 @@ public class LoginController {
 			System.out.println(e.getMessage());
 
 		} catch (ExecutionException e) {
-			Throwable cause = e;
-			while(cause.getCause() != null) {
-			    cause = cause.getCause();
-			    System.out.println("cause: "+cause.getMessage());
+			Throwable cause = e.getCause();
+			if(cause != null) {
+				return cause;
+//				System.out.println(cause.getClass().getName());
+//			    System.out.println("cause: "+cause.getMessage());
+//			    System.out.println(ExceptionUtils.indexOfThrowable(cause, AuthenticationException.class));
+//			    if(ExceptionUtils.indexOfThrowable(cause, AuthenticationException.class) >= 0){
+//			    	System.out.println(((AuthenticationException) cause).getMessage());
+//			    }
 			}
-			System.out.println("ExecutionException");
-
-			System.out.println(e.getMessage());
 		} catch (AuthenticationException e){
 			System.out.println("AuthenticationException");
 			System.out.println(e.getMessage());

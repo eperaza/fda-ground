@@ -8,7 +8,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -28,12 +27,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.boeing.cas.supa.ground.helpers.EmailSender;
-import com.boeing.cas.supa.ground.pojos.FileUploadMessage;
+import com.boeing.cas.supa.ground.pojos.UploadMessage;
 import com.boeing.cas.supa.ground.utils.ADWTransferUtil;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
-import com.boeing.cas.supa.ground.utils.FileUtil;
-import com.boeing.cas.supa.ground.utils.ZipFilteredReader;
 
 @RestController
 @RequestMapping("/uploadFile")
@@ -54,13 +50,13 @@ public class FileUploadController {
 		logger.debug("Single file upload!");
 		if (uploadfile.isEmpty()) {
 			//IF FILE IS EMPTY
-			FileUploadMessage fum = new FileUploadMessage("Fail", "Fail", "Fail", "Empty File");
+			UploadMessage fum = new UploadMessage("Fail", "Fail", "Empty File");
 			return new ResponseEntity<>(fum, HttpStatus.BAD_REQUEST);
 		}
 		try {
 			saveUploadedFiles(Arrays.asList(uploadfile));
 		} catch (IOException e) {
-			FileUploadMessage fum = new FileUploadMessage("Fail", "Fail", "Fail", "IO EXCEPTION:" + e.getMessage());
+			UploadMessage fum = new UploadMessage("Fail", "Fail", "IO EXCEPTION: " + e.getMessage());
 			return new ResponseEntity<>(fum, HttpStatus.BAD_REQUEST);
 		}
 
@@ -108,49 +104,13 @@ public class FileUploadController {
 			} 
 		});
 		
-		
-		//Sending email to logged in user
-		logger.debug("Sending email to logged in user...");
-		Future<Boolean> emailFuture = es.submit(new Callable<Boolean>() {
-			@Override
-			public Boolean call() throws Exception {
-				Boolean sent = false;
-				try {
-					Path tempDirPath = Files.createTempDirectory("");
-					if(uploadfile.getOriginalFilename().endsWith("zip")){
-						logger.debug("It is zip file");
-						ZipFilteredReader zipFilteredReader = new ZipFilteredReader(uploadFolderPath.toFile().getAbsolutePath(), tempDirPath.toString());
-						zipFilteredReader.filteredExpandZipFile(zipEntry -> {
-							String entryLC = zipEntry.getName().toLowerCase();
-							return !zipEntry.isDirectory() && entryLC.indexOf('/') == -1
-									&& (entryLC.endsWith(".csv") || entryLC.endsWith(".dat") || entryLC.endsWith(".sav")
-											|| entryLC.endsWith(".info") || entryLC.endsWith(".json") || entryLC.endsWith(".properties")
-											|| entryLC.endsWith(".txt"));
-						});
-					}
-					logger.info("Sending Email");
-					Optional<File> flightProgress = FileUtil.getFileByNameFromDirectory(tempDirPath, "flight_progress.csv");
-					EmailSender ems = new EmailSender();
-					sent = ems.sendEmail(Arrays.asList(flightProgress.isPresent() ? flightProgress.get() : new File("")), "mihir.shah@boeing.com",  "Test Flight Progress File");
-					logger.info("Email sent: " + sent);
-				}
-				catch(Exception e) {
-					logger.error("Error in email sending: "+e);
-				}
-				return sent;
-			} 
-		});
-		
-		futures.add(emailFuture);
 		futures.add(adwFuture);
 		futures.add(azureFuture);
 		boolean azureBool = false;
 		boolean adwBool = false;
-		boolean emailBool = false;
 		try {
 			azureBool = azureFuture.get();
 			adwBool = adwFuture.get();
-			emailBool = emailFuture.get();
 		} catch (InterruptedException | ExecutionException e) {
 			logger.error("Error in running executionservice: "+e.getMessage());
 		}
@@ -164,7 +124,7 @@ public class FileUploadController {
 			logger.error("Error in shuttingdown executionservice: "+e.getMessage());
 			es.shutdownNow();
 		}
-		FileUploadMessage fum = new FileUploadMessage(adwBool ? SUCCESS_MESSAGE : FAILURE_MESSAGE , azureBool ? SUCCESS_MESSAGE : FAILURE_MESSAGE, emailBool ? SUCCESS_MESSAGE : FAILURE_MESSAGE, "Uploaded File: " +uploadfile.getOriginalFilename());
+		UploadMessage fum = new UploadMessage(adwBool ? SUCCESS_MESSAGE : FAILURE_MESSAGE , azureBool ? SUCCESS_MESSAGE : FAILURE_MESSAGE, "Uploaded File: " +uploadfile.getOriginalFilename());
 		return new ResponseEntity<>(fum, HttpStatus.OK);
 	}
 
@@ -181,6 +141,5 @@ public class FileUploadController {
 			Path path = Paths.get(uploadFolder + File.separator + file.getOriginalFilename());
 			Files.write(path, bytes);
 		}
-
 	}
 }

@@ -1,16 +1,14 @@
 package com.boeing.cas.supa.ground.pojos;
 
-public class FileUploadMessage {
+public class UploadMessage {
 	private String AdwTransfer;
 	private String AzureUpload;
-	private String EmailSent;
 	private String Message;
 	
-	public FileUploadMessage(String adwTransfer, String azureUpload, String emailSent, String message) {
+	public UploadMessage(String adwTransfer, String azureUpload, String message) {
 		super();
 		AdwTransfer = adwTransfer;
 		AzureUpload = azureUpload;
-		EmailSent = emailSent;
 		Message = message;
 	}
 	public String getAdwTransfer() {
@@ -25,12 +23,7 @@ public class FileUploadMessage {
 	public void setAzureUpload(String azureUpload) {
 		AzureUpload = azureUpload;
 	}
-	public String getEmailSent() {
-		return EmailSent;
-	}
-	public void setEmailSent(String emailSent) {
-		EmailSent = emailSent;
-	}
+
 	public String getMessage() {
 		return Message;
 	}
