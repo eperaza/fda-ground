@@ -11506,3 +11506,108 @@ com.microsoft.aad.adal4j.AuthenticationException: {"error_description":"AADSTS50
 2017-12-17 20:49:42.431  INFO 28042 --- [pool-14-thread-1] c.b.c.supa.ground.utils.ADWTransferUtil  : ADWTransfer: PUT DONE
 2017-12-17 20:49:42.446  INFO 28042 --- [pool-14-thread-1] c.b.c.s.g.c.FileUploadController         : Transfer to ADW complete: true
 2017-12-17 20:49:42.451  INFO 28042 --- [http-nio-8080-exec-6] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2017-12-17 20:59:03.762  INFO 28042 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local with PID 28042 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-12-17 20:59:03.762  INFO 28042 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-12-17 20:59:04.487  INFO 28042 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.765 seconds (JVM running for 982.049)
+2017-12-18 11:07:19.126  INFO 13346 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on a5605027.dhcp.cs.boeing.com with PID 13346 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-12-18 11:07:19.127  INFO 13346 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-12-18 11:07:21.773  INFO 13346 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 2.854 seconds (JVM running for 4.612)
+2017-12-18 11:08:07.991  INFO 13346 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2017-12-18 11:09:35.266  INFO 13466 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on a5605027.dhcp.cs.boeing.com with PID 13466 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2017-12-18 11:09:35.266  INFO 13466 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2017-12-18 11:09:37.405  INFO 13466 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 2.316 seconds (JVM running for 3.864)
+2017-12-18 11:10:12.007  INFO 13466 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2017-12-18 11:10:34.907  INFO 13466 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2017-12-18 11:10:34.956  INFO 13466 --- [http-nio-8080-exec-4] c.b.c.s.g.controllers.LoginController    : it is valid
+2017-12-18 11:10:38.293 ERROR 13466 --- [pool-14-thread-1] c.m.aad.adal4j.AuthenticationContext     : [Correlation ID: ee12b60c-af74-4e39-bd9d-cf2d39f84b2d] Request to acquire token failed.
+
+com.microsoft.aad.adal4j.AuthenticationException: {"error_description":"AADSTS50034: To sign into this application the account must be added to the fdacustomertest.onmicrosoft.com directory.\r\nTrace ID: c04e1000-3c1a-4ffd-b348-e07a0e000800\r\nCorrelation ID: ee12b60c-af74-4e39-bd9d-cf2d39f84b2d\r\nTimestamp: 2017-12-18 19:10:37Z","error":"invalid_grant"}
+	at com.microsoft.aad.adal4j.AdalTokenRequest.executeOAuthRequestAndProcessResponse(AdalTokenRequest.java:107)
+	at com.microsoft.aad.adal4j.AuthenticationContext.acquireTokenCommon(AuthenticationContext.java:816)
+	at com.microsoft.aad.adal4j.AuthenticationContext.access$100(AuthenticationContext.java:64)
+	at com.microsoft.aad.adal4j.AuthenticationContext$1.call(AuthenticationContext.java:172)
+	at com.microsoft.aad.adal4j.AuthenticationContext$1.call(AuthenticationContext.java:161)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at java.lang.Thread.run(Thread.java:745)
+
+2017-12-18 11:10:38.320  INFO 13466 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2017-12-18 11:10:45.312  INFO 13466 --- [http-nio-8080-exec-5] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2017-12-18 11:10:45.314  INFO 13466 --- [http-nio-8080-exec-5] c.b.c.s.g.controllers.LoginController    : it is valid
+2017-12-18 11:10:49.165  INFO 13466 --- [http-nio-8080-exec-5] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2017-12-18 11:11:38.731  INFO 13466 --- [http-nio-8080-exec-6] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2017-12-18 11:11:38.736  INFO 13466 --- [http-nio-8080-exec-6] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2017-12-18 11:11:38.737  INFO 13466 --- [http-nio-8080-exec-6] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2017-12-18 11:11:38.747  INFO 13466 --- [http-nio-8080-exec-6] ication$$EnhancerBySpringCGLIB$$1b54a7a1 : Pinging the service
+2017-12-18 11:11:42.096  INFO 13466 --- [http-nio-8080-exec-6] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.WindowsAzure.ActiveDirectory.User/@Element","odata.type":"Microsoft.WindowsAzure.ActiveDirectory.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"country":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","facsimileTelephoneNumber":null,"givenName":"Test","jobTitle":null,"lastDirSyncTime":null,"mail":null,"mailNickname":"test1","mobile":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com"}
+2017-12-18 11:11:42.097  INFO 13466 --- [http-nio-8080-exec-6] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2017-12-18 11:11:42.115  INFO 13466 --- [http-nio-8080-exec-6] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2017-12-18 11:14:03.038  INFO 13466 --- [http-nio-8080-exec-9] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2017-12-18 11:14:03.039  INFO 13466 --- [http-nio-8080-exec-9] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2017-12-18 11:14:03.040  INFO 13466 --- [http-nio-8080-exec-9] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2017-12-18 11:14:03.089  INFO 13466 --- [http-nio-8080-exec-9] c.b.c.s.g.c.FileUploadController         : Upload File method invoked
+2017-12-18 11:14:03.108  INFO 13466 --- [pool-16-thread-1] c.b.c.s.g.c.FileUploadController         : Starting ADW Transfer
+2017-12-18 11:14:03.109  INFO 13466 --- [pool-16-thread-2] c.b.c.s.g.c.FileUploadController         : Starting Azure upload
+2017-12-18 11:14:03.110  INFO 13466 --- [pool-16-thread-1] c.b.c.supa.ground.utils.ADWTransferUtil  : Properties files loaded successfully: fta.hubspan.net:Outbox/089187496
+2017-12-18 11:14:03.110  INFO 13466 --- [pool-16-thread-1] c.b.c.s.g.c.FileUploadController         : /var/folders/q5/_s10dp1s6fz5dqv3ct8bgmfjv1h0vy/T/3764885850040703674/BoeingAMX_EI-DRC_AMX212_MMMX_MMCU_20170526_113801Z_2258.zip
+2017-12-18 11:14:03.364  WARN 13466 --- [pool-16-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:14:03.365  WARN 13466 --- [pool-16-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:14:03.366  WARN 13466 --- [pool-16-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:14:03.367  WARN 13466 --- [pool-16-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:14:03.371  WARN 13466 --- [pool-16-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:14:03.377  WARN 13466 --- [pool-16-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:14:03.377  WARN 13466 --- [pool-16-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:14:03.377  WARN 13466 --- [pool-16-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:14:03.378  WARN 13466 --- [pool-16-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:14:03.381  WARN 13466 --- [pool-16-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:14:03.381  WARN 13466 --- [pool-16-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:14:03.382  WARN 13466 --- [pool-16-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:14:03.382  WARN 13466 --- [pool-16-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:14:03.383  WARN 13466 --- [pool-16-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:14:03.385  WARN 13466 --- [pool-16-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size or default parameters
+2017-12-18 11:14:03.385  WARN 13466 --- [pool-16-thread-1] net.schmizz.sshj.DefaultConfig           : Disabling high-strength ciphers: cipher strengths apparently limited by JCE policy
+2017-12-18 11:14:12.577  INFO 13466 --- [pool-16-thread-1] c.b.c.supa.ground.utils.ADWTransferUtil  : ADWTransfer: PUT
+2017-12-18 11:15:22.827  INFO 13466 --- [pool-16-thread-1] c.b.c.supa.ground.utils.ADWTransferUtil  : ADWTransfer: PUT DONE
+2017-12-18 11:15:23.143 ERROR 13466 --- [reader] n.schmizz.sshj.transport.TransportImpl   : Dying because - {}
+
+net.schmizz.sshj.transport.TransportException: Broken transport; encountered EOF
+	at net.schmizz.sshj.transport.Reader.run(Reader.java:58)
+
+2017-12-18 11:15:23.146  INFO 13466 --- [pool-16-thread-1] c.b.c.s.g.c.FileUploadController         : Transfer to ADW complete: true
+2017-12-18 11:15:33.433  INFO 13466 --- [pool-16-thread-2] c.b.c.s.g.c.FileUploadController         : Upload to Azure complete: true
+2017-12-18 11:15:33.439  INFO 13466 --- [http-nio-8080-exec-9] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2017-12-18 11:16:56.847  INFO 13466 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2017-12-18 11:16:56.848  INFO 13466 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2017-12-18 11:16:56.849  INFO 13466 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2017-12-18 11:16:56.872  INFO 13466 --- [http-nio-8080-exec-1] c.b.c.s.g.c.FileUploadController         : Upload File method invoked
+2017-12-18 11:16:56.882  INFO 13466 --- [pool-18-thread-1] c.b.c.s.g.c.FileUploadController         : Starting ADW Transfer
+2017-12-18 11:16:56.882  INFO 13466 --- [pool-18-thread-2] c.b.c.s.g.c.FileUploadController         : Starting Azure upload
+2017-12-18 11:16:56.883  INFO 13466 --- [pool-18-thread-1] c.b.c.supa.ground.utils.ADWTransferUtil  : Properties files loaded successfully: fta.hubspan.net:Outbox/089187496
+2017-12-18 11:16:56.883  INFO 13466 --- [pool-18-thread-1] c.b.c.s.g.c.FileUploadController         : /var/folders/q5/_s10dp1s6fz5dqv3ct8bgmfjv1h0vy/T/3543768484183074534/BoeingAMX_EI-DRC_AMX212_MMMX_MMCU_20170526_113801Z_2258.zip
+2017-12-18 11:16:56.884  WARN 13466 --- [pool-18-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:16:56.884  WARN 13466 --- [pool-18-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:16:56.885  WARN 13466 --- [pool-18-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:16:56.885  WARN 13466 --- [pool-18-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:16:56.886  WARN 13466 --- [pool-18-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:16:56.886  WARN 13466 --- [pool-18-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:16:56.886  WARN 13466 --- [pool-18-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:16:56.887  WARN 13466 --- [pool-18-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:16:56.887  WARN 13466 --- [pool-18-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:16:56.888  WARN 13466 --- [pool-18-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:16:56.888  WARN 13466 --- [pool-18-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:16:56.889  WARN 13466 --- [pool-18-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:16:56.889  WARN 13466 --- [pool-18-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:16:56.890  WARN 13466 --- [pool-18-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2017-12-18 11:16:56.890  WARN 13466 --- [pool-18-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size or default parameters
+2017-12-18 11:16:56.890  WARN 13466 --- [pool-18-thread-1] net.schmizz.sshj.DefaultConfig           : Disabling high-strength ciphers: cipher strengths apparently limited by JCE policy
+2017-12-18 11:17:04.267  INFO 13466 --- [pool-18-thread-1] c.b.c.supa.ground.utils.ADWTransferUtil  : ADWTransfer: PUT
+2017-12-18 11:17:49.645  INFO 13466 --- [pool-18-thread-2] c.b.c.s.g.c.FileUploadController         : Upload to Azure complete: true
+2017-12-18 11:17:53.297  INFO 13466 --- [pool-18-thread-1] c.b.c.supa.ground.utils.ADWTransferUtil  : ADWTransfer: PUT DONE
+2017-12-18 11:17:53.344 ERROR 13466 --- [reader] n.schmizz.sshj.transport.TransportImpl   : Dying because - {}
+
+net.schmizz.sshj.transport.TransportException: Broken transport; encountered EOF
+	at net.schmizz.sshj.transport.Reader.run(Reader.java:58)
+
+2017-12-18 11:17:53.345  INFO 13466 --- [pool-18-thread-1] c.b.c.s.g.c.FileUploadController         : Transfer to ADW complete: true
+2017-12-18 11:17:53.348  INFO 13466 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
