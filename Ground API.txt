@@ -1,0 +1,106 @@
+
+
+curl -X POST \
+  http://localhost:8080/login \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{"azUsername": "<AD Username>",
+"azPassword": "AD Password"}'
+
+
+## Valid login request (Status code 200)
+{
+    "accessTokenType": "Bearer",
+    "expiresOn": 3599,
+    "idToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJhdWQiOiI5NWQ2OWEyMS0zNjliLTQ2Y2MtYWExZC0wYjY3YTIzNTNmNTkiLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC9iM2JmNjhhMS1kYWUwLTRiYTgtOGE3MS02NWI3MDQ0YjliZTAvIiwiaWF0IjoxNTEzNTQ2MTMwLCJuYmYiOjE1MTM1NDYxMzAsImV4cCI6MTUxMzU1MDAzMCwiYW1yIjpbInB3ZCJdLCJmYW1pbHlfbmFtZSI6IlR3byIsImdpdmVuX25hbWUiOiJUZXN0IiwiaXBhZGRyIjoiNzMuMTkuMTAxLjE2OCIsIm5hbWUiOiJUZXN0MiIsIm9pZCI6IjAwMjViOTI0LTY0Y2UtNGZlOC05MzkyLTI1NGVjOWRlYzIxZSIsInN1YiI6IjRvSGtkZWthYlAwREZpNngtYjJubVdVa1JOMWF5MHJRdkpxbGpRU0ZTMXMiLCJ0aWQiOiJiM2JmNjhhMS1kYWUwLTRiYTgtOGE3MS02NWI3MDQ0YjliZTAiLCJ1bmlxdWVfbmFtZSI6InRlc3QyQGZkYWN1c3RvbWVydGVzdC5vbm1pY3Jvc29mdC5jb20iLCJ1cG4iOiJ0ZXN0MkBmZGFjdXN0b21lcnRlc3Qub25taWNyb3NvZnQuY29tIiwidmVyIjoiMS4wIn0.",
+    "userInfo": {
+        "uniqueId": "0025b924-64ce-4fe8-9392-254ec9dec21e",
+        "displayableId": "test2@fdacustomertest.onmicrosoft.com",
+        "givenName": "Test",
+        "familyName": "Two",
+        "identityProvider": null,
+        "passwordChangeUrl": null,
+        "passwordExpiresOn": null
+    },
+    "accessToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ing0Nzh4eU9wbHNNMUg3TlhrN1N4MTd4MXVwYyIsImtpZCI6Ing0Nzh4eU9wbHNNMUg3TlhrN1N4MTd4MXVwYyJ9.eyJhdWQiOiJodHRwczovL2dyYXBoLndpbmRvd3MubmV0IiwiaXNzIjoiaHR0cHM6Ly9zdHMud2luZG93cy5uZXQvYjNiZjY4YTEtZGFlMC00YmE4LThhNzEtNjViNzA0NGI5YmUwLyIsImlhdCI6MTUxMzU0NjEzMCwibmJmIjoxNTEzNTQ2MTMwLCJleHAiOjE1MTM1NTAwMzAsImFjciI6IjEiLCJhaW8iOiJZMk5nWUxEbjdONjR3enRtSHBQWXJqcWYzNFczN01QS3ZkdkYybEpQS1M3bzgvK1RlQllBIiwiYW1yIjpbInB3ZCJdLCJhcHBpZCI6Ijk1ZDY5YTIxLTM2OWItNDZjYy1hYTFkLTBiNjdhMjM1M2Y1OSIsImFwcGlkYWNyIjoiMCIsImVfZXhwIjoyNjI4MDAsImZhbWlseV9uYW1lIjoiVHdvIiwiZ2l2ZW5fbmFtZSI6IlRlc3QiLCJpcGFkZHIiOiI3My4xOS4xMDEuMTY4IiwibmFtZSI6IlRlc3QyIiwib2lkIjoiMDAyNWI5MjQtNjRjZS00ZmU4LTkzOTItMjU0ZWM5ZGVjMjFlIiwicHVpZCI6IjEwMDMwMDAwQTU2RDhCNUEiLCJzY3AiOiJVc2VyLlJlYWQiLCJzdWIiOiJuV0dQazFvaU0yeloxRVNlNTlTZ2dZdER5Qmg2REJmQS1TbWlsdnE5cGJNIiwidGVuYW50X3JlZ2lvbl9zY29wZSI6Ik5BIiwidGlkIjoiYjNiZjY4YTEtZGFlMC00YmE4LThhNzEtNjViNzA0NGI5YmUwIiwidW5pcXVlX25hbWUiOiJ0ZXN0MkBmZGFjdXN0b21lcnRlc3Qub25taWNyb3NvZnQuY29tIiwidXBuIjoidGVzdDJAZmRhY3VzdG9tZXJ0ZXN0Lm9ubWljcm9zb2Z0LmNvbSIsInV0aSI6IjlQS2VrNkNKdUVPVXRYSXFiV1FlQUEiLCJ2ZXIiOiIxLjAifQ.ngvpCZslx0UUu01UN1LucBYrcSyspitRrNIcAjkzoo8HdPFDHIvzzWpyPU0ks4P1J2gACp2XjVPtHr-1W8XQRmZYH8oD8cgOaB_uzYY48r3m7wboNxrsfN4EK0VM7uRvDFAFvwtX_SvtPHltVpD8Qq-SRtWZ0AGu-5DBRnhYrBkKurk3Xa4VzIYS_hnRZc-A4-8p_-lk5Nkv0omJ_NpxbgzwU9yeeapwitBg7fZG8wYQzu7vO8sV2NCMAeGEH9KzWPh-JAN-b_eyEXog-xA026YWh5hrkjRr7F_ZTjGr3G4smImHXoZLYUNxQNXBLOVkfiFv5cfsBG0rxr6ILef6rA",
+    "refreshToken": "AQABAAAAAABHh4kmS_aKT5XrjzxRAtHz0mynd67leVgGY64ekuXoyg-MI9k6g-A95N7YZ66h8SoXywxGIvPgCBCDQXnpSBSQj5e-QwDEoIHjFTVPZwUj_sMKLEaamY2i3ekIIRt4q7n-eY68Dhrzwc7JlOR2U6XJ-D6wFdeNLH_8cMiFdu4HDmqUGR4RUQOmjJb2xZXstfHIUc8HnLvZHroQ3CZKqkCep7pbgdR0zGek2h-0XC2cpVIFVcFERMSOS5pQxVYTBDB7Pk3HR8kTP1M-4qM7iidjMpcpAmIYURUjlCpg4LKhgcHWXM5jCg2Kiq7X1aQ0DHKT4s32d5Z7gSQXN6CkJD9qC8Nj0YVjRy1-kgGNB1AEpdye5Z7aZK302s25xiQta4kQJV_Pj4QZRiOi_8YvwTEyhXtwh7eKaTwAfAK4F_-cnqTNZwCHgORjud7i83m_EX8CsdS_XN58JNbgNRWHadvmg3hwKTyG2VV1Z6JPU54ZaY_A2pm9gPHGIvRkTVLQGUs658jdUCVvy2rTZojdQmmDnkLGZx0phEvnnPrZMtni1whY6G2RpHXEMVQmpO3R1onIjBD54lBFE_nFd_WcQHRhoTgQViVe-pZvHKf4rm4k8xIzm0a-1f1Wp1CmKvgtqp9_Bm1FpBbV-M0PHKD1mLlSdJL_2oEqQjRRDZTXsffCpqHJPgtku9Vp068XG5F6sAzR1S5fToKgSOidNTo_qOPwIAA",
+    "multipleResourceRefreshToken": true,
+    "expiresAfter": 3599,
+    "expiresOnDate": 1513550035722
+}
+
+## Invalid login request 
+{
+  "error": "invalid_grant",
+  "errorDescription": "AADSTS50034: To sign into this application the account must be added to the fdacustomertest.onmicrosoft.com directory.",
+  "timestamp": 1513546473
+}
+
+## User Password Expired 
+{
+  "error": "user_password_expired",
+  "errorDescription": "AADSTS50055: Force Change Password.",
+  "timestamp": 1513546622
+}
+
+curl -X POST \
+  http://localhost:8080/refresh \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{"refreshToken": "<Refresh Token>"}'
+
+##Invalid Refresh Token
+{
+    "error": "invalid_grant",
+    "errorDescription": "AADSTS70000: Transmission data parser failure: Refresh Token is malformed or invalid.",
+    "timestamp": 1513546851
+}
+
+##Valid Refresh Token 
+{
+  "token_type": "Bearer",
+  "expires_in": "3599",
+  "expires_on": "1513550601",
+  "not_before": "1513546701",
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ing0Nzh4eU9wbHNNMUg3TlhrN1N4MTd4MXVwYyIsImtpZCI6Ing0Nzh4eU9wbHNNMUg3TlhrN1N4MTd4MXVwYyJ9.eyJhdWQiOiJodHRwczovL2dyYXBoLndpbmRvd3MubmV0IiwiaXNzIjoiaHR0cHM6Ly9zdHMud2luZG93cy5uZXQvYjNiZjY4YTEtZGFlMC00YmE4LThhNzEtNjViNzA0NGI5YmUwLyIsImlhdCI6MTUxMzU0NjcwMSwibmJmIjoxNTEzNTQ2NzAxLCJleHAiOjE1MTM1NTA2MDEsImFjciI6IjEiLCJhaW8iOiJBU1FBMi84R0FBQUEvWHhMdjZmUndJejYydkJ2Rlc4cXN6VDJLcXM2bVZxclB4em9oN01rUytJPSIsImFtciI6WyJwd2QiXSwiYXBwaWQiOiI5NWQ2OWEyMS0zNjliLTQ2Y2MtYWExZC0wYjY3YTIzNTNmNTkiLCJhcHBpZGFjciI6IjAiLCJmYW1pbHlfbmFtZSI6IlR3byIsImdpdmVuX25hbWUiOiJUZXN0IiwiaXBhZGRyIjoiNzMuMTkuMTAxLjE2OCIsIm5hbWUiOiJUZXN0MiIsIm9pZCI6IjAwMjViOTI0LTY0Y2UtNGZlOC05MzkyLTI1NGVjOWRlYzIxZSIsInB1aWQiOiIxMDAzMDAwMEE1NkQ4QjVBIiwic2NwIjoiVXNlci5SZWFkIiwic3ViIjoibldHUGsxb2lNMnpaMUVTZTU5U2dnWXREeUJoNkRCZkEtU21pbHZxOXBiTSIsInRlbmFudF9yZWdpb25fc2NvcGUiOiJOQSIsInRpZCI6ImIzYmY2OGExLWRhZTAtNGJhOC04YTcxLTY1YjcwNDRiOWJlMCIsInVuaXF1ZV9uYW1lIjoidGVzdDJAZmRhY3VzdG9tZXJ0ZXN0Lm9ubWljcm9zb2Z0LmNvbSIsInVwbiI6InRlc3QyQGZkYWN1c3RvbWVydGVzdC5vbm1pY3Jvc29mdC5jb20iLCJ1dGkiOiJ5R1FKRk5lcjRVeVprNjcyb1g4WkFBIiwidmVyIjoiMS4wIn0.BrQ03mrnK-MeWRoZzqKPRk_piM9252lBs_Boux9LqSY6BwofzkoSeIn9eMcQqimWfBMLg0gsVEfbjV3GQ4z4WyPRdjUNGOQURqyF3ah66XQEY75I4Q48whUJu8Hrevl6STXItMr3_vMjZmXtkGcB9E7YSHdjosR51Nb39WwiQ4Ogx-Ha-xoHitbxXdLDGBRdSWhIJYeKfJdK8Ef5KjD-jOjjQ1AL3x5MinmGDktwr8D9bNoGGMf8SRF7_jEIn7ZpS7sgaXnfIFF0dCrG4hJ3JtjX7oIxCJ1dHgDCvdMBh_3DPzqQWAL9jTOwtEZcMTN-QVvZhKmCfrmlRsPt18CM1Q",
+  "refresh_token": "AQABAAAAAABHh4kmS_aKT5XrjzxRAtHzJ8W8LcUFlYiVXO3d5-Yj65qKrJH4txv9e7HMMq7ThLijSNuFsUqu7GAwZMwd-czBNTcA0_xeux-9Ha7ZJT2hvdPdpzUSd6HoMjSrd1o62K5tqzVIZUudyIF8x_IWkHWSiguBmytWRyNdC2fmE6ZsiiYBszwHtNcPTnwn11bzJWj6eN8QS4zHhRpkENmTUClQ7pEpbFZFlLX4pjxI1dC9sHr9xVyIw4Ni3a_8TlMyqEF3SYuSXwqWup5InAZc-jRr1_5aRIbCh8crzSDPCRT68NUoh1s4N6n4Doyx7A1aRp2dGSpY96-vZUwwGaUpYax53-fLDWXy3-0RtKH5Rleij9cvDcqPpi7or2beb_uL-VrAyDiCHt0t_X0ZANApBYdNalbOZGQVeOyk_eilsZ81kvN8bs-8GCNCqa_IQPRO-4Lm0ayeEnpMaM4BKLZbTVU2792dUy6WB4AFShrHvLlk6JKlUD-57L9_pv3mKFY0orqf7vrjYXMZdC-fQC7mRZuwOmabKsf7inn3H8jU-1gDPuScb8x04wDZe1XeocCBCCItr1pIldvERdQ7zFMC5RkCVBJh2tO7oO7qT4yBfjoEAzlJkwJBDqUmpZRI145tEdvD9CJiO7FtQaoLx3ABdWgwQ8OujhEPpdgOxej_b4p5lXPyatApkJIM0FSfGy0lYaeQ-UGk3i0JH0fBKsI0Xv-ZIAA"
+}
+
+## Deleted user 
+{
+  "error": "invalid_grant",
+  "errorDescription": "AADSTS50034: To sign into this application the account must be added to the fdacustomertest.onmicrosoft.com directory.",
+  "timestamp": 1513547401
+}
+
+
+curl -X GET \
+  http://localhost:8080/ \
+  -H 'authorization: Bearer <ACCESS TOKEN>' \
+  -H 'cache-control: no-cache'
+
+## Valid token
+{
+"greeting": "hello world"
+}
+
+## Missing token 
+{
+  "error": "Authorization_Missing",
+  "errorDescription": "Must provide a Authorizaiton token",
+  "timestamp": 1513624087
+}
+
+
+curl -X POST \
+  http://localhost:8080/uploadFile \
+  -H 'authorization: Bearer <ACCESS TOKEN>' \
+  -H 'content-type: multipart/form-data' \
+  -F file=@/Users/iw062d/MobileBackendAPI/Airline_files/BoeingAMX_EI-DRC_AMX212_MMMX_MMCU_20170526_113801Z_2258.zip
+
+{
+    "message": "Uploaded File: BoeingAMX_EI-DRC_AMX212_MMMX_MMCU_20170526_113801Z_2258.zip",
+    "adwTransfer": "Success",
+    "azureUpload": "Success"
+}
+
