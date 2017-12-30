@@ -3,8 +3,9 @@ package com.boeing.cas.supa.ground.pojos;
 public class RefreshTokenInput {
 	protected String refreshToken;
 	
-	private RefreshTokenInput(){
+	public RefreshTokenInput(){
 		// private constructor hides implicit public one
+		this(null, null);
 	}
 	/**
 	 * @param userInfo
