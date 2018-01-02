@@ -8,6 +8,7 @@ public class RefreshTokenOutput {
 	protected String access_token;
 	protected String refresh_token;
 	
+	@SuppressWarnings("unused")
 	private RefreshTokenOutput(){
 		// private constructor hides implicit public one
 	}

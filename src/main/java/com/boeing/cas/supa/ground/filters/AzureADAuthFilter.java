@@ -31,7 +31,6 @@ import org.springframework.stereotype.Component;
 
 import com.boeing.cas.supa.ground.pojos.Error;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.microsoft.applicationinsights.TelemetryClient;
 import com.nimbusds.jwt.JWTParser;
 
 @Component
@@ -53,7 +52,6 @@ public class AzureADAuthFilter implements Filter {
 	private static final Set<String> ALLOWED_PATHS = Collections.unmodifiableSet(new HashSet<>(
 	        Arrays.asList("/login", "/refresh")));
 	
-	private final TelemetryClient telemetryClient = new TelemetryClient();
 
 
 	@Override
@@ -123,7 +121,9 @@ public class AzureADAuthFilter implements Filter {
         		Map<String, Object> claimsMap = JWTParser.parse(xAuth).getJWTClaimsSet().getClaims();
         		if(claimsMap.get("aud") instanceof List<?>){
         			Set<String> set = new HashSet<String>((Collection<? extends String>) claimsMap.get("aud"));
+        			logger.info(set.toString());
         			if(!set.contains(appIdUri)){
+        				
         				logger.info("Aud doesn't exist");
         				throw new SecurityException("Not a valid Authorizaiton token: Aud doesn't exist");  
         			}

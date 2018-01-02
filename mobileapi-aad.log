@@ -11611,3 +11611,421 @@ net.schmizz.sshj.transport.TransportException: Broken transport; encountered EOF
 
 2017-12-18 11:17:53.345  INFO 13466 --- [pool-18-thread-1] c.b.c.s.g.c.FileUploadController         : Transfer to ADW complete: true
 2017-12-18 11:17:53.348  INFO 13466 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 16:58:04.249  INFO 41726 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41726 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 16:58:04.252  INFO 41726 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 16:58:06.561 ERROR 41726 --- [restartedMain] o.a.coyote.http11.Http11NioProtocol      : Failed to start end point associated with ProtocolHandler ["http-nio-8080"]
+
+java.net.BindException: Address already in use
+	at sun.nio.ch.Net.bind0(Native Method)
+	at sun.nio.ch.Net.bind(Net.java:437)
+	at sun.nio.ch.Net.bind(Net.java:429)
+	at sun.nio.ch.ServerSocketChannelImpl.bind(ServerSocketChannelImpl.java:223)
+	at sun.nio.ch.ServerSocketAdaptor.bind(ServerSocketAdaptor.java:74)
+	at org.apache.tomcat.util.net.NioEndpoint.bind(NioEndpoint.java:210)
+	at org.apache.tomcat.util.net.AbstractEndpoint.start(AbstractEndpoint.java:990)
+	at org.apache.coyote.AbstractProtocol.start(AbstractProtocol.java:635)
+	at org.apache.catalina.connector.Connector.startInternal(Connector.java:1022)
+	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:150)
+	at org.apache.catalina.core.StandardService.addConnector(StandardService.java:225)
+	at org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer.addPreviouslyRemovedConnectors(TomcatEmbeddedServletContainer.java:250)
+	at org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer.start(TomcatEmbeddedServletContainer.java:193)
+	at org.springframework.boot.context.embedded.EmbeddedWebApplicationContext.startEmbeddedServletContainer(EmbeddedWebApplicationContext.java:297)
+	at org.springframework.boot.context.embedded.EmbeddedWebApplicationContext.finishRefresh(EmbeddedWebApplicationContext.java:145)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:546)
+	at org.springframework.boot.context.embedded.EmbeddedWebApplicationContext.refresh(EmbeddedWebApplicationContext.java:122)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:693)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:360)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:303)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1118)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1107)
+	at com.boeing.cas.supa.ground.DemoApplication.main(DemoApplication.java:52)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:497)
+	at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:49)
+
+2018-01-01 16:58:06.564 ERROR 41726 --- [restartedMain] o.apache.catalina.core.StandardService   : Failed to start connector [Connector[HTTP/1.1-8080]]
+
+org.apache.catalina.LifecycleException: Failed to start component [Connector[HTTP/1.1-8080]]
+	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:167)
+	at org.apache.catalina.core.StandardService.addConnector(StandardService.java:225)
+	at org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer.addPreviouslyRemovedConnectors(TomcatEmbeddedServletContainer.java:250)
+	at org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer.start(TomcatEmbeddedServletContainer.java:193)
+	at org.springframework.boot.context.embedded.EmbeddedWebApplicationContext.startEmbeddedServletContainer(EmbeddedWebApplicationContext.java:297)
+	at org.springframework.boot.context.embedded.EmbeddedWebApplicationContext.finishRefresh(EmbeddedWebApplicationContext.java:145)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:546)
+	at org.springframework.boot.context.embedded.EmbeddedWebApplicationContext.refresh(EmbeddedWebApplicationContext.java:122)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:693)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:360)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:303)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1118)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1107)
+	at com.boeing.cas.supa.ground.DemoApplication.main(DemoApplication.java:52)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:497)
+	at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:49)
+Caused by: org.apache.catalina.LifecycleException: service.getName(): "Tomcat";  Protocol handler start failed
+	at org.apache.catalina.connector.Connector.startInternal(Connector.java:1029)
+	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:150)
+	... 18 common frames omitted
+Caused by: java.net.BindException: Address already in use
+	at sun.nio.ch.Net.bind0(Native Method)
+	at sun.nio.ch.Net.bind(Net.java:437)
+	at sun.nio.ch.Net.bind(Net.java:429)
+	at sun.nio.ch.ServerSocketChannelImpl.bind(ServerSocketChannelImpl.java:223)
+	at sun.nio.ch.ServerSocketAdaptor.bind(ServerSocketAdaptor.java:74)
+	at org.apache.tomcat.util.net.NioEndpoint.bind(NioEndpoint.java:210)
+	at org.apache.tomcat.util.net.AbstractEndpoint.start(AbstractEndpoint.java:990)
+	at org.apache.coyote.AbstractProtocol.start(AbstractProtocol.java:635)
+	at org.apache.catalina.connector.Connector.startInternal(Connector.java:1022)
+	... 19 common frames omitted
+
+2018-01-01 16:58:06.572 ERROR 41726 --- [localhost-startStop-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Failed to destroy the filter named [azureADAuthFilter] of type [com.boeing.cas.supa.ground.filters.AzureADAuthFilter]
+
+java.lang.UnsupportedOperationException: null
+	at com.boeing.cas.supa.ground.filters.AzureADAuthFilter.destroy(AzureADAuthFilter.java:156)
+	at org.apache.catalina.core.ApplicationFilterConfig.release(ApplicationFilterConfig.java:318)
+	at org.apache.catalina.core.StandardContext.filterStop(StandardContext.java:4623)
+	at org.apache.catalina.core.StandardContext.stopInternal(StandardContext.java:5421)
+	at org.apache.catalina.util.LifecycleBase.stop(LifecycleBase.java:226)
+	at org.apache.catalina.core.ContainerBase$StopChild.call(ContainerBase.java:1435)
+	at org.apache.catalina.core.ContainerBase$StopChild.call(ContainerBase.java:1424)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at java.lang.Thread.run(Thread.java:745)
+
+2018-01-01 16:58:06.583 ERROR 41726 --- [restartedMain] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+The Tomcat connector configured to listen on port 8080 failed to start. The port may already be in use or the connector may be misconfigured.
+
+Action:
+
+Verify the connector's configuration, identify and stop any process that's listening on port 8080, or configure this application to listen on another port.
+
+2018-01-01 16:59:29.168  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 16:59:29.168  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 16:59:31.246  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 2.305 seconds (JVM running for 3.905)
+2018-01-01 16:59:36.320  INFO 41818 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 16:59:47.075  INFO 41818 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 17:00:18.480  INFO 41818 --- [http-nio-8080-exec-6] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 17:00:18.525  INFO 41818 --- [http-nio-8080-exec-6] c.b.c.s.g.controllers.LoginController    : it is valid
+2018-01-01 17:00:19.213  INFO 41818 --- [http-nio-8080-exec-6] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 17:00:55.783  INFO 41818 --- [http-nio-8080-exec-7] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 17:00:55.786  INFO 41818 --- [http-nio-8080-exec-7] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 17:00:55.787  INFO 41818 --- [http-nio-8080-exec-7] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 17:00:55.787  INFO 41818 --- [http-nio-8080-exec-7] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-01 17:00:55.871  INFO 41818 --- [http-nio-8080-exec-7] ication$$EnhancerBySpringCGLIB$$697e648a : Pinging the service
+2018-01-01 17:00:56.520  INFO 41818 --- [http-nio-8080-exec-7] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.WindowsAzure.ActiveDirectory.User/@Element","odata.type":"Microsoft.WindowsAzure.ActiveDirectory.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"country":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","facsimileTelephoneNumber":null,"givenName":"Test","jobTitle":null,"lastDirSyncTime":null,"mail":null,"mailNickname":"test1","mobile":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com"}
+2018-01-01 17:00:56.521  INFO 41818 --- [http-nio-8080-exec-7] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-01 17:00:56.542  INFO 41818 --- [http-nio-8080-exec-7] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 17:03:47.750  INFO 41818 --- [http-nio-8080-exec-10] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 17:03:47.751  INFO 41818 --- [http-nio-8080-exec-10] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 17:03:47.751  INFO 41818 --- [http-nio-8080-exec-10] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 17:03:47.751  INFO 41818 --- [http-nio-8080-exec-10] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-01 17:03:47.765  INFO 41818 --- [http-nio-8080-exec-10] ication$$EnhancerBySpringCGLIB$$697e648a : Pinging the service
+2018-01-01 17:03:48.108  INFO 41818 --- [http-nio-8080-exec-10] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.WindowsAzure.ActiveDirectory.User/@Element","odata.type":"Microsoft.WindowsAzure.ActiveDirectory.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"country":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","facsimileTelephoneNumber":null,"givenName":"Test","jobTitle":null,"lastDirSyncTime":null,"mail":null,"mailNickname":"test1","mobile":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com"}
+2018-01-01 17:03:48.109  INFO 41818 --- [http-nio-8080-exec-10] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-01 17:03:48.119  INFO 41818 --- [http-nio-8080-exec-10] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 17:04:44.379  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 17:04:44.380  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 17:04:44.381  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 17:04:44.381  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-01 17:04:44.387  INFO 41818 --- [http-nio-8080-exec-2] ication$$EnhancerBySpringCGLIB$$697e648a : Pinging the service
+2018-01-01 17:04:44.636  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.WindowsAzure.ActiveDirectory.User/@Element","odata.type":"Microsoft.WindowsAzure.ActiveDirectory.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"country":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","facsimileTelephoneNumber":null,"givenName":"Test","jobTitle":null,"lastDirSyncTime":null,"mail":null,"mailNickname":"test1","mobile":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com"}
+2018-01-01 17:04:44.637  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-01 17:04:44.647  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 17:11:44.951  INFO 41818 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 17:11:44.952  INFO 41818 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 17:11:44.952  INFO 41818 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 17:11:44.952  INFO 41818 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-01 17:11:44.959  INFO 41818 --- [http-nio-8080-exec-4] ication$$EnhancerBySpringCGLIB$$697e648a : Pinging the service
+2018-01-01 17:11:45.244  INFO 41818 --- [http-nio-8080-exec-4] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.WindowsAzure.ActiveDirectory.User/@Element","odata.type":"Microsoft.WindowsAzure.ActiveDirectory.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"country":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","facsimileTelephoneNumber":null,"givenName":"Test","jobTitle":null,"lastDirSyncTime":null,"mail":null,"mailNickname":"test1","mobile":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com"}
+2018-01-01 17:11:45.244  INFO 41818 --- [http-nio-8080-exec-4] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-01 17:11:45.253  INFO 41818 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 19:35:40.671  INFO 41818 --- [http-nio-8080-exec-7] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 19:35:40.672  INFO 41818 --- [http-nio-8080-exec-7] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 19:35:40.672  INFO 41818 --- [http-nio-8080-exec-7] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 19:35:40.672  INFO 41818 --- [http-nio-8080-exec-7] c.b.c.s.g.filters.AzureADAuthFilter      : Expired token
+2018-01-01 19:44:07.315  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 19:44:07.315  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 19:44:07.899  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.611 seconds (JVM running for 3382.349)
+2018-01-01 19:44:11.484  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 19:44:11.485  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 19:44:11.930  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.469 seconds (JVM running for 3386.381)
+2018-01-01 19:44:30.046  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 19:44:30.046  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 19:44:30.465  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.438 seconds (JVM running for 3404.916)
+2018-01-01 19:44:43.114  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 19:44:43.114  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 19:44:43.510  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.416 seconds (JVM running for 3417.962)
+2018-01-01 19:44:53.504  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 19:44:53.505  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 19:44:53.906  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.421 seconds (JVM running for 3428.359)
+2018-01-01 19:46:21.958  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 19:46:21.958  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 19:46:22.353  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.419 seconds (JVM running for 3516.81)
+2018-01-01 19:46:53.480  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 19:46:53.480  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 19:46:53.882  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.42 seconds (JVM running for 3548.342)
+2018-01-01 19:46:57.444  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 19:46:57.444  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 19:46:57.794  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.368 seconds (JVM running for 3552.253)
+2018-01-01 19:48:49.110  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 19:48:49.114  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.c.RefreshTokenController       : it is valid
+2018-01-01 19:48:49.566  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 19:49:18.310  INFO 41818 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 19:49:18.311  INFO 41818 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 19:49:18.311  INFO 41818 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 19:49:18.311  INFO 41818 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-01 19:49:18.318  INFO 41818 --- [http-nio-8080-exec-3] ication$$EnhancerBySpringCGLIB$$697e648a : Pinging the service
+2018-01-01 19:49:18.597  INFO 41818 --- [http-nio-8080-exec-3] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.DirectoryServices.User/@Element","odata.type":"Microsoft.DirectoryServices.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","deletionTimestamp":null,"accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"companyName":null,"country":null,"creationType":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","employeeId":null,"facsimileTelephoneNumber":null,"givenName":"Test","immutableId":null,"isCompromised":null,"jobTitle":null,"lastDirSyncTime":null,"legalAgeGroupClassification":null,"mail":null,"mailNickname":"test1","mobile":null,"onPremisesDistinguishedName":null,"onPremisesSecurityIdentifier":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"refreshTokensValidFromDateTime":"2017-12-28T19:42:52Z","showInAddressList":null,"signInNames":[],"sipProxyAddress":null,"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userIdentities":[],"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com","userType":"Member"}
+2018-01-01 19:49:18.597  INFO 41818 --- [http-nio-8080-exec-3] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-01 19:49:18.604  INFO 41818 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 20:08:28.641  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 20:08:28.642  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 20:08:28.980  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.357 seconds (JVM running for 4843.513)
+2018-01-01 20:08:31.475  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 20:08:31.476  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 20:08:31.476  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 20:08:31.477  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-01 20:08:31.478  INFO 41818 --- [http-nio-8080-exec-2] ication$$EnhancerBySpringCGLIB$$697e648a : Pinging the service
+2018-01-01 20:08:32.085  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.DirectoryServices.User/@Element","odata.type":"Microsoft.DirectoryServices.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","deletionTimestamp":null,"accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"companyName":null,"country":null,"creationType":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","employeeId":null,"facsimileTelephoneNumber":null,"givenName":"Test","immutableId":null,"isCompromised":null,"jobTitle":null,"lastDirSyncTime":null,"legalAgeGroupClassification":null,"mail":null,"mailNickname":"test1","mobile":null,"onPremisesDistinguishedName":null,"onPremisesSecurityIdentifier":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"refreshTokensValidFromDateTime":"2017-12-28T19:42:52Z","showInAddressList":null,"signInNames":[],"sipProxyAddress":null,"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userIdentities":[],"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com","userType":"Member"}
+2018-01-01 20:08:32.085  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-01 20:08:32.091  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 20:08:58.747  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 20:08:58.747  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 20:08:59.082  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.352 seconds (JVM running for 4873.616)
+2018-01-01 20:15:59.887  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 20:15:59.887  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 20:16:00.203  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.333 seconds (JVM running for 5294.761)
+2018-01-01 20:16:20.890  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 20:16:20.891  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 20:16:21.205  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.331 seconds (JVM running for 5315.765)
+2018-01-01 20:16:40.868  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 20:16:40.868  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 20:16:41.189  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.337 seconds (JVM running for 5335.75)
+2018-01-01 20:16:58.945  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 20:16:58.945  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 20:16:59.253  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.328 seconds (JVM running for 5353.814)
+2018-01-01 20:17:41.141  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 20:17:41.141  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 20:17:41.488  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.365 seconds (JVM running for 5396.052)
+2018-01-01 20:18:00.349  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 20:18:00.349  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 20:18:00.693  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.36 seconds (JVM running for 5415.258)
+2018-01-01 20:18:04.917  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 20:18:04.918  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 20:18:04.918  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 20:18:04.919  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-01 20:18:04.920  INFO 41818 --- [http-nio-8080-exec-2] ication$$EnhancerBySpringCGLIB$$697e648a : Pinging the service
+2018-01-01 20:18:05.323  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.DirectoryServices.User/@Element","odata.type":"Microsoft.DirectoryServices.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","deletionTimestamp":null,"accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"companyName":null,"country":null,"creationType":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","employeeId":null,"facsimileTelephoneNumber":null,"givenName":"Test","immutableId":null,"isCompromised":null,"jobTitle":null,"lastDirSyncTime":null,"legalAgeGroupClassification":null,"mail":null,"mailNickname":"test1","mobile":null,"onPremisesDistinguishedName":null,"onPremisesSecurityIdentifier":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"refreshTokensValidFromDateTime":"2017-12-28T19:42:52Z","showInAddressList":null,"signInNames":[],"sipProxyAddress":null,"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userIdentities":[],"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com","userType":"Member"}
+2018-01-01 20:18:05.324  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-01 20:18:05.540 ERROR 41818 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : https://graph.windows.net/fdacustomertest.onmicrosoft.com/memberOf/6081056b-0a59-4317-bf21-b8deec86be1e
+2018-01-01 20:18:05.543  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 20:18:49.636  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 20:18:49.637  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 20:18:49.936  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.315 seconds (JVM running for 5464.504)
+2018-01-01 20:18:54.960  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 20:18:54.962  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 20:18:54.962  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 20:18:54.962  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-01 20:18:54.965  INFO 41818 --- [http-nio-8080-exec-2] ication$$EnhancerBySpringCGLIB$$697e648a : Pinging the service
+2018-01-01 20:18:55.203  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.DirectoryServices.User/@Element","odata.type":"Microsoft.DirectoryServices.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","deletionTimestamp":null,"accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"companyName":null,"country":null,"creationType":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","employeeId":null,"facsimileTelephoneNumber":null,"givenName":"Test","immutableId":null,"isCompromised":null,"jobTitle":null,"lastDirSyncTime":null,"legalAgeGroupClassification":null,"mail":null,"mailNickname":"test1","mobile":null,"onPremisesDistinguishedName":null,"onPremisesSecurityIdentifier":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"refreshTokensValidFromDateTime":"2017-12-28T19:42:52Z","showInAddressList":null,"signInNames":[],"sipProxyAddress":null,"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userIdentities":[],"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com","userType":"Member"}
+2018-01-01 20:18:55.204  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-01 20:18:55.313 ERROR 41818 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : https://graph.windows.net/fdacustomertest.onmicrosoft.com/memberOf/6081056b-0a59-4317-bf21-b8deec86be1e
+2018-01-01 20:18:55.316  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 20:21:34.552  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 20:21:34.552  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 20:21:34.877  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.341 seconds (JVM running for 5629.454)
+2018-01-01 20:21:41.869  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 20:21:41.869  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 20:21:42.170  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.315 seconds (JVM running for 5636.747)
+2018-01-01 20:21:52.935  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 20:21:52.937  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 20:21:52.937  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 20:21:52.937  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-01 20:21:52.943  INFO 41818 --- [http-nio-8080-exec-2] ication$$EnhancerBySpringCGLIB$$697e648a : Pinging the service
+2018-01-01 20:21:53.231 ERROR 41818 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : https://graph.windows.net/fdacustomertest.onmicrosoft.com/memberOf/6081056b-0a59-4317-bf21-b8deec86be1e
+2018-01-01 20:22:26.020  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 20:22:26.020  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 20:22:26.329  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.324 seconds (JVM running for 5680.909)
+2018-01-01 20:31:24.777  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 20:31:24.777  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 20:31:25.078  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.317 seconds (JVM running for 6219.688)
+2018-01-01 20:31:30.086  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 20:31:30.088  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 20:31:30.088  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 20:31:30.088  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-01 20:31:30.090  INFO 41818 --- [http-nio-8080-exec-2] ication$$EnhancerBySpringCGLIB$$697e648a : Pinging the service
+2018-01-01 20:31:30.955  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.DirectoryServices.User/@Element","odata.type":"Microsoft.DirectoryServices.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","deletionTimestamp":null,"accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"companyName":null,"country":null,"creationType":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","employeeId":null,"facsimileTelephoneNumber":null,"givenName":"Test","immutableId":null,"isCompromised":null,"jobTitle":null,"lastDirSyncTime":null,"legalAgeGroupClassification":null,"mail":null,"mailNickname":"test1","mobile":null,"onPremisesDistinguishedName":null,"onPremisesSecurityIdentifier":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"refreshTokensValidFromDateTime":"2017-12-28T19:42:52Z","showInAddressList":null,"signInNames":[],"sipProxyAddress":null,"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userIdentities":[],"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com","userType":"Member"}
+2018-01-01 20:31:30.955  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-01 20:31:30.961  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 20:50:14.298  INFO 41818 --- [http-nio-8080-exec-5] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 20:50:14.299  INFO 41818 --- [http-nio-8080-exec-5] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 20:50:14.299  INFO 41818 --- [http-nio-8080-exec-5] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 20:50:14.299  INFO 41818 --- [http-nio-8080-exec-5] c.b.c.s.g.filters.AzureADAuthFilter      : Expired token
+2018-01-01 20:50:35.440  INFO 41818 --- [http-nio-8080-exec-7] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 20:50:35.442  INFO 41818 --- [http-nio-8080-exec-7] c.b.c.s.g.c.RefreshTokenController       : it is valid
+2018-01-01 20:50:36.006  INFO 41818 --- [http-nio-8080-exec-7] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 20:50:54.504  INFO 41818 --- [http-nio-8080-exec-8] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 20:50:54.505  INFO 41818 --- [http-nio-8080-exec-8] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 20:50:54.505  INFO 41818 --- [http-nio-8080-exec-8] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 20:50:54.506  INFO 41818 --- [http-nio-8080-exec-8] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-01 20:50:54.512  INFO 41818 --- [http-nio-8080-exec-8] ication$$EnhancerBySpringCGLIB$$697e648a : Pinging the service
+2018-01-01 20:50:54.805  INFO 41818 --- [http-nio-8080-exec-8] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.DirectoryServices.User/@Element","odata.type":"Microsoft.DirectoryServices.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","deletionTimestamp":null,"accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"companyName":null,"country":null,"creationType":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","employeeId":null,"facsimileTelephoneNumber":null,"givenName":"Test","immutableId":null,"isCompromised":null,"jobTitle":null,"lastDirSyncTime":null,"legalAgeGroupClassification":null,"mail":null,"mailNickname":"test1","mobile":null,"onPremisesDistinguishedName":null,"onPremisesSecurityIdentifier":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"refreshTokensValidFromDateTime":"2017-12-28T19:42:52Z","showInAddressList":null,"signInNames":[],"sipProxyAddress":null,"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userIdentities":[],"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com","userType":"Member"}
+2018-01-01 20:50:54.806  INFO 41818 --- [http-nio-8080-exec-8] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-01 20:50:54.811  INFO 41818 --- [http-nio-8080-exec-8] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 20:51:23.319  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 41818 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 20:51:23.319  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 20:51:23.620  INFO 41818 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.317 seconds (JVM running for 7418.296)
+2018-01-01 20:51:30.392  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 20:51:30.393  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 20:51:30.393  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 20:51:30.394  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-01 20:51:30.396  INFO 41818 --- [http-nio-8080-exec-2] ication$$EnhancerBySpringCGLIB$$697e648a : Pinging the service
+2018-01-01 20:51:30.642  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.DirectoryServices.User/@Element","odata.type":"Microsoft.DirectoryServices.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","deletionTimestamp":null,"accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"companyName":null,"country":null,"creationType":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","employeeId":null,"facsimileTelephoneNumber":null,"givenName":"Test","immutableId":null,"isCompromised":null,"jobTitle":null,"lastDirSyncTime":null,"legalAgeGroupClassification":null,"mail":null,"mailNickname":"test1","mobile":null,"onPremisesDistinguishedName":null,"onPremisesSecurityIdentifier":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"refreshTokensValidFromDateTime":"2017-12-28T19:42:52Z","showInAddressList":null,"signInNames":[],"sipProxyAddress":null,"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userIdentities":[],"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com","userType":"Member"}
+2018-01-01 20:51:30.642  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-01 20:51:30.649  INFO 41818 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 21:01:00.442  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 50040 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 21:01:00.443  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 21:01:02.574  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 2.315 seconds (JVM running for 3.994)
+2018-01-01 21:01:07.748  INFO 50040 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 21:01:07.772  INFO 50040 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 21:01:07.772  INFO 50040 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 21:01:07.772  INFO 50040 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-01 21:01:07.797  INFO 50040 --- [http-nio-8080-exec-1] ication$$EnhancerBySpringCGLIB$$31c84749 : Pinging the service
+2018-01-01 21:01:08.054  INFO 50040 --- [http-nio-8080-exec-1] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.DirectoryServices.User/@Element","odata.type":"Microsoft.DirectoryServices.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","deletionTimestamp":null,"accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"companyName":null,"country":null,"creationType":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","employeeId":null,"facsimileTelephoneNumber":null,"givenName":"Test","immutableId":null,"isCompromised":null,"jobTitle":null,"lastDirSyncTime":null,"legalAgeGroupClassification":null,"mail":null,"mailNickname":"test1","mobile":null,"onPremisesDistinguishedName":null,"onPremisesSecurityIdentifier":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"refreshTokensValidFromDateTime":"2017-12-28T19:42:52Z","showInAddressList":null,"signInNames":[],"sipProxyAddress":null,"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userIdentities":[],"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com","userType":"Member"}
+2018-01-01 21:01:08.055  INFO 50040 --- [http-nio-8080-exec-1] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-01 21:01:08.125  INFO 50040 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 21:02:35.314  INFO 50040 --- [http-nio-8080-exec-5] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 21:02:35.315  INFO 50040 --- [http-nio-8080-exec-5] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 21:02:35.315  INFO 50040 --- [http-nio-8080-exec-5] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 21:02:35.315  INFO 50040 --- [http-nio-8080-exec-5] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-01 21:02:35.322  INFO 50040 --- [http-nio-8080-exec-5] ication$$EnhancerBySpringCGLIB$$31c84749 : Pinging the service
+2018-01-01 21:02:35.611  INFO 50040 --- [http-nio-8080-exec-5] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.DirectoryServices.User/@Element","odata.type":"Microsoft.DirectoryServices.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","deletionTimestamp":null,"accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"companyName":null,"country":null,"creationType":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","employeeId":null,"facsimileTelephoneNumber":null,"givenName":"Test","immutableId":null,"isCompromised":null,"jobTitle":null,"lastDirSyncTime":null,"legalAgeGroupClassification":null,"mail":null,"mailNickname":"test1","mobile":null,"onPremisesDistinguishedName":null,"onPremisesSecurityIdentifier":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"refreshTokensValidFromDateTime":"2017-12-28T19:42:52Z","showInAddressList":null,"signInNames":[],"sipProxyAddress":null,"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userIdentities":[],"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com","userType":"Member"}
+2018-01-01 21:02:35.612  INFO 50040 --- [http-nio-8080-exec-5] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-01 21:02:35.622  INFO 50040 --- [http-nio-8080-exec-5] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 21:03:08.129  INFO 50040 --- [http-nio-8080-exec-6] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 21:03:08.131  INFO 50040 --- [http-nio-8080-exec-6] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 21:03:08.131  INFO 50040 --- [http-nio-8080-exec-6] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 21:03:08.132  INFO 50040 --- [http-nio-8080-exec-6] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-01 21:03:08.184  INFO 50040 --- [http-nio-8080-exec-6] ication$$EnhancerBySpringCGLIB$$31c84749 : Pinging the service
+2018-01-01 21:03:08.773  INFO 50040 --- [http-nio-8080-exec-6] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.DirectoryServices.User/@Element","odata.type":"Microsoft.DirectoryServices.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","deletionTimestamp":null,"accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"companyName":null,"country":null,"creationType":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","employeeId":null,"facsimileTelephoneNumber":null,"givenName":"Test","immutableId":null,"isCompromised":null,"jobTitle":null,"lastDirSyncTime":null,"legalAgeGroupClassification":null,"mail":null,"mailNickname":"test1","mobile":null,"onPremisesDistinguishedName":null,"onPremisesSecurityIdentifier":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"refreshTokensValidFromDateTime":"2017-12-28T19:42:52Z","showInAddressList":null,"signInNames":[],"sipProxyAddress":null,"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userIdentities":[],"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com","userType":"Member"}
+2018-01-01 21:03:08.774  INFO 50040 --- [http-nio-8080-exec-6] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-01 21:03:08.782  INFO 50040 --- [http-nio-8080-exec-6] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 21:06:42.430  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 50040 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 21:06:42.430  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 21:06:42.964  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.559 seconds (JVM running for 344.404)
+2018-01-01 21:07:46.481  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 50040 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 21:07:46.482  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 21:07:46.935  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.48 seconds (JVM running for 408.379)
+2018-01-01 21:09:49.359  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 50040 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 21:09:49.359  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 21:09:49.796  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.458 seconds (JVM running for 531.246)
+2018-01-01 21:10:11.487  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 50040 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 21:10:11.487  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 21:10:11.881  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.413 seconds (JVM running for 553.332)
+2018-01-01 21:10:29.337  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 50040 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 21:10:29.338  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 21:10:29.771  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.453 seconds (JVM running for 571.224)
+2018-01-01 21:11:46.840  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 50040 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 21:11:46.840  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 21:11:47.190  INFO 50040 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.368 seconds (JVM running for 648.647)
+2018-01-01 21:27:05.683  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 52449 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 21:27:05.683  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 21:27:07.747  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 2.301 seconds (JVM running for 3.885)
+2018-01-01 21:27:10.331  INFO 52449 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 21:27:10.385  INFO 52449 --- [http-nio-8080-exec-2] c.b.c.s.g.c.RefreshTokenController       : it is valid
+2018-01-01 21:27:11.455  INFO 52449 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 21:27:35.486  INFO 52449 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 21:27:35.515  INFO 52449 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 21:27:35.515  INFO 52449 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 21:27:35.516  INFO 52449 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-01 21:27:35.524  INFO 52449 --- [http-nio-8080-exec-3] ication$$EnhancerBySpringCGLIB$$479b5139 : Pinging the service
+2018-01-01 21:27:35.845  INFO 52449 --- [http-nio-8080-exec-3] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.DirectoryServices.User/@Element","odata.type":"Microsoft.DirectoryServices.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","deletionTimestamp":null,"accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"companyName":null,"country":null,"creationType":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","employeeId":null,"facsimileTelephoneNumber":null,"givenName":"Test","immutableId":null,"isCompromised":null,"jobTitle":null,"lastDirSyncTime":null,"legalAgeGroupClassification":null,"mail":null,"mailNickname":"test1","mobile":null,"onPremisesDistinguishedName":null,"onPremisesSecurityIdentifier":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"refreshTokensValidFromDateTime":"2017-12-28T19:42:52Z","showInAddressList":null,"signInNames":[],"sipProxyAddress":null,"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userIdentities":[],"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com","userType":"Member"}
+2018-01-01 21:27:35.846  INFO 52449 --- [http-nio-8080-exec-3] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-01 21:27:35.868  INFO 52449 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 21:28:24.903  INFO 52449 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 21:28:24.905  INFO 52449 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 21:28:24.905  INFO 52449 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 21:28:24.906  INFO 52449 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-01 21:28:24.993  INFO 52449 --- [http-nio-8080-exec-4] c.b.c.s.g.c.FileUploadController         : Upload File method invoked
+2018-01-01 21:28:25.011  INFO 52449 --- [pool-12-thread-1] c.b.c.s.g.c.FileUploadController         : Starting ADW Transfer
+2018-01-01 21:28:25.015  INFO 52449 --- [pool-12-thread-1] c.b.c.supa.ground.utils.ADWTransferUtil  : Properties files loaded successfully: fta.hubspan.net:Outbox/089187496
+2018-01-01 21:28:25.015  INFO 52449 --- [pool-12-thread-1] c.b.c.s.g.c.FileUploadController         : /var/folders/q5/_s10dp1s6fz5dqv3ct8bgmfjv1h0vy/T/2230016226405428914/BoeingAMX_EI-DRC_AMX212_MMMX_MMCU_20170526_113801Z_2258.zip
+2018-01-01 21:28:25.256  WARN 52449 --- [pool-12-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:28:25.257  WARN 52449 --- [pool-12-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:28:25.258  WARN 52449 --- [pool-12-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:28:25.259  WARN 52449 --- [pool-12-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:28:25.263  WARN 52449 --- [pool-12-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:28:25.269  WARN 52449 --- [pool-12-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:28:25.269  WARN 52449 --- [pool-12-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:28:25.269  WARN 52449 --- [pool-12-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:28:25.270  WARN 52449 --- [pool-12-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:28:25.273  WARN 52449 --- [pool-12-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:28:25.274  WARN 52449 --- [pool-12-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:28:25.274  WARN 52449 --- [pool-12-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:28:25.275  WARN 52449 --- [pool-12-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:28:25.276  WARN 52449 --- [pool-12-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:28:25.278  WARN 52449 --- [pool-12-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size or default parameters
+2018-01-01 21:28:25.278  WARN 52449 --- [pool-12-thread-1] net.schmizz.sshj.DefaultConfig           : Disabling high-strength ciphers: cipher strengths apparently limited by JCE policy
+2018-01-01 21:28:25.329  INFO 52449 --- [pool-12-thread-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.DirectoryServices.User/@Element","odata.type":"Microsoft.DirectoryServices.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","deletionTimestamp":null,"accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"companyName":null,"country":null,"creationType":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","employeeId":null,"facsimileTelephoneNumber":null,"givenName":"Test","immutableId":null,"isCompromised":null,"jobTitle":null,"lastDirSyncTime":null,"legalAgeGroupClassification":null,"mail":null,"mailNickname":"test1","mobile":null,"onPremisesDistinguishedName":null,"onPremisesSecurityIdentifier":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"refreshTokensValidFromDateTime":"2017-12-28T19:42:52Z","showInAddressList":null,"signInNames":[],"sipProxyAddress":null,"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userIdentities":[],"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com","userType":"Member"}
+2018-01-01 21:28:25.330  INFO 52449 --- [pool-12-thread-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-01 21:28:25.338  INFO 52449 --- [pool-12-thread-2] c.b.c.s.g.c.FileUploadController         : Starting Azure upload
+2018-01-01 21:28:29.295  INFO 52449 --- [pool-12-thread-1] c.b.c.supa.ground.utils.ADWTransferUtil  : ADWTransfer: PUT
+2018-01-01 21:28:41.942 ERROR 52449 --- [pool-12-thread-2] c.b.c.s.ground.utils.AzureStorageUtil    : Exception encountered: 
+2018-01-01 21:28:41.943 ERROR 52449 --- [pool-12-thread-2] c.b.c.s.ground.utils.AzureStorageUtil    : No serializer found for class com.boeing.cas.supa.ground.pojos.UserCondensed and no properties discovered to create BeanSerializer (to avoid exception, disable SerializationFeature.FAIL_ON_EMPTY_BEANS) ) (through reference chain: com.boeing.cas.supa.ground.utils.AzureStorageMessage["uploadedBy"])
+2018-01-01 21:28:41.943  INFO 52449 --- [pool-12-thread-2] c.b.c.s.g.c.FileUploadController         : Upload to Azure complete: false
+2018-01-01 21:28:50.045  INFO 52449 --- [pool-12-thread-1] c.b.c.supa.ground.utils.ADWTransferUtil  : ADWTransfer: PUT DONE
+2018-01-01 21:28:50.225 ERROR 52449 --- [reader] n.schmizz.sshj.transport.TransportImpl   : Dying because - {}
+
+net.schmizz.sshj.transport.TransportException: Broken transport; encountered EOF
+	at net.schmizz.sshj.transport.Reader.run(Reader.java:58)
+
+2018-01-01 21:28:50.229  INFO 52449 --- [pool-12-thread-1] c.b.c.s.g.c.FileUploadController         : Transfer to ADW complete: true
+2018-01-01 21:28:50.232  INFO 52449 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 21:31:59.262  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 52449 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 21:31:59.263  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 21:31:59.792  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.564 seconds (JVM running for 295.946)
+2018-01-01 21:32:02.010  INFO 52449 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-01 21:32:02.012  INFO 52449 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-01 21:32:02.012  INFO 52449 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-01 21:32:02.013  INFO 52449 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-01 21:32:02.048  INFO 52449 --- [http-nio-8080-exec-2] c.b.c.s.g.c.FileUploadController         : Upload File method invoked
+2018-01-01 21:32:02.059  INFO 52449 --- [pool-15-thread-1] c.b.c.s.g.c.FileUploadController         : Starting ADW Transfer
+2018-01-01 21:32:02.060  INFO 52449 --- [pool-15-thread-1] c.b.c.supa.ground.utils.ADWTransferUtil  : Properties files loaded successfully: fta.hubspan.net:Outbox/089187496
+2018-01-01 21:32:02.060  INFO 52449 --- [pool-15-thread-1] c.b.c.s.g.c.FileUploadController         : /var/folders/q5/_s10dp1s6fz5dqv3ct8bgmfjv1h0vy/T/9188142323199626875/BoeingAMX_EI-DRC_AMX212_MMMX_MMCU_20170526_113801Z_2258.zip
+2018-01-01 21:32:02.061  WARN 52449 --- [pool-15-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:32:02.062  WARN 52449 --- [pool-15-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:32:02.062  WARN 52449 --- [pool-15-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:32:02.062  WARN 52449 --- [pool-15-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:32:02.063  WARN 52449 --- [pool-15-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:32:02.063  WARN 52449 --- [pool-15-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:32:02.064  WARN 52449 --- [pool-15-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:32:02.064  WARN 52449 --- [pool-15-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:32:02.064  WARN 52449 --- [pool-15-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:32:02.065  WARN 52449 --- [pool-15-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:32:02.065  WARN 52449 --- [pool-15-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:32:02.066  WARN 52449 --- [pool-15-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:32:02.066  WARN 52449 --- [pool-15-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:32:02.066  WARN 52449 --- [pool-15-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-01 21:32:02.067  WARN 52449 --- [pool-15-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size or default parameters
+2018-01-01 21:32:02.067  WARN 52449 --- [pool-15-thread-1] net.schmizz.sshj.DefaultConfig           : Disabling high-strength ciphers: cipher strengths apparently limited by JCE policy
+2018-01-01 21:32:02.376  INFO 52449 --- [pool-15-thread-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.DirectoryServices.User/@Element","odata.type":"Microsoft.DirectoryServices.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","deletionTimestamp":null,"accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"companyName":null,"country":null,"creationType":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","employeeId":null,"facsimileTelephoneNumber":null,"givenName":"Test","immutableId":null,"isCompromised":null,"jobTitle":null,"lastDirSyncTime":null,"legalAgeGroupClassification":null,"mail":null,"mailNickname":"test1","mobile":null,"onPremisesDistinguishedName":null,"onPremisesSecurityIdentifier":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"refreshTokensValidFromDateTime":"2017-12-28T19:42:52Z","showInAddressList":null,"signInNames":[],"sipProxyAddress":null,"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userIdentities":[],"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com","userType":"Member"}
+2018-01-01 21:32:02.377  INFO 52449 --- [pool-15-thread-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-01 21:32:02.383  INFO 52449 --- [pool-15-thread-2] c.b.c.s.g.c.FileUploadController         : Starting Azure upload
+2018-01-01 21:32:04.630  INFO 52449 --- [pool-15-thread-1] c.b.c.supa.ground.utils.ADWTransferUtil  : ADWTransfer: PUT
+2018-01-01 21:32:18.792  INFO 52449 --- [pool-15-thread-2] c.b.c.s.g.c.FileUploadController         : Upload to Azure complete: true
+2018-01-01 21:32:26.979  INFO 52449 --- [pool-15-thread-1] c.b.c.supa.ground.utils.ADWTransferUtil  : ADWTransfer: PUT DONE
+2018-01-01 21:32:27.173  INFO 52449 --- [pool-15-thread-1] c.b.c.s.g.c.FileUploadController         : Transfer to ADW complete: true
+2018-01-01 21:32:27.178  INFO 52449 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...

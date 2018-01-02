@@ -490,4 +490,21 @@ public class User extends DirectoryObject {
 	public ArrayList<String> getOtherMails() {
 		return otherMails;
 	}
+
+
+	@Override
+	public String toString() {
+		return "User [objectId=" + objectId + ", objectType=" + objectType + ", accountEnabled=" + accountEnabled
+				+ ", city=" + city + ", country=" + country + ", department=" + department + ", dirSyncEnabled="
+				+ dirSyncEnabled + ", displayName=" + displayName + ", facsimileTelephoneNumber="
+				+ facsimileTelephoneNumber + ", givenName=" + givenName + ", jobTitle=" + jobTitle
+				+ ", lastDirSyncTime=" + lastDirSyncTime + ", mail=" + mail + ", mailNickname=" + mailNickname
+				+ ", mobile=" + mobile + ", otherMails=" + otherMails + ", password=" + password + ", passwordPolicies="
+				+ passwordPolicies + ", physicalDeliveryOfficeName=" + physicalDeliveryOfficeName + ", postalCode="
+				+ postalCode + ", preferredLanguage=" + preferredLanguage + ", state=" + state + ", streetAddress="
+				+ streetAddress + ", surname=" + surname + ", telephoneNumber=" + telephoneNumber + ", usageLocation="
+				+ usageLocation + ", userPrincipalName=" + userPrincipalName + ", groups=" + groups + ", roles=" + roles
+				+ "]";
+	}
+	
 }

@@ -1,8 +1,13 @@
 package com.boeing.cas.supa.ground.utils;
 
+import com.boeing.cas.supa.ground.pojos.UserCondensed;
+
 public class AzureStorageMessage {
-	String containerName;
-	String fileName;
+	protected String containerName;
+	protected String fileName;
+	protected UserCondensed uploadedBy;
+	protected long uploadedOn;
+
 
 	public String getContainerName() {
 		return containerName;
@@ -18,6 +23,22 @@ public class AzureStorageMessage {
 
 	public void setFileName(String fileName) {
 		this.fileName = fileName;
+	}
+	
+	public UserCondensed getUploadedBy() {
+		return uploadedBy;
+	}
+
+	public long getUploadedOn() {
+		return uploadedOn;
+	}
+
+	public void setUploadedBy(UserCondensed uploadedBy) {
+		this.uploadedBy = uploadedBy;
+	}
+
+	public void setUploadedOn(long uploadedOn) {
+		this.uploadedOn = uploadedOn;
 	}
 
 	@Override

@@ -27,7 +27,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.boeing.cas.supa.ground.helpers.HttpClientHelper;
 import com.boeing.cas.supa.ground.pojos.UploadMessage;
+import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.utils.ADWTransferUtil;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 
@@ -60,7 +62,7 @@ public class FileUploadController {
 			return new ResponseEntity<>(fum, HttpStatus.BAD_REQUEST);
 		}
 
-
+		
 		Path uploadFolderPath = Paths.get(uploadFolder + File.separator + uploadfile.getOriginalFilename());
 		
 		//Adding file to ADW
@@ -90,11 +92,12 @@ public class FileUploadController {
 		Future<Boolean> azureFuture = es.submit(new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
+				User user = HttpClientHelper.getUserInfoFromHeader(httpRequest);
 				Boolean upload = false;
 				try {
 					logger.info("Starting Azure upload");
 					AzureStorageUtil asu = new AzureStorageUtil();
-					upload = asu.uploadFile(uploadFolderPath.toFile().getAbsolutePath(), uploadfile.getOriginalFilename());
+					upload = asu.uploadFile(uploadFolderPath.toFile().getAbsolutePath(), uploadfile.getOriginalFilename(), user);
 					logger.info("Upload to Azure complete: " + upload);
 				}
 				catch(Exception e) {

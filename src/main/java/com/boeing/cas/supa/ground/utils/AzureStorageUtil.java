@@ -6,11 +6,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
+import java.util.ArrayList;
 import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.boeing.cas.supa.ground.pojos.User;
+import com.boeing.cas.supa.ground.pojos.UserCondensed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.StorageException;
@@ -35,7 +38,7 @@ public class AzureStorageUtil {
 			logger.error(e.getMessage());
 		}
 	}
-	public boolean uploadFile(String fileLocation, String fileName){
+	public boolean uploadFile(String fileLocation, String fileName, User user){
 		String containerName = fileName.split("_")[0].toLowerCase();		
 		boolean rval = false;
 		
@@ -67,6 +70,8 @@ public class AzureStorageUtil {
             AzureStorageMessage msg = new AzureStorageMessage();
             msg.setContainerName(containerName);
             msg.setFileName(fileName);
+            msg.setUploadedBy(new UserCondensed(user.getSurname(), user.getGivenName(), user.getDisplayName(), user.getOtherMails()));
+            msg.setUploadedOn(System.currentTimeMillis()/1000);
             ObjectMapper mapper = new ObjectMapper();
             String jsonMessage = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(msg);
             

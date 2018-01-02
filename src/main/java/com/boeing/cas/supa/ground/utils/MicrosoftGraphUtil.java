@@ -3,8 +3,12 @@ package com.boeing.cas.supa.ground.utils;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,21 +32,23 @@ public class MicrosoftGraphUtil {
         User userClass = null;
 		URL url;
 		try {
-			url = new URL(String.format("https://graph.windows.net/%s/users/%s?api-version=2013-04-05", tenant,uniqueId));
+			url = new URL(String.format("https://graph.windows.net/%s/users/%s", tenant,uniqueId));
 			logger.debug("url: " + url.toString());
 	        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 	        // Set the appropriate header fields in the request header.
-	        conn.setRequestProperty("api-version", "2013-04-05");
+	        conn.setRequestProperty("api-version", "1.6");
 	        conn.setRequestProperty("Authorization", accessToken);
 	        conn.setRequestProperty("Accept", "application/json;odata=minimalmetadata");
 	        String goodRespStr = HttpClientHelper.getResponseStringFromConn(conn, true);
+	        System.out.println(goodRespStr);
 	        logger.info("goodRespStr ->" + goodRespStr);
 	        int responseCode = conn.getResponseCode();
 	        logger.info("responseCode: " + responseCode);
 	        ObjectMapper objectMapper = new ObjectMapper();
 	        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-	        ObjectReader objectReader = objectMapper.reader(User.class);
+	        @SuppressWarnings("deprecation")
+			ObjectReader objectReader = objectMapper.reader(User.class);
 	        userClass = objectReader.readValue(goodRespStr);
 	        return userClass;
 		} catch (MalformedURLException e) {
@@ -53,4 +59,5 @@ public class MicrosoftGraphUtil {
 		return userClass;
         
     }
+	
 }

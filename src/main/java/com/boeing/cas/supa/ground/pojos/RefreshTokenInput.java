@@ -3,6 +3,7 @@ package com.boeing.cas.supa.ground.pojos;
 public class RefreshTokenInput {
 	protected String refreshToken;
 	
+	@SuppressWarnings("unused")
 	private RefreshTokenInput(){
 		// private constructor hides implicit public one
 	}
