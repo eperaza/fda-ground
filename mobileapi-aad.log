@@ -12029,3 +12029,18 @@ net.schmizz.sshj.transport.TransportException: Broken transport; encountered EOF
 2018-01-01 21:32:26.979  INFO 52449 --- [pool-15-thread-1] c.b.c.supa.ground.utils.ADWTransferUtil  : ADWTransfer: PUT DONE
 2018-01-01 21:32:27.173  INFO 52449 --- [pool-15-thread-1] c.b.c.s.g.c.FileUploadController         : Transfer to ADW complete: true
 2018-01-01 21:32:27.178  INFO 52449 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-01 21:40:15.869  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local with PID 52449 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 21:40:15.870  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 21:40:16.343  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.497 seconds (JVM running for 793.898)
+2018-01-01 21:41:04.259  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local with PID 52449 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 21:41:04.260  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 21:41:04.701  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.468 seconds (JVM running for 842.258)
+2018-01-01 21:41:49.579  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local with PID 52449 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 21:41:49.579  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 21:41:49.988  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.431 seconds (JVM running for 887.547)
+2018-01-01 21:41:52.506  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local with PID 52449 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 21:41:52.506  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 21:41:52.903  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.416 seconds (JVM running for 890.462)
+2018-01-01 21:42:22.877  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local with PID 52449 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-01 21:42:22.878  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-01 21:42:23.328  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.471 seconds (JVM running for 920.888)

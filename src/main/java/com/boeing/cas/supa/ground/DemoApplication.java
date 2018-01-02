@@ -35,8 +35,6 @@ public class DemoApplication {
 		telemetryClient.trackEvent("MobileBackendAPI main() in ping");
 		TelemetryConfiguration.getActive().getChannel().setDeveloperMode(true);
 		logger.info("Pinging the service");
-		User user = HttpClientHelper.getUserInfoFromHeader(httpRequest);
-		System.out.println(user.toString());
 		Map<String, Object> responseMap = new HashMap<>();
 		responseMap.put("greeting", "hello world");
 		return new ResponseEntity<>(responseMap, HttpStatus.OK);

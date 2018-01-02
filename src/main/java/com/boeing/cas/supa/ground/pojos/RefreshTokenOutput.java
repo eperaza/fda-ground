@@ -8,10 +8,12 @@ public class RefreshTokenOutput {
 	protected String access_token;
 	protected String refresh_token;
 	
-	@SuppressWarnings("unused")
-	private RefreshTokenOutput(){
+
+	public  RefreshTokenOutput() {
 		// private constructor hides implicit public one
+		this(null, null, null, null, null, null);
 	}
+
 	public RefreshTokenOutput(String token_type, String expires_in, String expires_on, String not_before,
 			String access_token, String refresh_token) {
 		this.token_type = token_type;

@@ -48,10 +48,9 @@ public class ADWTransferUtil {
 		if(host != null)
 		{
 			ssh = new SSHClient();
-			try
-			{
+			try {
 
-				ssh.loadKnownHosts();
+				//ssh.loadKnownHosts();
 				ssh.addHostKeyVerifier("39:45:c9:85:ff:8f:f5:d9:a3:a0:23:ed:02:f8:cc:b9");
 				ssh.connect(host);
 				ssh.authPassword(usr, pwd);
