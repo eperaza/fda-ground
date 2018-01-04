@@ -12044,3 +12044,143 @@ net.schmizz.sshj.transport.TransportException: Broken transport; encountered EOF
 2018-01-01 21:42:22.877  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local with PID 52449 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
 2018-01-01 21:42:22.878  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
 2018-01-01 21:42:23.328  INFO 52449 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.471 seconds (JVM running for 920.888)
+2018-01-02 11:57:46.142  INFO 14782 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 14782 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-02 11:57:46.143  INFO 14782 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-02 11:57:48.305  INFO 14782 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 2.412 seconds (JVM running for 4.136)
+2018-01-02 11:57:51.019  INFO 14782 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-02 11:57:51.079  INFO 14782 --- [http-nio-8080-exec-1] c.b.c.s.g.controllers.LoginController    : it is valid
+2018-01-02 11:57:52.082  INFO 14782 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-02 11:58:12.058  INFO 14782 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-02 11:58:12.064  INFO 14782 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-02 11:58:12.064  INFO 14782 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-02 11:58:12.065  INFO 14782 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-02 11:58:12.078  INFO 14782 --- [http-nio-8080-exec-3] lication$$EnhancerBySpringCGLIB$$ee7c78b : Pinging the service
+2018-01-02 11:58:12.412  INFO 14782 --- [http-nio-8080-exec-3] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.WindowsAzure.ActiveDirectory.User/@Element","odata.type":"Microsoft.WindowsAzure.ActiveDirectory.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"country":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","facsimileTelephoneNumber":null,"givenName":"Test","jobTitle":null,"lastDirSyncTime":null,"mail":null,"mailNickname":"test1","mobile":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com"}
+2018-01-02 11:58:12.413  INFO 14782 --- [http-nio-8080-exec-3] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-02 11:58:12.541  INFO 14782 --- [http-nio-8080-exec-3] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects","value":[{"odata.type":"Microsoft.WindowsAzure.ActiveDirectory.Group","objectType":"Group","objectId":"db80b523-e576-420b-8668-164752df9ef6","description":"Aero Mexico","dirSyncEnabled":null,"displayName":"amx","lastDirSyncTime":null,"mail":null,"mailNickname":"465251bb-797a-4897-aaf4-df67226a57f0","mailEnabled":false,"provisioningErrors":[],"proxyAddresses":[],"securityEnabled":true},{"odata.type":"Microsoft.WindowsAzure.ActiveDirectory.Group","objectType":"Group","objectId":"c308d29c-6520-49ce-8e4b-e26d6f6d2b3d","description":null,"dirSyncEnabled":null,"displayName":"Test","lastDirSyncTime":null,"mail":null,"mailNickname":"8fc120cc-e409-42fe-adab-99f0c154c8c2","mailEnabled":false,"provisioningErrors":[],"proxyAddresses":[],"securityEnabled":true}]}
+2018-01-02 11:58:12.542  INFO 14782 --- [http-nio-8080-exec-3] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-02 11:58:12.549  INFO 14782 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-02 12:26:08.438  INFO 14782 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 14782 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-02 12:26:08.439  INFO 14782 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-02 12:26:09.170  INFO 14782 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.76 seconds (JVM running for 1705.091)
+2018-01-02 12:29:20.311  INFO 14782 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 14782 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-02 12:29:20.311  INFO 14782 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-02 12:29:20.742  INFO 14782 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.452 seconds (JVM running for 1896.674)
+2018-01-02 12:29:43.470  INFO 14782 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.attlocal.net with PID 14782 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-02 12:29:43.471  INFO 14782 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-02 12:29:43.909  INFO 14782 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.46 seconds (JVM running for 1919.843)
+2018-01-04 11:59:07.618  INFO 66971 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on a5605027.aub.boeing.com with PID 66971 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 11:59:07.619  INFO 66971 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 11:59:09.959  INFO 66971 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 2.551 seconds (JVM running for 4.454)
+2018-01-04 12:00:00.159  INFO 66971 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-04 12:00:00.221  INFO 66971 --- [http-nio-8080-exec-1] c.b.c.s.g.controllers.LoginController    : it is valid
+2018-01-04 12:00:00.348 ERROR 66971 --- [pool-13-thread-1] c.m.aad.adal4j.AuthenticationContext     : [Correlation ID: 1c983faf-0a15-40e8-b91f-bd4613c0c4ff] Request to acquire token failed.
+
+java.net.UnknownHostException: login.microsoftonline.com
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:184)
+	at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
+	at java.net.Socket.connect(Socket.java:589)
+	at sun.security.ssl.SSLSocketImpl.connect(SSLSocketImpl.java:656)
+	at sun.security.ssl.BaseSSLSocketImpl.connect(BaseSSLSocketImpl.java:173)
+	at sun.net.NetworkClient.doConnect(NetworkClient.java:180)
+	at sun.net.www.http.HttpClient.openServer(HttpClient.java:432)
+	at sun.net.www.http.HttpClient.openServer(HttpClient.java:527)
+	at sun.net.www.protocol.https.HttpsClient.<init>(HttpsClient.java:275)
+	at sun.net.www.protocol.https.HttpsClient.New(HttpsClient.java:371)
+	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.getNewHttpClient(AbstractDelegateHttpsURLConnection.java:191)
+	at sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:1104)
+	at sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:998)
+	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.connect(AbstractDelegateHttpsURLConnection.java:177)
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1512)
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1440)
+	at java.net.HttpURLConnection.getResponseCode(HttpURLConnection.java:480)
+	at sun.net.www.protocol.https.HttpsURLConnectionImpl.getResponseCode(HttpsURLConnectionImpl.java:338)
+	at com.microsoft.aad.adal4j.HttpHelper.readResponseFromConnection(HttpHelper.java:74)
+	at com.microsoft.aad.adal4j.HttpHelper.getResponse(HttpHelper.java:176)
+	at com.microsoft.aad.adal4j.HttpHelper.executeGetRequest(HttpHelper.java:150)
+	at com.microsoft.aad.adal4j.HttpHelper.executeHttpGet(HttpHelper.java:46)
+	at com.microsoft.aad.adal4j.UserDiscoveryRequest.execute(UserDiscoveryRequest.java:44)
+	at com.microsoft.aad.adal4j.AuthenticationContext.processPasswordGrant(AuthenticationContext.java:835)
+	at com.microsoft.aad.adal4j.AuthenticationContext.access$000(AuthenticationContext.java:64)
+	at com.microsoft.aad.adal4j.AuthenticationContext$1.call(AuthenticationContext.java:171)
+	at com.microsoft.aad.adal4j.AuthenticationContext$1.call(AuthenticationContext.java:161)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at java.lang.Thread.run(Thread.java:745)
+
+2018-01-04 12:00:00.352  INFO 66971 --- [http-nio-8080-exec-1] c.b.c.s.g.controllers.LoginController    : login called
+2018-01-04 12:00:00.358  INFO 66971 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-04 12:00:19.180  INFO 66971 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-04 12:00:19.183  INFO 66971 --- [http-nio-8080-exec-3] c.b.c.s.g.controllers.LoginController    : it is valid
+2018-01-04 12:00:20.336  INFO 66971 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-04 12:00:46.468  INFO 66971 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-04 12:00:46.472  INFO 66971 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-04 12:00:46.472  INFO 66971 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-04 12:00:46.473  INFO 66971 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-04 12:00:46.481  INFO 66971 --- [http-nio-8080-exec-4] ication$$EnhancerBySpringCGLIB$$bb424e77 : Pinging the service
+2018-01-04 12:00:48.228  INFO 66971 --- [http-nio-8080-exec-4] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.WindowsAzure.ActiveDirectory.User/@Element","odata.type":"Microsoft.WindowsAzure.ActiveDirectory.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"country":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","facsimileTelephoneNumber":null,"givenName":"Test","jobTitle":null,"lastDirSyncTime":null,"mail":null,"mailNickname":"test1","mobile":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com"}
+2018-01-04 12:00:48.229  INFO 66971 --- [http-nio-8080-exec-4] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-04 12:01:26.937  INFO 66971 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 66971 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 12:01:26.938  INFO 66971 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 12:01:27.503  INFO 66971 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.596 seconds (JVM running for 142.006)
+2018-01-04 12:01:31.082  INFO 66971 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 66971 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 12:01:31.083  INFO 66971 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 12:01:31.522  INFO 66971 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.461 seconds (JVM running for 146.025)
+2018-01-04 12:01:44.175  INFO 66971 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 66971 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 12:01:44.175  INFO 66971 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 12:01:44.588  INFO 66971 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.434 seconds (JVM running for 159.092)
+2018-01-04 12:02:09.339  INFO 66971 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 66971 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 12:02:09.340  INFO 66971 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 12:02:09.733  INFO 66971 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.414 seconds (JVM running for 184.238)
+2018-01-04 12:02:17.892  INFO 66971 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-04 12:02:17.893  INFO 66971 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-04 12:02:17.894  INFO 66971 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-04 12:02:17.894  INFO 66971 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-04 12:02:17.898  INFO 66971 --- [http-nio-8080-exec-2] ication$$EnhancerBySpringCGLIB$$bb424e77 : Pinging the service
+2018-01-04 12:02:18.523  INFO 66971 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.WindowsAzure.ActiveDirectory.User/@Element","odata.type":"Microsoft.WindowsAzure.ActiveDirectory.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"country":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","facsimileTelephoneNumber":null,"givenName":"Test","jobTitle":null,"lastDirSyncTime":null,"mail":null,"mailNickname":"test1","mobile":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com"}
+2018-01-04 12:02:18.524  INFO 66971 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-04 12:03:19.242  INFO 67223 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 67223 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 12:03:19.243  INFO 67223 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 12:03:22.057  INFO 67223 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 3.051 seconds (JVM running for 4.894)
+2018-01-04 12:03:30.716  INFO 67223 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-04 12:03:40.660  INFO 67223 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-04 12:03:40.660  INFO 67223 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-04 12:03:40.660  INFO 67223 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-04 12:03:40.698  INFO 67223 --- [http-nio-8080-exec-2] ication$$EnhancerBySpringCGLIB$$125a1194 : Pinging the service
+2018-01-04 12:03:41.256  INFO 67223 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.WindowsAzure.ActiveDirectory.User/@Element","odata.type":"Microsoft.WindowsAzure.ActiveDirectory.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"country":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","facsimileTelephoneNumber":null,"givenName":"Test","jobTitle":null,"lastDirSyncTime":null,"mail":null,"mailNickname":"test1","mobile":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com"}
+2018-01-04 12:03:41.257  INFO 67223 --- [http-nio-8080-exec-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-04 12:04:41.035  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 67261 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 12:04:41.035  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 12:04:44.062  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 3.299 seconds (JVM running for 5.014)
+2018-01-04 12:04:49.660  INFO 67261 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-04 12:04:54.965  INFO 67261 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-04 12:04:54.966  INFO 67261 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-04 12:04:54.966  INFO 67261 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-04 12:04:54.996  INFO 67261 --- [http-nio-8080-exec-1] ication$$EnhancerBySpringCGLIB$$2ca3c633 : Pinging the service
+2018-01-04 12:04:55.540  INFO 67261 --- [http-nio-8080-exec-1] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.WindowsAzure.ActiveDirectory.User/@Element","odata.type":"Microsoft.WindowsAzure.ActiveDirectory.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"country":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","facsimileTelephoneNumber":null,"givenName":"Test","jobTitle":null,"lastDirSyncTime":null,"mail":null,"mailNickname":"test1","mobile":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com"}
+2018-01-04 12:04:55.541  INFO 67261 --- [http-nio-8080-exec-1] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-04 12:05:34.893  INFO 67261 --- [http-nio-8080-exec-1] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects","value":[{"odata.type":"Microsoft.WindowsAzure.ActiveDirectory.Group","objectType":"Group","objectId":"db80b523-e576-420b-8668-164752df9ef6","description":"Aero Mexico","dirSyncEnabled":null,"displayName":"amx","lastDirSyncTime":null,"mail":null,"mailNickname":"465251bb-797a-4897-aaf4-df67226a57f0","mailEnabled":false,"provisioningErrors":[],"proxyAddresses":[],"securityEnabled":true},{"odata.type":"Microsoft.WindowsAzure.ActiveDirectory.Group","objectType":"Group","objectId":"c308d29c-6520-49ce-8e4b-e26d6f6d2b3d","description":null,"dirSyncEnabled":null,"displayName":"Test","lastDirSyncTime":null,"mail":null,"mailNickname":"8fc120cc-e409-42fe-adab-99f0c154c8c2","mailEnabled":false,"provisioningErrors":[],"proxyAddresses":[],"securityEnabled":true}]}
+2018-01-04 12:05:34.895  INFO 67261 --- [http-nio-8080-exec-1] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-04 12:05:34.925  INFO 67261 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-04 12:08:46.943  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 67261 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 12:08:46.944  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 12:08:47.841  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.929 seconds (JVM running for 248.807)
+2018-01-04 12:08:58.391  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 67261 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 12:08:58.392  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 12:08:59.164  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.801 seconds (JVM running for 260.13)
+2018-01-04 12:09:30.315  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 67261 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 12:09:30.316  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 12:09:31.022  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.732 seconds (JVM running for 291.99)
+2018-01-04 12:09:51.623  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 67261 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 12:09:51.623  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 12:09:52.318  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.723 seconds (JVM running for 313.287)
+2018-01-04 12:10:52.231  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 67261 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 12:10:52.231  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 12:10:52.894  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.688 seconds (JVM running for 373.866)
+2018-01-04 12:11:39.730  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 67261 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 12:11:39.731  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 12:11:40.354  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.646 seconds (JVM running for 421.33)
+2018-01-04 12:11:59.339  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 67261 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 12:11:59.339  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 12:11:59.965  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.65 seconds (JVM running for 440.941)

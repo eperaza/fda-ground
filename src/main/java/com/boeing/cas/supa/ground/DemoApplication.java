@@ -36,6 +36,8 @@ public class DemoApplication {
 		TelemetryConfiguration.getActive().getChannel().setDeveloperMode(true);
 		logger.info("Pinging the service");
 		Map<String, Object> responseMap = new HashMap<>();
+		User user = HttpClientHelper.getUserInfoFromHeader(httpRequest);
+		System.out.println(user.getGivenName());
 		responseMap.put("greeting", "hello world");
 		return new ResponseEntity<>(responseMap, HttpStatus.OK);
 	}

@@ -66,7 +66,7 @@ public class User extends DirectoryObject {
 	 * below 2 properties are for future use
 	 */
 	// The groups holds a list of group entity this user belongs to.
-	private ArrayList<Group> groups;
+	private ArrayList<com.boeing.cas.supa.ground.pojos.Group> groups;
 
 	// The roles holds a list of role entity this user belongs to.
 	private ArrayList<Group> roles;
@@ -77,7 +77,7 @@ public class User extends DirectoryObject {
 	 */
 	public User() {
 
-		this.groups = new ArrayList<Group>();
+		this.groups = new ArrayList<com.boeing.cas.supa.ground.pojos.Group>();
 		this.roles = new ArrayList<Group>();
 	}
 
@@ -472,12 +472,12 @@ public class User extends DirectoryObject {
 		this.accountEnabled = accountEnabled;
 	}
 
-	public ArrayList<Group> getGroups() {
+	public ArrayList<com.boeing.cas.supa.ground.pojos.Group> getGroups() {
 		return groups;
 	}
 
-	public void setGroups(ArrayList<Group> groups) {
-		this.groups = groups;
+	public void setGroups(ArrayList<com.boeing.cas.supa.ground.pojos.Group> group) {
+		this.groups = group;
 	}
 
 	public ArrayList<Group> getRoles() {

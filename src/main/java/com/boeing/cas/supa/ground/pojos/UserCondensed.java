@@ -7,11 +7,13 @@ public class UserCondensed {
 	protected String givenName;
 	protected String displayName;
 	protected ArrayList<String> otherMails;
-	public UserCondensed(String surname, String givenName, String displayName, ArrayList<String> otherMails) {
+	protected ArrayList<Group> groups;
+	public UserCondensed(String surname, String givenName, String displayName, ArrayList<String> otherMails, ArrayList<Group> groups) {
 		this.surname = surname;
 		this.givenName = givenName;
 		this.displayName = displayName;
 		this.otherMails = otherMails;
+		this.groups = groups;
 	}
 	public String getSurname() {
 		return surname;
@@ -36,6 +38,12 @@ public class UserCondensed {
 	}
 	public void setOtherMails(ArrayList<String> otherMails) {
 		this.otherMails = otherMails;
+	}
+	public ArrayList<Group> getGroups() {
+		return groups;
+	}
+	public void setGroups(ArrayList<Group> groups) {
+		this.groups = groups;
 	}
 	
 

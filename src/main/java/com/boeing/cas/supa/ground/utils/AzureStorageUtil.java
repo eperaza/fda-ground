@@ -70,7 +70,7 @@ public class AzureStorageUtil {
             AzureStorageMessage msg = new AzureStorageMessage();
             msg.setContainerName(containerName);
             msg.setFileName(fileName);
-            msg.setUploadedBy(new UserCondensed(user.getSurname(), user.getGivenName(), user.getDisplayName(), user.getOtherMails()));
+            msg.setUploadedBy(new UserCondensed(user.getSurname(), user.getGivenName(), user.getDisplayName(), user.getOtherMails(), user.getGroups()));
             msg.setUploadedOn(System.currentTimeMillis()/1000);
             ObjectMapper mapper = new ObjectMapper();
             String jsonMessage = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(msg);

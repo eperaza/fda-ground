@@ -24,10 +24,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.boeing.cas.supa.ground.pojos.Group;
 import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.utils.HeaderMapRequestWrapper;
 import com.boeing.cas.supa.ground.utils.MicrosoftGraphUtil;
@@ -68,6 +71,8 @@ public class HttpClientHelper {
 		String uniqueId = getUniqueIdFromJWT(tokenName);
 		MicrosoftGraphUtil mgu = new MicrosoftGraphUtil("fdacustomertest.onmicrosoft.com", tokenName.replaceFirst("Bearer ", ""));
 		User user = mgu.getUsernamesFromGraph(uniqueId);
+		ArrayList<Group> group = mgu.getGroupFromGraph(uniqueId);
+		user.setGroups(group);
     	return user;
     }
     private static String getUniqueIdFromJWT(String xAuth) {
