@@ -5,7 +5,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,28 +27,26 @@ public class MicrosoftGraphUtil {
 		this.accessToken = accessToken;
 	}
 	public User getUsernamesFromGraph(String uniqueId) {
-        logger.debug("get user object info from graph");
+        logger.debug("getting user object object info from graph");
         User userClass = null;
 		URL url;
 		try {
 			url = new URL(String.format("https://graph.windows.net/%s/users/%s?api-version=2013-04-05", tenant,uniqueId));
-			logger.debug("url: " + url.toString());
 	        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 	        // Set the appropriate header fields in the request header.
 	        conn.setRequestProperty("api-version", "2013-04-05");
 	        conn.setRequestProperty("Authorization", accessToken);
 	        conn.setRequestProperty("Accept", "application/json;odata=minimalmetadata");
 	        String goodRespStr = HttpClientHelper.getResponseStringFromConn(conn, true);
-	        System.out.println(goodRespStr);
-	        logger.info("goodRespStr ->" + goodRespStr);
 	        int responseCode = conn.getResponseCode();
-	        logger.info("responseCode: " + responseCode);
 	        ObjectMapper objectMapper = new ObjectMapper();
 	        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
 	        @SuppressWarnings("deprecation")
 			ObjectReader objectReader = objectMapper.reader(User.class);
-	        userClass = objectReader.readValue(goodRespStr);
+	        if(responseCode == 200){
+	        	userClass = objectReader.readValue(goodRespStr);
+	        }
 	        return userClass;
 		} catch (MalformedURLException e) {
 			logger.error(e.getMessage());
@@ -60,25 +57,22 @@ public class MicrosoftGraphUtil {
         
     }
 	public ArrayList<Group> getGroupFromGraph(String uniqueId) {
-        logger.debug("get graph object info from graph");
+        logger.debug("getting group object list info from graph");
 		URL url;
 		ArrayList<Group> groupList = new ArrayList<Group>();
 		try {
 			url = new URL(String.format("https://graph.windows.net/%s/users/%s/memberOf?api-version=2013-04-05", tenant,uniqueId));
-			logger.debug("url: " + url.toString());
 	        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 	        // Set the appropriate header fields in the request header.
 	        conn.setRequestProperty("api-version", "2013-04-05");
 	        conn.setRequestProperty("Authorization", accessToken);
 	        conn.setRequestProperty("Accept", "application/json;odata=minimalmetadata");
 	        String goodRespStr = HttpClientHelper.getResponseStringFromConn(conn, true);
-	        System.out.println(goodRespStr);
 	        groupList = getGroupListFromString(goodRespStr);
-	        System.out.println(goodRespStr);
-	        logger.info("goodRespStr ->" + goodRespStr);
 	        int responseCode = conn.getResponseCode();
-	        logger.info("responseCode: " + responseCode);
-	       
+	        if(responseCode == 200){
+	        	groupList = getGroupListFromString(goodRespStr);
+	        }
 		} catch (MalformedURLException e) {
 			logger.error(e.getMessage());
 		} catch (IOException e) {
@@ -93,13 +87,11 @@ public class MicrosoftGraphUtil {
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
 			JsonNode arrNode = mapper.readTree(respStr).get("value");
-			System.out.println(arrNode.isNull());
 			
 			if(arrNode.isArray()){
 				for (JsonNode objNode : arrNode) {
 					Group group = mapper.treeToValue(objNode, Group.class);
 					groupList.add(group);
-					System.out.println(group);
 			    }
 			}
 		} catch (IOException e) {

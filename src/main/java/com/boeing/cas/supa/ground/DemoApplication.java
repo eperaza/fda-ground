@@ -31,13 +31,8 @@ public class DemoApplication {
 	
 	@RequestMapping("/")
 	public ResponseEntity<Map<String, Object>> getGreeting(HttpServletRequest httpRequest)  {
-		TelemetryClient telemetryClient = new TelemetryClient();
-		telemetryClient.trackEvent("MobileBackendAPI main() in ping");
-		TelemetryConfiguration.getActive().getChannel().setDeveloperMode(true);
 		logger.info("Pinging the service");
 		Map<String, Object> responseMap = new HashMap<>();
-		User user = HttpClientHelper.getUserInfoFromHeader(httpRequest);
-		System.out.println(user.getGivenName());
 		responseMap.put("greeting", "hello world");
 		return new ResponseEntity<>(responseMap, HttpStatus.OK);
 	}

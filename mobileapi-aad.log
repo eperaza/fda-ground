@@ -12184,3 +12184,98 @@ java.net.UnknownHostException: login.microsoftonline.com
 2018-01-04 12:11:59.339  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 67261 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
 2018-01-04 12:11:59.339  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
 2018-01-04 12:11:59.965  INFO 67261 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.65 seconds (JVM running for 440.941)
+2018-01-04 13:16:46.025  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 72494 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 13:16:46.026  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 13:16:48.372  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 2.526 seconds (JVM running for 4.059)
+2018-01-04 13:16:48.937  INFO 72494 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-04 13:16:48.963  INFO 72494 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-04 13:16:48.963  INFO 72494 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-04 13:16:48.964  INFO 72494 --- [http-nio-8080-exec-2] c.b.c.s.g.filters.AzureADAuthFilter      : Expired token
+2018-01-04 13:17:00.379  INFO 72494 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-04 13:17:00.423  INFO 72494 --- [http-nio-8080-exec-4] c.b.c.s.g.controllers.LoginController    : it is valid
+2018-01-04 13:17:01.841  INFO 72494 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-04 13:17:33.908  INFO 72494 --- [http-nio-8080-exec-5] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-04 13:17:33.909  INFO 72494 --- [http-nio-8080-exec-5] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-04 13:17:33.910  INFO 72494 --- [http-nio-8080-exec-5] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-04 13:17:33.910  INFO 72494 --- [http-nio-8080-exec-5] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-04 13:17:33.918  INFO 72494 --- [http-nio-8080-exec-5] ication$$EnhancerBySpringCGLIB$$43702bac : Pinging the service
+2018-01-04 13:17:34.764  INFO 72494 --- [http-nio-8080-exec-5] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.WindowsAzure.ActiveDirectory.User/@Element","odata.type":"Microsoft.WindowsAzure.ActiveDirectory.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"country":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","facsimileTelephoneNumber":null,"givenName":"Test","jobTitle":null,"lastDirSyncTime":null,"mail":null,"mailNickname":"test1","mobile":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com"}
+2018-01-04 13:17:34.765  INFO 72494 --- [http-nio-8080-exec-5] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-04 13:17:34.937  INFO 72494 --- [http-nio-8080-exec-5] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects","value":[{"odata.type":"Microsoft.WindowsAzure.ActiveDirectory.Group","objectType":"Group","objectId":"db80b523-e576-420b-8668-164752df9ef6","description":"Aero Mexico","dirSyncEnabled":null,"displayName":"amx","lastDirSyncTime":null,"mail":null,"mailNickname":"465251bb-797a-4897-aaf4-df67226a57f0","mailEnabled":false,"provisioningErrors":[],"proxyAddresses":[],"securityEnabled":true},{"odata.type":"Microsoft.WindowsAzure.ActiveDirectory.Group","objectType":"Group","objectId":"c308d29c-6520-49ce-8e4b-e26d6f6d2b3d","description":null,"dirSyncEnabled":null,"displayName":"Test","lastDirSyncTime":null,"mail":null,"mailNickname":"8fc120cc-e409-42fe-adab-99f0c154c8c2","mailEnabled":false,"provisioningErrors":[],"proxyAddresses":[],"securityEnabled":true}]}
+2018-01-04 13:17:34.937  INFO 72494 --- [http-nio-8080-exec-5] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-04 13:17:34.942  INFO 72494 --- [http-nio-8080-exec-5] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-04 13:19:09.967  INFO 72494 --- [http-nio-8080-exec-8] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-04 13:19:09.968  INFO 72494 --- [http-nio-8080-exec-8] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-04 13:19:09.969  INFO 72494 --- [http-nio-8080-exec-8] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-04 13:19:09.969  INFO 72494 --- [http-nio-8080-exec-8] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-04 13:19:09.974  WARN 72494 --- [http-nio-8080-exec-8] o.s.web.servlet.PageNotFound             : Request method 'GET' not supported
+2018-01-04 13:19:09.975  WARN 72494 --- [http-nio-8080-exec-8] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved exception caused by Handler execution: org.springframework.web.HttpRequestMethodNotSupportedException: Request method 'GET' not supported
+2018-01-04 13:19:09.977  INFO 72494 --- [http-nio-8080-exec-8] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-04 13:20:11.611  INFO 72494 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-04 13:20:11.612  INFO 72494 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-04 13:20:11.613  INFO 72494 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-04 13:20:11.613  INFO 72494 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-04 13:20:11.666  INFO 72494 --- [http-nio-8080-exec-1] c.b.c.s.g.c.FileUploadController         : Upload File method invoked
+2018-01-04 13:20:11.686  INFO 72494 --- [pool-13-thread-1] c.b.c.s.g.c.FileUploadController         : Starting ADW Transfer
+2018-01-04 13:20:11.695  INFO 72494 --- [pool-13-thread-1] c.b.c.supa.ground.utils.ADWTransferUtil  : Properties files loaded successfully: fta.hubspan.net:Outbox/089187496
+2018-01-04 13:20:11.696  INFO 72494 --- [pool-13-thread-1] c.b.c.s.g.c.FileUploadController         : /var/folders/q5/_s10dp1s6fz5dqv3ct8bgmfjv1h0vy/T/5662980889513444029/BoeingAMX_EI-DRC_AMX212_MMMX_MMCU_20170526_113801Z_2258.zip
+2018-01-04 13:20:11.948  WARN 72494 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-04 13:20:11.949  WARN 72494 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-04 13:20:11.951  WARN 72494 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-04 13:20:11.951  WARN 72494 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-04 13:20:11.955  WARN 72494 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-04 13:20:11.961  WARN 72494 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-04 13:20:11.961  WARN 72494 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-04 13:20:11.962  WARN 72494 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-04 13:20:11.962  WARN 72494 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-04 13:20:11.965  WARN 72494 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-04 13:20:11.966  WARN 72494 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-04 13:20:11.966  WARN 72494 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-04 13:20:11.967  WARN 72494 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-04 13:20:11.967  WARN 72494 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-04 13:20:11.969  WARN 72494 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size or default parameters
+2018-01-04 13:20:11.969  WARN 72494 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Disabling high-strength ciphers: cipher strengths apparently limited by JCE policy
+2018-01-04 13:20:12.403  INFO 72494 --- [pool-13-thread-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects/Microsoft.WindowsAzure.ActiveDirectory.User/@Element","odata.type":"Microsoft.WindowsAzure.ActiveDirectory.User","objectType":"User","objectId":"6081056b-0a59-4317-bf21-b8deec86be1e","accountEnabled":true,"assignedLicenses":[],"assignedPlans":[],"city":null,"country":null,"department":null,"dirSyncEnabled":null,"displayName":"Test","facsimileTelephoneNumber":null,"givenName":"Test","jobTitle":null,"lastDirSyncTime":null,"mail":null,"mailNickname":"test1","mobile":null,"otherMails":["mihirs029@gmail.com"],"passwordPolicies":"None","passwordProfile":null,"physicalDeliveryOfficeName":null,"postalCode":null,"preferredLanguage":null,"provisionedPlans":[],"provisioningErrors":[],"proxyAddresses":[],"state":null,"streetAddress":null,"surname":"One","telephoneNumber":null,"usageLocation":null,"userPrincipalName":"test1@fdacustomertest.onmicrosoft.com"}
+2018-01-04 13:20:12.404  INFO 72494 --- [pool-13-thread-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-04 13:20:12.658  INFO 72494 --- [pool-13-thread-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : goodRespStr ->{"odata.metadata":"https://graph.windows.net/fdacustomertest.onmicrosoft.com/$metadata#directoryObjects","value":[{"odata.type":"Microsoft.WindowsAzure.ActiveDirectory.Group","objectType":"Group","objectId":"db80b523-e576-420b-8668-164752df9ef6","description":"Aero Mexico","dirSyncEnabled":null,"displayName":"amx","lastDirSyncTime":null,"mail":null,"mailNickname":"465251bb-797a-4897-aaf4-df67226a57f0","mailEnabled":false,"provisioningErrors":[],"proxyAddresses":[],"securityEnabled":true},{"odata.type":"Microsoft.WindowsAzure.ActiveDirectory.Group","objectType":"Group","objectId":"c308d29c-6520-49ce-8e4b-e26d6f6d2b3d","description":null,"dirSyncEnabled":null,"displayName":"Test","lastDirSyncTime":null,"mail":null,"mailNickname":"8fc120cc-e409-42fe-adab-99f0c154c8c2","mailEnabled":false,"provisioningErrors":[],"proxyAddresses":[],"securityEnabled":true}]}
+2018-01-04 13:20:12.659  INFO 72494 --- [pool-13-thread-2] c.b.c.s.ground.utils.MicrosoftGraphUtil  : responseCode: 200
+2018-01-04 13:20:12.659  INFO 72494 --- [pool-13-thread-2] c.b.c.s.g.c.FileUploadController         : Starting Azure upload
+2018-01-04 13:20:16.509  INFO 72494 --- [pool-13-thread-2] c.b.c.s.g.c.FileUploadController         : Upload to Azure complete: true
+2018-01-04 13:21:28.723 ERROR 72494 --- [pool-13-thread-1] c.b.c.s.g.c.FileUploadController         : Error in ADW XFER: java.net.ConnectException: Operation timed out
+2018-01-04 13:21:28.728  INFO 72494 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-04 13:29:08.210  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 72494 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 13:29:08.211  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 13:29:08.746  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.567 seconds (JVM running for 744.472)
+2018-01-04 13:29:22.420  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 72494 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 13:29:22.421  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 13:29:22.869  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.474 seconds (JVM running for 758.596)
+2018-01-04 13:29:48.589  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 72494 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 13:29:48.590  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 13:29:49.027  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.459 seconds (JVM running for 784.755)
+2018-01-04 13:29:56.608  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 72494 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 13:29:56.609  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 13:29:57.004  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.416 seconds (JVM running for 792.733)
+2018-01-04 13:30:37.810  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 72494 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 13:30:37.811  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 13:30:38.189  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.398 seconds (JVM running for 833.92)
+2018-01-04 13:31:04.950  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 72494 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 13:31:04.951  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 13:31:05.333  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.401 seconds (JVM running for 861.066)
+2018-01-04 13:31:30.038  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 72494 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 13:31:30.038  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 13:31:30.397  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.376 seconds (JVM running for 886.13)
+2018-01-04 13:31:33.981  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 72494 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 13:31:33.982  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 13:31:34.343  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.381 seconds (JVM running for 890.077)
+2018-01-04 13:31:55.024  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 72494 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 13:31:55.024  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 13:31:55.393  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.387 seconds (JVM running for 911.128)
+2018-01-04 13:31:58.946  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 72494 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 13:31:58.947  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 13:31:59.293  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.364 seconds (JVM running for 915.028)
+2018-01-04 13:32:14.938  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 72494 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 13:32:14.938  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 13:32:15.277  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.356 seconds (JVM running for 931.013)
+2018-01-04 13:32:34.954  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 72494 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-04 13:32:34.955  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-04 13:32:35.293  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.355 seconds (JVM running for 951.03)
