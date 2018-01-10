@@ -12279,3 +12279,286 @@ java.net.UnknownHostException: login.microsoftonline.com
 2018-01-04 13:32:34.954  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local.tld with PID 72494 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
 2018-01-04 13:32:34.955  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
 2018-01-04 13:32:35.293  INFO 72494 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.355 seconds (JVM running for 951.03)
+2018-01-08 12:42:48.362  INFO 38406 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on a5605027.aub.boeing.com with PID 38406 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-08 12:42:48.363  INFO 38406 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-08 12:42:50.820  INFO 38406 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 2.677 seconds (JVM running for 4.64)
+2018-01-08 12:42:53.719  INFO 38406 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-08 12:42:53.780  INFO 38406 --- [http-nio-8080-exec-1] c.b.c.s.g.controllers.LoginController    : it is valid
+2018-01-08 12:42:53.890 ERROR 38406 --- [pool-13-thread-1] c.m.aad.adal4j.AuthenticationContext     : [Correlation ID: 53bf5ab9-b811-4e06-b9bb-ddf5e22767ed] Request to acquire token failed.
+
+java.net.UnknownHostException: login.microsoftonline.com
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:184)
+	at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
+	at java.net.Socket.connect(Socket.java:589)
+	at sun.security.ssl.SSLSocketImpl.connect(SSLSocketImpl.java:656)
+	at sun.security.ssl.BaseSSLSocketImpl.connect(BaseSSLSocketImpl.java:173)
+	at sun.net.NetworkClient.doConnect(NetworkClient.java:180)
+	at sun.net.www.http.HttpClient.openServer(HttpClient.java:432)
+	at sun.net.www.http.HttpClient.openServer(HttpClient.java:527)
+	at sun.net.www.protocol.https.HttpsClient.<init>(HttpsClient.java:275)
+	at sun.net.www.protocol.https.HttpsClient.New(HttpsClient.java:371)
+	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.getNewHttpClient(AbstractDelegateHttpsURLConnection.java:191)
+	at sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:1104)
+	at sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:998)
+	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.connect(AbstractDelegateHttpsURLConnection.java:177)
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1512)
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1440)
+	at java.net.HttpURLConnection.getResponseCode(HttpURLConnection.java:480)
+	at sun.net.www.protocol.https.HttpsURLConnectionImpl.getResponseCode(HttpsURLConnectionImpl.java:338)
+	at com.microsoft.aad.adal4j.HttpHelper.readResponseFromConnection(HttpHelper.java:74)
+	at com.microsoft.aad.adal4j.HttpHelper.getResponse(HttpHelper.java:176)
+	at com.microsoft.aad.adal4j.HttpHelper.executeGetRequest(HttpHelper.java:150)
+	at com.microsoft.aad.adal4j.HttpHelper.executeHttpGet(HttpHelper.java:46)
+	at com.microsoft.aad.adal4j.UserDiscoveryRequest.execute(UserDiscoveryRequest.java:44)
+	at com.microsoft.aad.adal4j.AuthenticationContext.processPasswordGrant(AuthenticationContext.java:835)
+	at com.microsoft.aad.adal4j.AuthenticationContext.access$000(AuthenticationContext.java:64)
+	at com.microsoft.aad.adal4j.AuthenticationContext$1.call(AuthenticationContext.java:171)
+	at com.microsoft.aad.adal4j.AuthenticationContext$1.call(AuthenticationContext.java:161)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at java.lang.Thread.run(Thread.java:745)
+
+2018-01-08 12:42:53.894  INFO 38406 --- [http-nio-8080-exec-1] c.b.c.s.g.controllers.LoginController    : login called
+2018-01-08 12:42:53.901  INFO 38406 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-08 12:42:56.892  INFO 38406 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-08 12:42:56.895  INFO 38406 --- [http-nio-8080-exec-3] c.b.c.s.g.controllers.LoginController    : it is valid
+2018-01-08 12:42:56.898 ERROR 38406 --- [pool-14-thread-1] c.m.aad.adal4j.AuthenticationContext     : [Correlation ID: 39ebf241-ee14-4bcc-afd5-38cc3e90b6dc] Request to acquire token failed.
+
+java.net.UnknownHostException: login.microsoftonline.com
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:184)
+	at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
+	at java.net.Socket.connect(Socket.java:589)
+	at sun.security.ssl.SSLSocketImpl.connect(SSLSocketImpl.java:656)
+	at sun.security.ssl.BaseSSLSocketImpl.connect(BaseSSLSocketImpl.java:173)
+	at sun.net.NetworkClient.doConnect(NetworkClient.java:180)
+	at sun.net.www.http.HttpClient.openServer(HttpClient.java:432)
+	at sun.net.www.http.HttpClient.openServer(HttpClient.java:527)
+	at sun.net.www.protocol.https.HttpsClient.<init>(HttpsClient.java:275)
+	at sun.net.www.protocol.https.HttpsClient.New(HttpsClient.java:371)
+	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.getNewHttpClient(AbstractDelegateHttpsURLConnection.java:191)
+	at sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:1104)
+	at sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:998)
+	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.connect(AbstractDelegateHttpsURLConnection.java:177)
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1512)
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1440)
+	at java.net.HttpURLConnection.getResponseCode(HttpURLConnection.java:480)
+	at sun.net.www.protocol.https.HttpsURLConnectionImpl.getResponseCode(HttpsURLConnectionImpl.java:338)
+	at com.microsoft.aad.adal4j.HttpHelper.readResponseFromConnection(HttpHelper.java:74)
+	at com.microsoft.aad.adal4j.HttpHelper.getResponse(HttpHelper.java:176)
+	at com.microsoft.aad.adal4j.HttpHelper.executeGetRequest(HttpHelper.java:150)
+	at com.microsoft.aad.adal4j.HttpHelper.executeHttpGet(HttpHelper.java:46)
+	at com.microsoft.aad.adal4j.UserDiscoveryRequest.execute(UserDiscoveryRequest.java:44)
+	at com.microsoft.aad.adal4j.AuthenticationContext.processPasswordGrant(AuthenticationContext.java:835)
+	at com.microsoft.aad.adal4j.AuthenticationContext.access$000(AuthenticationContext.java:64)
+	at com.microsoft.aad.adal4j.AuthenticationContext$1.call(AuthenticationContext.java:171)
+	at com.microsoft.aad.adal4j.AuthenticationContext$1.call(AuthenticationContext.java:161)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at java.lang.Thread.run(Thread.java:745)
+
+2018-01-08 12:42:56.899  INFO 38406 --- [http-nio-8080-exec-3] c.b.c.s.g.controllers.LoginController    : login called
+2018-01-08 12:42:56.900  INFO 38406 --- [http-nio-8080-exec-3] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-08 12:43:12.996  INFO 38406 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-08 12:43:13.000  INFO 38406 --- [http-nio-8080-exec-4] c.b.c.s.g.controllers.LoginController    : it is valid
+2018-01-08 12:43:13.003 ERROR 38406 --- [pool-16-thread-1] c.m.aad.adal4j.AuthenticationContext     : [Correlation ID: e77fd624-4391-425a-aa96-838e77ad0124] Request to acquire token failed.
+
+java.net.UnknownHostException: login.microsoftonline.com
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:184)
+	at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
+	at java.net.Socket.connect(Socket.java:589)
+	at sun.security.ssl.SSLSocketImpl.connect(SSLSocketImpl.java:656)
+	at sun.security.ssl.BaseSSLSocketImpl.connect(BaseSSLSocketImpl.java:173)
+	at sun.net.NetworkClient.doConnect(NetworkClient.java:180)
+	at sun.net.www.http.HttpClient.openServer(HttpClient.java:432)
+	at sun.net.www.http.HttpClient.openServer(HttpClient.java:527)
+	at sun.net.www.protocol.https.HttpsClient.<init>(HttpsClient.java:275)
+	at sun.net.www.protocol.https.HttpsClient.New(HttpsClient.java:371)
+	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.getNewHttpClient(AbstractDelegateHttpsURLConnection.java:191)
+	at sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:1104)
+	at sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:998)
+	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.connect(AbstractDelegateHttpsURLConnection.java:177)
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1512)
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1440)
+	at java.net.HttpURLConnection.getResponseCode(HttpURLConnection.java:480)
+	at sun.net.www.protocol.https.HttpsURLConnectionImpl.getResponseCode(HttpsURLConnectionImpl.java:338)
+	at com.microsoft.aad.adal4j.HttpHelper.readResponseFromConnection(HttpHelper.java:74)
+	at com.microsoft.aad.adal4j.HttpHelper.getResponse(HttpHelper.java:176)
+	at com.microsoft.aad.adal4j.HttpHelper.executeGetRequest(HttpHelper.java:150)
+	at com.microsoft.aad.adal4j.HttpHelper.executeHttpGet(HttpHelper.java:46)
+	at com.microsoft.aad.adal4j.UserDiscoveryRequest.execute(UserDiscoveryRequest.java:44)
+	at com.microsoft.aad.adal4j.AuthenticationContext.processPasswordGrant(AuthenticationContext.java:835)
+	at com.microsoft.aad.adal4j.AuthenticationContext.access$000(AuthenticationContext.java:64)
+	at com.microsoft.aad.adal4j.AuthenticationContext$1.call(AuthenticationContext.java:171)
+	at com.microsoft.aad.adal4j.AuthenticationContext$1.call(AuthenticationContext.java:161)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at java.lang.Thread.run(Thread.java:745)
+
+2018-01-08 12:43:13.005  INFO 38406 --- [http-nio-8080-exec-4] c.b.c.s.g.controllers.LoginController    : login called
+2018-01-08 12:43:13.005  INFO 38406 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-08 12:43:14.240  INFO 38406 --- [http-nio-8080-exec-5] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-08 12:43:14.243  INFO 38406 --- [http-nio-8080-exec-5] c.b.c.s.g.controllers.LoginController    : it is valid
+2018-01-08 12:43:14.245 ERROR 38406 --- [pool-17-thread-1] c.m.aad.adal4j.AuthenticationContext     : [Correlation ID: c18b21ab-71d7-44ed-84b4-e895b2af91b3] Request to acquire token failed.
+
+java.net.UnknownHostException: login.microsoftonline.com
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:184)
+	at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
+	at java.net.Socket.connect(Socket.java:589)
+	at sun.security.ssl.SSLSocketImpl.connect(SSLSocketImpl.java:656)
+	at sun.security.ssl.BaseSSLSocketImpl.connect(BaseSSLSocketImpl.java:173)
+	at sun.net.NetworkClient.doConnect(NetworkClient.java:180)
+	at sun.net.www.http.HttpClient.openServer(HttpClient.java:432)
+	at sun.net.www.http.HttpClient.openServer(HttpClient.java:527)
+	at sun.net.www.protocol.https.HttpsClient.<init>(HttpsClient.java:275)
+	at sun.net.www.protocol.https.HttpsClient.New(HttpsClient.java:371)
+	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.getNewHttpClient(AbstractDelegateHttpsURLConnection.java:191)
+	at sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:1104)
+	at sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:998)
+	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.connect(AbstractDelegateHttpsURLConnection.java:177)
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1512)
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1440)
+	at java.net.HttpURLConnection.getResponseCode(HttpURLConnection.java:480)
+	at sun.net.www.protocol.https.HttpsURLConnectionImpl.getResponseCode(HttpsURLConnectionImpl.java:338)
+	at com.microsoft.aad.adal4j.HttpHelper.readResponseFromConnection(HttpHelper.java:74)
+	at com.microsoft.aad.adal4j.HttpHelper.getResponse(HttpHelper.java:176)
+	at com.microsoft.aad.adal4j.HttpHelper.executeGetRequest(HttpHelper.java:150)
+	at com.microsoft.aad.adal4j.HttpHelper.executeHttpGet(HttpHelper.java:46)
+	at com.microsoft.aad.adal4j.UserDiscoveryRequest.execute(UserDiscoveryRequest.java:44)
+	at com.microsoft.aad.adal4j.AuthenticationContext.processPasswordGrant(AuthenticationContext.java:835)
+	at com.microsoft.aad.adal4j.AuthenticationContext.access$000(AuthenticationContext.java:64)
+	at com.microsoft.aad.adal4j.AuthenticationContext$1.call(AuthenticationContext.java:171)
+	at com.microsoft.aad.adal4j.AuthenticationContext$1.call(AuthenticationContext.java:161)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at java.lang.Thread.run(Thread.java:745)
+
+2018-01-08 12:43:14.247  INFO 38406 --- [http-nio-8080-exec-5] c.b.c.s.g.controllers.LoginController    : login called
+2018-01-08 12:43:14.248  INFO 38406 --- [http-nio-8080-exec-5] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-08 12:43:20.150  INFO 38406 --- [http-nio-8080-exec-6] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-08 12:43:36.604  INFO 38406 --- [http-nio-8080-exec-8] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-08 12:43:36.607  INFO 38406 --- [http-nio-8080-exec-8] c.b.c.s.g.controllers.LoginController    : it is valid
+2018-01-08 12:43:36.610 ERROR 38406 --- [pool-19-thread-1] c.m.aad.adal4j.AuthenticationContext     : [Correlation ID: 5c662417-d986-4172-a393-a2410de21278] Request to acquire token failed.
+
+java.net.UnknownHostException: login.microsoftonline.com
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:184)
+	at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
+	at java.net.Socket.connect(Socket.java:589)
+	at sun.security.ssl.SSLSocketImpl.connect(SSLSocketImpl.java:656)
+	at sun.security.ssl.BaseSSLSocketImpl.connect(BaseSSLSocketImpl.java:173)
+	at sun.net.NetworkClient.doConnect(NetworkClient.java:180)
+	at sun.net.www.http.HttpClient.openServer(HttpClient.java:432)
+	at sun.net.www.http.HttpClient.openServer(HttpClient.java:527)
+	at sun.net.www.protocol.https.HttpsClient.<init>(HttpsClient.java:275)
+	at sun.net.www.protocol.https.HttpsClient.New(HttpsClient.java:371)
+	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.getNewHttpClient(AbstractDelegateHttpsURLConnection.java:191)
+	at sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:1104)
+	at sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:998)
+	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.connect(AbstractDelegateHttpsURLConnection.java:177)
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1512)
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1440)
+	at java.net.HttpURLConnection.getResponseCode(HttpURLConnection.java:480)
+	at sun.net.www.protocol.https.HttpsURLConnectionImpl.getResponseCode(HttpsURLConnectionImpl.java:338)
+	at com.microsoft.aad.adal4j.HttpHelper.readResponseFromConnection(HttpHelper.java:74)
+	at com.microsoft.aad.adal4j.HttpHelper.getResponse(HttpHelper.java:176)
+	at com.microsoft.aad.adal4j.HttpHelper.executeGetRequest(HttpHelper.java:150)
+	at com.microsoft.aad.adal4j.HttpHelper.executeHttpGet(HttpHelper.java:46)
+	at com.microsoft.aad.adal4j.UserDiscoveryRequest.execute(UserDiscoveryRequest.java:44)
+	at com.microsoft.aad.adal4j.AuthenticationContext.processPasswordGrant(AuthenticationContext.java:835)
+	at com.microsoft.aad.adal4j.AuthenticationContext.access$000(AuthenticationContext.java:64)
+	at com.microsoft.aad.adal4j.AuthenticationContext$1.call(AuthenticationContext.java:171)
+	at com.microsoft.aad.adal4j.AuthenticationContext$1.call(AuthenticationContext.java:161)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at java.lang.Thread.run(Thread.java:745)
+
+2018-01-08 12:43:36.611  INFO 38406 --- [http-nio-8080-exec-8] c.b.c.s.g.controllers.LoginController    : login called
+2018-01-08 12:43:36.612  INFO 38406 --- [http-nio-8080-exec-8] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-08 12:44:04.212  INFO 38406 --- [http-nio-8080-exec-9] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-08 12:44:04.214  INFO 38406 --- [http-nio-8080-exec-9] c.b.c.s.g.controllers.LoginController    : it is valid
+2018-01-08 12:44:04.226 ERROR 38406 --- [pool-20-thread-1] c.m.aad.adal4j.AuthenticationContext     : [Correlation ID: f11ddf9a-40b1-47e9-90e1-a31c2a137674] Request to acquire token failed.
+
+java.net.UnknownHostException: login.microsoftonline.com
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:184)
+	at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
+	at java.net.Socket.connect(Socket.java:589)
+	at sun.security.ssl.SSLSocketImpl.connect(SSLSocketImpl.java:656)
+	at sun.security.ssl.BaseSSLSocketImpl.connect(BaseSSLSocketImpl.java:173)
+	at sun.net.NetworkClient.doConnect(NetworkClient.java:180)
+	at sun.net.www.http.HttpClient.openServer(HttpClient.java:432)
+	at sun.net.www.http.HttpClient.openServer(HttpClient.java:527)
+	at sun.net.www.protocol.https.HttpsClient.<init>(HttpsClient.java:275)
+	at sun.net.www.protocol.https.HttpsClient.New(HttpsClient.java:371)
+	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.getNewHttpClient(AbstractDelegateHttpsURLConnection.java:191)
+	at sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:1104)
+	at sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:998)
+	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.connect(AbstractDelegateHttpsURLConnection.java:177)
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1512)
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1440)
+	at java.net.HttpURLConnection.getResponseCode(HttpURLConnection.java:480)
+	at sun.net.www.protocol.https.HttpsURLConnectionImpl.getResponseCode(HttpsURLConnectionImpl.java:338)
+	at com.microsoft.aad.adal4j.HttpHelper.readResponseFromConnection(HttpHelper.java:74)
+	at com.microsoft.aad.adal4j.HttpHelper.getResponse(HttpHelper.java:176)
+	at com.microsoft.aad.adal4j.HttpHelper.executeGetRequest(HttpHelper.java:150)
+	at com.microsoft.aad.adal4j.HttpHelper.executeHttpGet(HttpHelper.java:46)
+	at com.microsoft.aad.adal4j.UserDiscoveryRequest.execute(UserDiscoveryRequest.java:44)
+	at com.microsoft.aad.adal4j.AuthenticationContext.processPasswordGrant(AuthenticationContext.java:835)
+	at com.microsoft.aad.adal4j.AuthenticationContext.access$000(AuthenticationContext.java:64)
+	at com.microsoft.aad.adal4j.AuthenticationContext$1.call(AuthenticationContext.java:171)
+	at com.microsoft.aad.adal4j.AuthenticationContext$1.call(AuthenticationContext.java:161)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at java.lang.Thread.run(Thread.java:745)
+
+2018-01-08 12:44:04.227  INFO 38406 --- [http-nio-8080-exec-9] c.b.c.s.g.controllers.LoginController    : login called
+2018-01-08 12:44:04.228  INFO 38406 --- [http-nio-8080-exec-9] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-08 15:49:59.951  INFO 38406 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on a5605027.aub.boeing.com with PID 38406 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-08 15:49:59.951  INFO 38406 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-08 15:50:00.539  INFO 38406 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 0.614 seconds (JVM running for 11234.919)
+2018-01-08 21:24:34.225  INFO 57332 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Starting DemoApplication on A5605027.local with PID 57332 (/Users/iw062d/MobileBackendAPI/target/classes started by iw062d in /Users/iw062d/MobileBackendAPI)
+2018-01-08 21:24:34.226  INFO 57332 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : No active profile set, falling back to default profiles: default
+2018-01-08 21:24:36.616  INFO 57332 --- [restartedMain] c.b.cas.supa.ground.DemoApplication      : Started DemoApplication in 2.657 seconds (JVM running for 4.786)
+2018-01-08 21:24:41.914  INFO 57332 --- [http-nio-8080-exec-1] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-08 21:24:50.244  INFO 57332 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-08 21:24:50.294  INFO 57332 --- [http-nio-8080-exec-4] c.b.c.s.g.controllers.LoginController    : it is valid
+2018-01-08 21:24:51.192  INFO 57332 --- [http-nio-8080-exec-4] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
+2018-01-08 21:27:43.144  INFO 57332 --- [http-nio-8080-exec-7] c.b.c.s.g.filters.AzureADAuthFilter      : filter doing some stuff...
+2018-01-08 21:27:43.147  INFO 57332 --- [http-nio-8080-exec-7] c.b.c.s.g.filters.AzureADAuthFilter      : [https://graph.windows.net]
+2018-01-08 21:27:43.148  INFO 57332 --- [http-nio-8080-exec-7] c.b.c.s.g.filters.AzureADAuthFilter      : java.util.Date
+2018-01-08 21:27:43.148  INFO 57332 --- [http-nio-8080-exec-7] c.b.c.s.g.filters.AzureADAuthFilter      : everything passed...
+2018-01-08 21:27:43.200  INFO 57332 --- [http-nio-8080-exec-7] c.b.c.s.g.c.FileUploadController         : Upload File method invoked
+2018-01-08 21:27:43.216  INFO 57332 --- [pool-13-thread-1] c.b.c.s.g.c.FileUploadController         : Starting ADW Transfer
+2018-01-08 21:27:43.226  INFO 57332 --- [pool-13-thread-1] c.b.c.supa.ground.utils.ADWTransferUtil  : Properties files loaded successfully: fta.hubspan.net:Outbox/089187496
+2018-01-08 21:27:43.226  INFO 57332 --- [pool-13-thread-1] c.b.c.s.g.c.FileUploadController         : /var/folders/q5/_s10dp1s6fz5dqv3ct8bgmfjv1h0vy/T/8372748516333971651/BoeingAMX_XA-ZAM_AMX644_MMMX_KLAX_20170926_195301Z_5097.zip
+2018-01-08 21:27:43.467  WARN 57332 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-08 21:27:43.467  WARN 57332 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-08 21:27:43.469  WARN 57332 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-08 21:27:43.470  WARN 57332 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-08 21:27:43.473  WARN 57332 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-08 21:27:43.478  WARN 57332 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-08 21:27:43.479  WARN 57332 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-08 21:27:43.479  WARN 57332 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-08 21:27:43.479  WARN 57332 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-08 21:27:43.482  WARN 57332 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-08 21:27:43.483  WARN 57332 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-08 21:27:43.483  WARN 57332 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-08 21:27:43.483  WARN 57332 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-08 21:27:43.484  WARN 57332 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size
+2018-01-08 21:27:43.485  WARN 57332 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Illegal key size or default parameters
+2018-01-08 21:27:43.486  WARN 57332 --- [pool-13-thread-1] net.schmizz.sshj.DefaultConfig           : Disabling high-strength ciphers: cipher strengths apparently limited by JCE policy
+2018-01-08 21:27:44.007  INFO 57332 --- [pool-13-thread-2] c.b.c.s.g.c.FileUploadController         : Starting Azure upload
+2018-01-08 21:27:44.796  INFO 57332 --- [pool-13-thread-1] c.b.c.supa.ground.utils.ADWTransferUtil  : ADWTransfer: PUT
+2018-01-08 21:27:50.186  INFO 57332 --- [pool-13-thread-2] c.b.c.s.g.c.FileUploadController         : Upload to Azure complete: true
+2018-01-08 21:27:52.629  INFO 57332 --- [pool-13-thread-1] c.b.c.supa.ground.utils.ADWTransferUtil  : ADWTransfer: PUT DONE
+2018-01-08 21:27:52.766 ERROR 57332 --- [reader] n.schmizz.sshj.transport.TransportImpl   : Dying because - {}
+
+net.schmizz.sshj.transport.TransportException: Broken transport; encountered EOF
+	at net.schmizz.sshj.transport.Reader.run(Reader.java:58)
+
+2018-01-08 21:27:52.769  INFO 57332 --- [pool-13-thread-1] c.b.c.s.g.c.FileUploadController         : Transfer to ADW complete: true
+2018-01-08 21:27:52.773  INFO 57332 --- [http-nio-8080-exec-7] c.b.c.s.g.filters.AzureADAuthFilter      : possibly modifying the response...
