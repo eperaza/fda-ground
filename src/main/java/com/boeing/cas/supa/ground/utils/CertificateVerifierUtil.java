@@ -2,11 +2,13 @@ package com.boeing.cas.supa.ground.utils;
 
 import java.io.ByteArrayInputStream;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Principal;
 import java.security.PublicKey;
 import java.security.SignatureException;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -15,7 +17,14 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 
+import javax.xml.bind.DatatypeConverter;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 public class CertificateVerifierUtil {
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private X509Certificate cert;
 	public CertificateVerifierUtil(String clientCertHeader){
 		this.cert = getCertFromHeader(clientCertHeader);
@@ -28,18 +37,18 @@ public class CertificateVerifierUtil {
 			try {
 				cf = CertificateFactory.getInstance("X.509");
 			    cert = (X509Certificate)cf.generateCertificate(new ByteArrayInputStream(decodedBytes));
-			} catch (CertificateException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} catch (Exception e ) {
+				cert = null;
+				logger.info(e.getMessage());
 			}
 		}
 		return cert;
 	}
-	private boolean IsValidClientCertificate(){
-		boolean isValid = false;
+	public boolean IsValidClientCertificate(){
 		if(cert != null){
 			try {
-				boolean isSelfSignedCert = isSelfSignedCert(cert);
+				boolean isSelfSignedCert = isSelfSignedCert();
+				logger.info("Certificate received is self signed:" + (isSelfSignedCert ? "true": "false"));
 				if(!isSelfSignedCert){
 					//1. The certificate is not expired and is active for the current time on server.
 					cert.checkValidity(new Date());
@@ -48,10 +57,11 @@ public class CertificateVerifierUtil {
 					//subjectDn: CN=a5605027.mw.nos.boeing.com
 		    		Principal principal = cert.getSubjectDN();
 		            String subjectDn = principal.getName();
+		            logger.info("Certificate received with subjectDn: " +subjectDn);
 		            boolean foundSubject = false;
 		            List<String> subjectDnList = Arrays.asList(subjectDn.split(","));
 		            for(String subject: subjectDnList){
-		            	if(subject.trim().equalsIgnoreCase("CN=nildevecc")){
+		            	if(subject.trim().equalsIgnoreCase("CN=a5605027.mw.nos.boeing.com")){
 		            		foundSubject = true;
 		            		break;
 		            	}
@@ -64,33 +74,44 @@ public class CertificateVerifierUtil {
 		            principal = cert.getIssuerDN();
 		            String issuerDn = principal.getName();
 		            List<String> issuerDnList = Arrays.asList(issuerDn.split(","));
+		            logger.info("Certificate received with issuerDn: " +issuerDn);
 		            boolean foundIssuerCN = false, foundIssuerO = false;
 		            for(String issuer: issuerDnList){
-		            	if(issuer.trim().equalsIgnoreCase("CN=nildevecc")){
+		            	if(issuer.trim().equalsIgnoreCase("CN=Boeing Class 2 Windows Machines")){
 		            		foundIssuerCN = true;
 		            		if (foundIssuerO) break;
 		            	}
-		            	if(issuer.trim().equalsIgnoreCase("O=Microsoft Corp")){
+		            	if(issuer.trim().equalsIgnoreCase("O=Boeing")){
 		            		foundIssuerO = true;
 		            		if (foundIssuerCN) break;
 		            	}
 		            }
 		            if (!foundIssuerCN || !foundIssuerO) return false;
 		            
+		            //83e9c401f1f98597963ef5fbacd6840be9bf012c
+		            String certThumbPrint = getThumbprint();
+		            logger.info("Certificate received with thumbprint: " + certThumbPrint);
+		            if(!certThumbPrint.equalsIgnoreCase("83e9c401f1f98597963ef5fbacd6840be9bf012c")){
+		            	return false;
+		            }
+		           
+		            return true;
+		            
 				}
 			} catch (CertificateException | NoSuchAlgorithmException | NoSuchProviderException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.debug("Some exceptions are happening in certificate verification");
+				logger.debug(e.getMessage());
+				return false;
 			}
-
+			
 		}
-		return isValid;
+		return false;
 		
 	}
     /**
      * Checks whether given X.509 certificate is self-signed.
      */
-    private boolean isSelfSignedCert(X509Certificate cert)
+    private boolean isSelfSignedCert()
             throws CertificateException, NoSuchAlgorithmException,
             NoSuchProviderException {
         try {
@@ -105,6 +126,16 @@ public class CertificateVerifierUtil {
             // Invalid key --> not self-signed
             return false;
         }
+    }
+    
+	private String getThumbprint()
+            throws NoSuchAlgorithmException, CertificateEncodingException {
+        MessageDigest md = MessageDigest.getInstance("SHA-1");
+        byte[] der = cert.getEncoded();
+        md.update(der);
+        byte[] digest = md.digest();
+        String digestHex = DatatypeConverter.printHexBinary(digest);
+        return digestHex.toLowerCase();
     }
 	
 

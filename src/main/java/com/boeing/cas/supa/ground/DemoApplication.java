@@ -15,10 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.boeing.cas.supa.ground.helpers.HttpClientHelper;
-import com.boeing.cas.supa.ground.pojos.User;
 import com.microsoft.applicationinsights.TelemetryClient;
-import com.microsoft.applicationinsights.TelemetryConfiguration;
 
 @RestController
 @EnableAutoConfiguration
@@ -33,7 +30,7 @@ public class DemoApplication {
 	public ResponseEntity<Map<String, Object>> getGreeting(HttpServletRequest httpRequest)  {
 		logger.info("Pinging the service");
 		Map<String, Object> responseMap = new HashMap<>();
-		responseMap.put("greeting", "hello world");
+		responseMap.put("ping:", "hello world");
 		return new ResponseEntity<>(responseMap, HttpStatus.OK);
 	}
 	
