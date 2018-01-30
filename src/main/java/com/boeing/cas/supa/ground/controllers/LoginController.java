@@ -1,6 +1,16 @@
 package com.boeing.cas.supa.ground.controllers;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.cert.X509Certificate;
+import java.util.Base64;
+import java.util.Enumeration;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
+import com.boeing.cas.supa.ground.pojos.AccessToken;
 import com.boeing.cas.supa.ground.pojos.Credential;
 import com.boeing.cas.supa.ground.pojos.Error;
 import com.microsoft.aad.adal4j.AuthenticationContext;
@@ -39,7 +50,18 @@ public class LoginController {
 			Object ar = getAccessTokenFromUserCredentials(cred.getAzUsername(), cred.getAzPassword());
 			if(ar != null){
 				if(ar instanceof AuthenticationResult){
-					return new ResponseEntity<>(ar, HttpStatus.OK);
+					try {
+						String getPfxEncodedAsBase64 = getPfxEncodedAsBase64();
+						AccessToken at = new AccessToken((AuthenticationResult) ar, getPfxEncodedAsBase64);
+						return new ResponseEntity<>(at, HttpStatus.OK);
+					} catch (IOException e) {
+						logger.error(e.getMessage());
+						if(ExceptionUtils.indexOfThrowable(e.getCause(), IOException.class) >= 0){
+							Error error = AzureADClientHelper.getLoginErrorFromString(((AuthenticationException) ar).getMessage());
+							
+							return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+						}
+					}	
 				}
 				if(ExceptionUtils.indexOfThrowable((Throwable) ar, AuthenticationException.class) >= 0){
 					Error error = AzureADClientHelper.getLoginErrorFromString(((AuthenticationException) ar).getMessage());
@@ -47,7 +69,8 @@ public class LoginController {
 					return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
 				}
 			}		
-		}else {
+		}//https://stackoverflow.com/questions/31971673/how-can-i-get-a-pem-base-64-from-a-pfx-in-java
+		else {
 			return new ResponseEntity<>("Not a valid request", HttpStatus.BAD_REQUEST);
 		}
 		logger.info("login called");
@@ -100,5 +123,19 @@ public class LoginController {
         return result;
     }
 	
+	
+	private String getPfxEncodedAsBase64() throws IOException{
+		InputStream fis = this.getClass().getClassLoader().getResourceAsStream("client2.pfx");;
+		ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
+		byte[] InBuffer = new byte[512];
+		int read = 0;
+		while ( (read = fis.read(InBuffer)) != -1 ) {
+		   outBuffer.write(InBuffer, 0, read);
+		}
+
+		String encoded = Base64.getEncoder().encodeToString(outBuffer.toByteArray());
+		return encoded;
+
+	}
 
 }

@@ -1,6 +1,9 @@
 package com.boeing.cas.supa.ground.utils;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -16,6 +19,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -23,11 +27,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+
 public class CertificateVerifierUtil {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private X509Certificate cert;
-	public CertificateVerifierUtil(String clientCertHeader){
+	private String certHolder;
+	private static Properties certProp;
+    
+    static{
+        InputStream is = null;
+        try {
+        	certProp = new Properties();
+            is = CertificateVerifierUtil.class.getClassLoader().getResourceAsStream("Certificate.properties");;
+            certProp.load(is);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+	
+	public CertificateVerifierUtil(String clientCertHeader, String certHolder){
 		this.cert = getCertFromHeader(clientCertHeader);
+		this.certHolder = certHolder;
 	}
 	private X509Certificate getCertFromHeader(String certHeader) {
 		X509Certificate cert = null;
@@ -44,29 +66,28 @@ public class CertificateVerifierUtil {
 		}
 		return cert;
 	}
+	
 	public boolean IsValidClientCertificate(){
 		if(cert != null){
 			try {
 				boolean isSelfSignedCert = isSelfSignedCert();
 				logger.info("Certificate received is self signed:" + (isSelfSignedCert ? "true": "false"));
 				if(!isSelfSignedCert){
+					String subjectDn = cert.getSubjectDN().getName();
+					String issuerDn = cert.getIssuerDN().getName();
+					String certThumbPrint = getThumbprint();
+					 
 					//1. The certificate is not expired and is active for the current time on server.
 					cert.checkValidity(new Date());
 
-					//2. The subject name of the certificate has the common name nildevecc
-					//subjectDn: CN=a5605027.mw.nos.boeing.com
-					//EMAILADDRESS=certs@example.com, CN=client1, OU=techops, O=Example Co, L=Boston, ST=MA, C=US
-					Principal principal = cert.getSubjectDN();
-					String subjectDn = principal.getName();
+					//2. The subject name of the certificate has the common name nildevecc					
+					
 					logger.info("Certificate received with subjectDn: " +subjectDn);
 					boolean foundSubject = false;
 					List<String> subjectDnList = Arrays.asList(subjectDn.split(","));
+					String clientHolderSubjectCN = getPropertyValue(certHolder+".subject.CN");
 					for(String subject: subjectDnList){
-						if(subject.trim().equalsIgnoreCase("CN=client1")){
-							foundSubject = true;
-							break;
-						}
-						if(subject.trim().equalsIgnoreCase("CN=a5605027.mw.nos.boeing.com")){
+						if(subject.trim().equalsIgnoreCase("CN="+clientHolderSubjectCN)){
 							foundSubject = true;
 							break;
 						}
@@ -76,42 +97,28 @@ public class CertificateVerifierUtil {
 
 
 					//3. Check issuer name of certificate
-					//CN=Boeing Class 2 Windows Machines, OU=certservers, O=Boeing, C=US
-					//EMAILADDRESS=certs@example.com, CN=ca, OU=techops, O=Example Co, L=Boston, ST=MA, C=US
-
 					if (!foundSubject) return false;
-
-					principal = cert.getIssuerDN();
-					String issuerDn = principal.getName();
 					List<String> issuerDnList = Arrays.asList(issuerDn.split(","));
 					logger.info("Certificate received with issuerDn: " +issuerDn);
 					boolean foundIssuerCN = false, foundIssuerO = false;
+					String clientHolderIssuerCN = getPropertyValue(certHolder+".issuer.CN");
+					String clientHolderIssuerO = getPropertyValue(certHolder+".issuer.O");
 					for(String issuer: issuerDnList){
-						if(issuer.trim().equalsIgnoreCase("CN=ca")){
+						if(issuer.trim().equalsIgnoreCase("CN="+clientHolderIssuerCN)){
 							foundIssuerCN = true;
 							if (foundIssuerO) break;
 						}
-						if(issuer.trim().equalsIgnoreCase("O=Example Co")){
-							foundIssuerO = true;
-							if (foundIssuerCN) break;
-						}
-						if(issuer.trim().equalsIgnoreCase("CN=Boeing Class 2 Windows Machines")){
-							foundIssuerCN = true;
-							if (foundIssuerO) break;
-						}
-						if(issuer.trim().equalsIgnoreCase("O=Boeing")){
+						if(issuer.trim().equalsIgnoreCase("O="+clientHolderIssuerO)){
 							foundIssuerO = true;
 							if (foundIssuerCN) break;
 						}
 
 					}
 					if (!foundIssuerCN || !foundIssuerO) return false;
-
-					//83e9c401f1f98597963ef5fbacd6840be9bf012c
-					//9d4a30f85e2df3bf5ee47d9c8be85bef6815ef3b
-					String certThumbPrint = getThumbprint();
+					
 					logger.info("Certificate received with thumbprint: " + certThumbPrint);
-					if(!certThumbPrint.equalsIgnoreCase("9d4a30f85e2df3bf5ee47d9c8be85bef6815ef3b") && !certThumbPrint.equalsIgnoreCase("83e9c401f1f98597963ef5fbacd6840be9bf012c")){
+					String clientHolderThumbPrint = getPropertyValue(certHolder+".thumbprint");
+					if(!certThumbPrint.equalsIgnoreCase(clientHolderThumbPrint)){
 						return false;
 					}
 
@@ -157,6 +164,10 @@ public class CertificateVerifierUtil {
 		String digestHex = DatatypeConverter.printHexBinary(digest);
 		return digestHex.toLowerCase();
 	}
+	
+	public static String getPropertyValue(String key){
+        return certProp.getProperty(key);
+    }
 
 
 }

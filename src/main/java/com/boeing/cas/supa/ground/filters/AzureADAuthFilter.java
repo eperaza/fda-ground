@@ -68,25 +68,37 @@ public class AzureADAuthFilter implements Filter {
 		if (request instanceof HttpServletRequest) {
 			HttpServletRequest httpRequest = (HttpServletRequest) request;
 			HttpServletResponse httpResponse = (HttpServletResponse) response;
+			String path = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length()).replaceAll("[/]+$", ""); 
+			boolean allowedPath = ALLOWED_PATHS.contains(path);
+			
+			if(allowedPath){
+				//Only allow client1 and mihir certs
+				if(!isValidClientCert("client1", httpRequest) && !isValidClientCert("mihir", httpRequest)){
+					httpResponse.setStatus(403);
+					httpResponse.setContentType("application/json");
 
-
-			if(!isValidClientCert(httpRequest)){
-				httpResponse.setStatus(403);
-				httpResponse.setContentType("application/json");
-
-				//pass down the actual obj that exception handler normally send
-				ObjectMapper mapper = new ObjectMapper();
-				PrintWriter out = httpResponse.getWriter(); 
-				out.print(mapper.writeValueAsString(new Error("certificate missing", "Must provide a valid client certificate", System.currentTimeMillis()/1000)));
-				out.flush();
-				return;
-			}else {
-				logger.info("client certificate is valid");
-				String path = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length()).replaceAll("[/]+$", ""); 
-				boolean allowedPath = ALLOWED_PATHS.contains(path);
-				if(allowedPath){
+					//pass down the actual obj that exception handler normally send
+					ObjectMapper mapper = new ObjectMapper();
+					PrintWriter out = httpResponse.getWriter(); 
+					out.print(mapper.writeValueAsString(new Error("certificate missing", "Must provide a valid client certificate", System.currentTimeMillis()/1000)));
+					out.flush();
+					return;
+				}else{
 					chain.doFilter(request, response);
-				}else {
+				}
+				
+			}else{
+				if(!isValidClientCert("client2", httpRequest)){
+					httpResponse.setStatus(403);
+					httpResponse.setContentType("application/json");
+
+					//pass down the actual obj that exception handler normally send
+					ObjectMapper mapper = new ObjectMapper();
+					PrintWriter out = httpResponse.getWriter(); 
+					out.print(mapper.writeValueAsString(new Error("Invalid client certificate", "Must provide a valid client certificate", System.currentTimeMillis()/1000)));
+					out.flush();
+					return;
+				}else{
 					String xAuth = httpRequest.getHeader("Authorization");
 					if(xAuth == null || xAuth.isEmpty()){
 
@@ -118,22 +130,23 @@ public class AzureADAuthFilter implements Filter {
 
 						return;
 					}
-				}		
+					
+				}
 			}
 		}
 		logger.info("possibly modifying the response...");
 	}
 
-	private boolean isValidClientCert(HttpServletRequest request) {
-		String certHeader = request.getHeader("X-ARR-ClientCert");
+	private boolean isValidClientCert(String certHolder, HttpServletRequest httpRequest) {
+		String certHeader = httpRequest.getHeader("X-ARR-ClientCert");
 		boolean isValid = false;
 		if(!certHeader.isEmpty() || certHeader != null){
-			CertificateVerifierUtil cvu = new CertificateVerifierUtil(certHeader);
+			CertificateVerifierUtil cvu = new CertificateVerifierUtil(certHeader, certHolder);
 			isValid = cvu.IsValidClientCertificate();
 		}
 		return isValid;
+		
 	}
-
 
 	private boolean isValidOAuthToken(String xAuth) throws ParseException, SecurityException {
 		boolean ret = false;
