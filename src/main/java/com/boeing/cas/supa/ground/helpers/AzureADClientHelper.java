@@ -19,7 +19,7 @@ public class AzureADClientHelper {
 			Map<String, String> map = mapper.readValue(responseString, HashMap.class);
 			String errorDesc = map.get("error_description");
 			String errorString = errorDesc.split("\\r?\\n")[0];
-			return new Error(map.get("error"), errorString, System.currentTimeMillis()/1000);
+			return new Error(map.get("error"), errorString);
 		} catch (IOException e) {
 			return null;
 		}

@@ -13,10 +13,10 @@ public class Error {
 	 * @param errorDescription
 	 * @param timestamp
 	 */
-	public Error(String error, String errorDescription, long timestamp) {
+	public Error(String error, String errorDescription) {
 		this.error = error;
 		this.errorDescription = errorDescription;
-		this.timestamp = timestamp;
+		this.timestamp = System.currentTimeMillis()/1000;
 	}
 	/**
 	 * @return the error

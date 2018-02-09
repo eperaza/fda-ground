@@ -80,7 +80,7 @@ public class AzureADAuthFilter implements Filter {
 					//pass down the actual obj that exception handler normally send
 					ObjectMapper mapper = new ObjectMapper();
 					PrintWriter out = httpResponse.getWriter(); 
-					out.print(mapper.writeValueAsString(new Error("certificate missing", "Must provide a valid client certificate", System.currentTimeMillis()/1000)));
+					out.print(mapper.writeValueAsString(new Error("certificate missing", "Must provide a valid client certificate")));
 					out.flush();
 					return;
 				}else{
@@ -95,7 +95,7 @@ public class AzureADAuthFilter implements Filter {
 					//pass down the actual obj that exception handler normally send
 					ObjectMapper mapper = new ObjectMapper();
 					PrintWriter out = httpResponse.getWriter(); 
-					out.print(mapper.writeValueAsString(new Error("Invalid client certificate", "Must provide a valid client certificate", System.currentTimeMillis()/1000)));
+					out.print(mapper.writeValueAsString(new Error("Invalid client certificate", "Must provide a valid client certificate")));
 					out.flush();
 					return;
 				}else{
@@ -108,7 +108,7 @@ public class AzureADAuthFilter implements Filter {
 						//pass down the actual obj that exception handler normally send
 						ObjectMapper mapper = new ObjectMapper();
 						PrintWriter out = httpResponse.getWriter(); 
-						out.print(mapper.writeValueAsString(new Error("Authorization_Missing", "Must provide a Authorizaiton token", System.currentTimeMillis()/1000)));
+						out.print(mapper.writeValueAsString(new Error("Authorization_Missing", "Must provide a Authorizaiton token")));
 						out.flush();
 
 						return;
@@ -125,7 +125,7 @@ public class AzureADAuthFilter implements Filter {
 						//pass down the actual obj that exception handler normally send
 						ObjectMapper mapper = new ObjectMapper();
 						PrintWriter out = httpResponse.getWriter(); 
-						out.print(mapper.writeValueAsString(new Error("JWT_ERROR", e.getMessage(), System.currentTimeMillis()/1000)));
+						out.print(mapper.writeValueAsString(new Error("JWT_ERROR", e.getMessage())));
 						out.flush();
 
 						return;
