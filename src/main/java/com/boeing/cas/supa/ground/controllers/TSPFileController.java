@@ -38,7 +38,7 @@ public class TSPFileController {
 					        .contentType(MediaType.parseMediaType("application/octet-stream"))
 					        .body(new InputStreamResource(tspFile.getInputStream()));
 				} catch (Exception e) {
-					error = new Error("internal-error", e.getMessage());
+					error = new Error("internal_error", e.getMessage());
 				}
 		    }
 		}

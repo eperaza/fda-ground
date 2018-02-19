@@ -24,9 +24,9 @@ $ cp target/*.war to <tomcat home>/webapps
 ```
 ### Test (locally)
 ```sh
+$ cp target/*.war to <tomcat home>/webapps
 $ cd <tomcat home>/bin
 $ startup.sh
-$ cp target/*.war to <tomcat home>/webapps
 $ curl -X POST \
   http://localhost:8080/mobilebackendapi-0.0.1-SNAPSHOT/ \
   -H 'cache-control: no-cache' \
