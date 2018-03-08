@@ -19,6 +19,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,12 +34,20 @@ import com.boeing.cas.supa.ground.pojos.UploadMessage;
 import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.utils.ADWTransferUtil;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
+import com.boeing.cas.supa.ground.utils.KeyVaultProperties;
+import com.boeing.cas.supa.ground.utils.KeyVaultRetriever;
 
 @RestController
 @RequestMapping("/uploadFile")
+@EnableConfigurationProperties(KeyVaultProperties.class)
+
 public class FileUploadController {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	
+	@Autowired
+    private KeyVaultProperties keyVaultProperties;
+	
 	private static final String SUCCESS_MESSAGE = "Success";
 	private static final String FAILURE_MESSAGE = "Fail";
 	private static String uploadFolder;
@@ -45,7 +55,8 @@ public class FileUploadController {
 	@RequestMapping(method = {RequestMethod.POST })
 	public ResponseEntity<Object> uploadFile(
 			@RequestParam("file") MultipartFile uploadfile, HttpServletRequest httpRequest) {
-
+		KeyVaultRetriever kvr = new KeyVaultRetriever(keyVaultProperties.getClientId(), keyVaultProperties.getClientKey());		
+		System.out.println();
 
 		logger.info("Upload File method invoked");
 
@@ -75,7 +86,11 @@ public class FileUploadController {
 				Boolean xfr = false;
 				try {
 					logger.info("Starting ADW Transfer");
-					ADWTransferUtil adw = new ADWTransferUtil();
+					String host = kvr.getSecretByKey("adwHost");
+					String usr = kvr.getSecretByKey("adwUser");
+					String pwd = kvr.getSecretByKey("adwPwd");
+					String path = kvr.getSecretByKey("adwPath" );
+					ADWTransferUtil adw = new ADWTransferUtil(host, usr, pwd, path);
 					logger.info(uploadFolderPath.toFile().getAbsolutePath());
 					xfr = adw.sendFile(uploadFolderPath.toFile().getAbsolutePath());
 					logger.info("Transfer to ADW complete: " + xfr);
@@ -96,7 +111,7 @@ public class FileUploadController {
 				Boolean upload = false;
 				try {
 					logger.info("Starting Azure upload");
-					AzureStorageUtil asu = new AzureStorageUtil();
+					AzureStorageUtil asu = new AzureStorageUtil(kvr.getSecretByKey("StorageKey"));
 					upload = asu.uploadFile(uploadFolderPath.toFile().getAbsolutePath(), uploadfile.getOriginalFilename(), user);
 					logger.info("Upload to Azure complete: " + upload);
 				}

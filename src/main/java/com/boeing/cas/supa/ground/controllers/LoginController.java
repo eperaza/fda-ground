@@ -1,16 +1,10 @@
 package com.boeing.cas.supa.ground.controllers;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.cert.X509Certificate;
 import java.util.Base64;
-import java.util.Enumeration;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -19,6 +13,8 @@ import java.util.concurrent.Future;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,38 +26,37 @@ import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
 import com.boeing.cas.supa.ground.pojos.AccessToken;
 import com.boeing.cas.supa.ground.pojos.Credential;
 import com.boeing.cas.supa.ground.pojos.Error;
+import com.boeing.cas.supa.ground.utils.KeyVaultProperties;
+import com.boeing.cas.supa.ground.utils.KeyVaultRetriever;
 import com.microsoft.aad.adal4j.AuthenticationContext;
 import com.microsoft.aad.adal4j.AuthenticationException;
 import com.microsoft.aad.adal4j.AuthenticationResult;
 
 @RestController
 @RequestMapping("/login")
+@EnableConfigurationProperties(KeyVaultProperties.class)
 public class LoginController {
+	
+	@Autowired
+    private KeyVaultProperties keyVaultProperties;
 	//https://stackoverflow.com/questions/45694705/adal4j-java-use-refresh-token-with-username-and-password-to-get-the-access-tok
-	private final static String AUTHORITY = "https://login.microsoftonline.com/fdacustomertest.onmicrosoft.com/";
-    private final static String CLIENT_ID = "95d69a21-369b-46cc-aa1d-0b67a2353f59";
+//	private final static String AUTHORITY = "https://login.microsoftonline.com/fdacustomertest.onmicrosoft.com/";
+//    private final static String CLIENT_ID = "95d69a21-369b-46cc-aa1d-0b67a2353f59";
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
 	@RequestMapping(method = {RequestMethod.POST })
 	public ResponseEntity<Object> getAccessToken(@RequestBody Credential cred){
+		KeyVaultRetriever kvr = new KeyVaultRetriever(keyVaultProperties.getClientId(), keyVaultProperties.getClientKey());
+		
 		if (isValid(cred)) {
 			logger.info("it is valid");
 			
-			Object ar = getAccessTokenFromUserCredentials(cred.getAzUsername(), cred.getAzPassword());
+			Object ar = getAccessTokenFromUserCredentials(cred.getAzUsername(), cred.getAzPassword(), kvr.getSecretByKey("azure-ad-authority"), kvr.getSecretByKey("azure-ad-clientid"));
 			if(ar != null){
 				if(ar instanceof AuthenticationResult){
-					try {
-						String getPfxEncodedAsBase64 = getPfxEncodedAsBase64();
-						AccessToken at = new AccessToken((AuthenticationResult) ar, getPfxEncodedAsBase64);
-						return new ResponseEntity<>(at, HttpStatus.OK);
-					} catch (IOException e) {
-						logger.error(e.getMessage());
-						if(ExceptionUtils.indexOfThrowable(e.getCause(), IOException.class) >= 0){
-							Error error = AzureADClientHelper.getLoginErrorFromString(((AuthenticationException) ar).getMessage());
-							
-							return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
-						}
-					}	
+					String getPfxEncodedAsBase64 = kvr.getSecretByKey("client2base64");
+					AccessToken at = new AccessToken((AuthenticationResult) ar, getPfxEncodedAsBase64);
+					return new ResponseEntity<>(at, HttpStatus.OK);	
 				}
 				if(ExceptionUtils.indexOfThrowable((Throwable) ar, AuthenticationException.class) >= 0){
 					Error error = AzureADClientHelper.getLoginErrorFromString(((AuthenticationException) ar).getMessage());
@@ -83,15 +78,15 @@ public class LoginController {
 		        && cred.getAzPassword() != null;
 	}
 	private static Object getAccessTokenFromUserCredentials(
-            String username, String password) {
+            String username, String password, String authority, String clientid) {
         AuthenticationContext context = null;
         AuthenticationResult result = null;
         ExecutorService service = null;
         try {
             service = Executors.newFixedThreadPool(1);
-            context = new AuthenticationContext(AUTHORITY, false, service);
+            context = new AuthenticationContext(authority, false, service);
             Future<AuthenticationResult> future = context.acquireToken(
-                    "https://graph.windows.net", CLIENT_ID, username, password,
+                    "https://graph.windows.net", clientid, username, password,
                     null);
             result = future.get();
             System.out.println(context.toString());
@@ -107,12 +102,6 @@ public class LoginController {
 			Throwable cause = e.getCause();
 			if(cause != null) {
 				return cause;
-//				System.out.println(cause.getClass().getName());
-//			    System.out.println("cause: "+cause.getMessage());
-//			    System.out.println(ExceptionUtils.indexOfThrowable(cause, AuthenticationException.class));
-//			    if(ExceptionUtils.indexOfThrowable(cause, AuthenticationException.class) >= 0){
-//			    	System.out.println(((AuthenticationException) cause).getMessage());
-//			    }
 			}
 		} catch (AuthenticationException e){
 			System.out.println("AuthenticationException");
@@ -123,19 +112,6 @@ public class LoginController {
         return result;
     }
 	
-	
-	private String getPfxEncodedAsBase64() throws IOException{
-		InputStream fis = this.getClass().getClassLoader().getResourceAsStream("client2.pfx");;
-		ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
-		byte[] InBuffer = new byte[512];
-		int read = 0;
-		while ( (read = fis.read(InBuffer)) != -1 ) {
-		   outBuffer.write(InBuffer, 0, read);
-		}
 
-		String encoded = Base64.getEncoder().encodeToString(outBuffer.toByteArray());
-		return encoded;
-
-	}
 
 }

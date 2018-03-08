@@ -33,8 +33,8 @@ import com.boeing.cas.supa.ground.utils.CertificateVerifierUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWTParser;
 
-@Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
+//@Component
+//@Order(Ordered.HIGHEST_PRECEDENCE)
 public class AzureADAuthFilter implements Filter {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -73,7 +73,7 @@ public class AzureADAuthFilter implements Filter {
 			
 			if(allowedPath){
 				//Only allow client1 and mihir certs
-				if(!isValidClientCert("client1", httpRequest) && !isValidClientCert("mihir", httpRequest)){
+				if(!isValidClientCert("client1", httpRequest)){
 					httpResponse.setStatus(403);
 					httpResponse.setContentType("application/json");
 
