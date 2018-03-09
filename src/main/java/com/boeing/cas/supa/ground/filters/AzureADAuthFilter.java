@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -33,10 +34,15 @@ import com.boeing.cas.supa.ground.utils.CertificateVerifierUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWTParser;
 
-//@Component
-//@Order(Ordered.HIGHEST_PRECEDENCE)
-public class AzureADAuthFilter implements Filter {
+@Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
 
+public class AzureADAuthFilter implements Filter {
+	
+	@Autowired
+	private CertificateVerifierUtil certVerify;
+
+	
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	@Value("#{'${list.of.apps}'.split(',')}") 
@@ -63,7 +69,7 @@ public class AzureADAuthFilter implements Filter {
 			throws IOException, ServletException {
 
 		logger.info("filter doing some stuff...");
-
+		
 
 		if (request instanceof HttpServletRequest) {
 			HttpServletRequest httpRequest = (HttpServletRequest) request;
@@ -141,8 +147,7 @@ public class AzureADAuthFilter implements Filter {
 		String certHeader = httpRequest.getHeader("X-ARR-ClientCert");
 		boolean isValid = false;
 		if(!certHeader.isEmpty() || certHeader != null){
-			CertificateVerifierUtil cvu = new CertificateVerifierUtil(certHeader, certHolder);
-			isValid = cvu.IsValidClientCertificate();
+			isValid = certVerify.IsValidClientCertificate(certHeader, certHolder);
 		}
 		return isValid;
 		

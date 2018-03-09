@@ -23,7 +23,6 @@ public class KeyVaultRetriever {
 
 	
 	public KeyVaultRetriever(String clientId, String clientKey) {
-		// TODO Auto-generated constructor stub
 		kvc = KeyVaultAuthenticator.getAuthenticatedClient(clientId, clientKey);
 	}
 
