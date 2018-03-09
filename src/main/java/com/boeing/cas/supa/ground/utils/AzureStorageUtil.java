@@ -6,14 +6,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.pojos.UserCondensed;
@@ -33,9 +29,7 @@ public class AzureStorageUtil {
 	
 	private String key;
 	private CloudStorageAccount strAccount;
-	
-	@Autowired
-    private KeyVaultProperties keyVaultProperties;
+
 	
 	public AzureStorageUtil(String key) throws IOException {
 		try {
