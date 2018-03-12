@@ -23,6 +23,17 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import com.boeing.cas.supa.ground.pojos.Group;
+import com.boeing.cas.supa.ground.pojos.User;
+import com.boeing.cas.supa.ground.utils.HeaderMapRequestWrapper;
+import com.boeing.cas.supa.ground.utils.MicrosoftGraphUtil;
+import com.nimbusds.jwt.JWTParser;
 
 /**
  * This is Helper class for all RestClient class.
@@ -52,4 +63,31 @@ public class HttpClientHelper {
 
         return stringBuilder.toString();
     }
+    
+    public static User getUserInfoFromHeader(HttpServletRequest httpRequest){
+    	HeaderMapRequestWrapper header = new HeaderMapRequestWrapper(httpRequest);
+		String tokenName = header.getHeader("authorization");
+		String uniqueId = getUniqueIdFromJWT(tokenName);
+		MicrosoftGraphUtil mgu = new MicrosoftGraphUtil("fdacustomertest.onmicrosoft.com", tokenName.replaceFirst("Bearer ", ""));
+		User user = mgu.getUsernamesFromGraph(uniqueId);
+		ArrayList<Group> group = mgu.getGroupFromGraph(uniqueId);
+		user.setGroups(group);
+    	return user;
+    }
+    private static String getUniqueIdFromJWT(String xAuth) {
+		String uniqueId = null;
+		if(xAuth.contains("Bearer")){
+    		xAuth = xAuth.replaceFirst("Bearer ", "");
+    		Map<String, Object> claimsMap;
+			try {
+				claimsMap = JWTParser.parse(xAuth).getJWTClaimsSet().getClaims();
+				uniqueId = (String) claimsMap.get("oid");
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    		
+		}
+		return uniqueId;
+	}
 }

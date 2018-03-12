@@ -1,4 +1,5 @@
 package com.boeing.cas.supa.ground.utils;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -6,11 +7,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
-import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.boeing.cas.supa.ground.pojos.User;
+import com.boeing.cas.supa.ground.pojos.UserCondensed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.StorageException;
@@ -21,11 +23,17 @@ import com.microsoft.azure.storage.queue.CloudQueue;
 import com.microsoft.azure.storage.queue.CloudQueueClient;
 import com.microsoft.azure.storage.queue.CloudQueueMessage;
 
+
 public class AzureStorageUtil {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	
+	private String key;
 	private CloudStorageAccount strAccount;
-	public AzureStorageUtil() throws IOException {
+
+	
+	public AzureStorageUtil(String key) throws IOException {
 		try {
+			this.key = key;
 			this.strAccount = getcloudStorageAccount();
 		} catch (IllegalArgumentException e) {
 			logger.error(e.getMessage());
@@ -35,7 +43,7 @@ public class AzureStorageUtil {
 			logger.error(e.getMessage());
 		}
 	}
-	public boolean uploadFile(String fileLocation, String fileName){
+	public boolean uploadFile(String fileLocation, String fileName, User user){
 		String containerName = fileName.split("_")[0].toLowerCase();		
 		boolean rval = false;
 		
@@ -67,6 +75,8 @@ public class AzureStorageUtil {
             AzureStorageMessage msg = new AzureStorageMessage();
             msg.setContainerName(containerName);
             msg.setFileName(fileName);
+            msg.setUploadedBy(new UserCondensed(user.getSurname(), user.getGivenName(), user.getDisplayName(), user.getOtherMails(), user.getGroups()));
+            msg.setUploadedOn(System.currentTimeMillis()/1000);
             ObjectMapper mapper = new ObjectMapper();
             String jsonMessage = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(msg);
             
@@ -94,25 +104,32 @@ public class AzureStorageUtil {
         }
 		return rval;
 	}
+	
+	public ByteArrayOutputStream downloadFile(String containerName, String fileName){
+		// Create the blob client.
+	    CloudBlobClient blobClient = strAccount.createCloudBlobClient();
+	    ByteArrayOutputStream outputStream = null; 
+	    try {
+			CloudBlobContainer container = blobClient.getContainerReference(containerName);
+			if(container.exists()){
+				CloudBlockBlob blob = container.getBlockBlobReference(fileName);
+				if(blob.exists()){
+					outputStream = new ByteArrayOutputStream();  
+					blob.download(outputStream);
+				}
+			}
+		} catch (URISyntaxException | StorageException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return outputStream;
+	}
+	
 	private CloudStorageAccount getcloudStorageAccount() {
 
-        // Retrieve the connection string
-        Properties prop = new Properties();
-        try {
-            InputStream propertyStream = AzureStorageUtil.class.getClassLoader().getResourceAsStream("StorageAccount.properties");
-            if (propertyStream != null) {
-                prop.load(propertyStream);
-            }
-            else {
-                throw new RuntimeException();
-            }
-        } catch (RuntimeException|IOException e) {
-        	logger.error("\nFailed to load StorageAccount.properties file.");
-            throw new RuntimeException();
-        }
         CloudStorageAccount storageAccount;
         try {
-        	String key = prop.getProperty("StorageKey");
+        	logger.info("storage key:" + key);
         	String storageConnectionString = "DefaultEndpointsProtocol=http;" + "AccountName=fdaadw;"
         			+ "AccountKey=" + key + ";EndpointSuffix=core.windows.net;";
             storageAccount = CloudStorageAccount.parse(storageConnectionString);

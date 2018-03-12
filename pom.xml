@@ -33,7 +33,6 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-configuration-processor</artifactId>
@@ -64,34 +63,29 @@
 			<version>5.3.0</version>
 		</dependency>
 		<dependency>
-	  <groupId>com.hierynomus</groupId>
-	  <artifactId>sshj</artifactId>
-	  <version>0.19.0</version>
-	</dependency>
-	<!-- https://mvnrepository.com/artifact/com.google.collections/google-collections -->
-      <dependency>
-        <groupId>com.microsoft.azure</groupId>
-        <artifactId>applicationinsights-web</artifactId>
-        <!-- or applicationinsights-core for bare API -->
-        <version>[1.0,)</version>
-      </dependency>
-<!-- <dependency>
-			<groupId>com.microsoft.azure</groupId>
-			<artifactId>applicationinsights-core</artifactId>
-			<version>1.0.10</version>
-		</dependency> -->
-
-       <dependency>
-          <groupId>com.microsoft.azure</groupId>
-          <artifactId>applicationinsights-logging-logback</artifactId>
-          <version>[1.0,)</version>
-       </dependency>
-       		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>2.7.5</version>
+			<groupId>com.hierynomus</groupId>
+			<artifactId>sshj</artifactId>
+			<version>0.19.0</version>
 		</dependency>
-  
+		<!-- https://mvnrepository.com/artifact/com.google.collections/google-collections -->
+		<dependency>
+			<groupId>com.microsoft.azure</groupId>
+			<artifactId>applicationinsights-web</artifactId>
+			<!-- or applicationinsights-core for bare API -->
+			<version>[1.0,)</version>
+		</dependency>
+		<!-- <dependency> <groupId>com.microsoft.azure</groupId> <artifactId>applicationinsights-core</artifactId> 
+			<version>1.0.10</version> </dependency> -->
+		<dependency>
+			<groupId>com.microsoft.azure</groupId>
+			<artifactId>applicationinsights-logging-logback</artifactId>
+			<version>[1.0,)</version>
+		</dependency>
+		<dependency>
+    <groupId>com.microsoft.azure</groupId>
+    <artifactId>azure-keyvault</artifactId>
+    <version>1.0.0</version>
+</dependency>
 	</dependencies>
 
 	<build>
@@ -102,6 +96,5 @@
 			</plugin>
 		</plugins>
 	</build>
-
-
+	
 </project>

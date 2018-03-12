@@ -2,6 +2,7 @@ Airline_files/
 Airline_files_unzipped/
 target/
 !.mvn/wrapper/maven-wrapper.jar
+*.log
 
 ### STS ###
 .apt_generated
