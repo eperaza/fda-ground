@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
-import com.boeing.cas.supa.ground.pojos.AccessToken;
 import com.boeing.cas.supa.ground.pojos.Credential;
 import com.boeing.cas.supa.ground.pojos.Error;
 import com.boeing.cas.supa.ground.pojos.UserRegistration;
