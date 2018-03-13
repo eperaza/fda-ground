@@ -51,6 +51,7 @@ public class CertificateVerifierUtil {
 	}
 	
 	public boolean IsValidClientCertificate(String certHeader, String certHolder){
+		//Refer: https://docs.microsoft.com/en-us/azure/app-service/app-service-web-configure-tls-mutual-auth
 		X509Certificate x509ClientCert = getCertFromHeader(certHeader);
 		if(x509ClientCert != null){
 			try {

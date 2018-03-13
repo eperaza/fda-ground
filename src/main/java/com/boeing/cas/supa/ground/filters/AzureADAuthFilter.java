@@ -29,13 +29,15 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import com.boeing.cas.supa.ground.helpers.HttpClientHelper;
 import com.boeing.cas.supa.ground.pojos.Error;
+import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.utils.CertificateVerifierUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWTParser;
 
-//@Component
-//@Order(Ordered.HIGHEST_PRECEDENCE)
+@Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
 
 public class AzureADAuthFilter implements Filter {
 	
@@ -55,7 +57,7 @@ public class AzureADAuthFilter implements Filter {
 	private String appIdUri;
 
 	private static final Set<String> ALLOWED_PATHS = Collections.unmodifiableSet(new HashSet<>(
-			Arrays.asList("/login", "/refresh", "/logfile")));
+			Arrays.asList("/login", "/register", "/logfile")));
 
 
 
@@ -78,7 +80,7 @@ public class AzureADAuthFilter implements Filter {
 			boolean allowedPath = ALLOWED_PATHS.contains(path);
 			
 			if(allowedPath){
-				//Only allow client1 and mihir certs
+				//Only allow client1 certs
 				if(!isValidClientCert("client1", httpRequest)){
 					httpResponse.setStatus(403);
 					httpResponse.setContentType("application/json");
@@ -121,6 +123,8 @@ public class AzureADAuthFilter implements Filter {
 					}
 					try {
 						if(isValidOAuthToken(xAuth)){
+							User user = HttpClientHelper.getUserInfoFromHeader(httpRequest);
+							logger.info("User: " + user.getGivenName());
 							chain.doFilter(request, response);
 						}
 					} catch (Exception e){
