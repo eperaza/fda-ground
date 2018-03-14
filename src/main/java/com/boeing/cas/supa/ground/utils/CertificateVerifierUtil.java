@@ -105,6 +105,60 @@ public class CertificateVerifierUtil {
 		return false;
 
 	}
+	public boolean IsValidClientCertificate(X509Certificate x509ClientCert, String certHolder) {
+		if(x509ClientCert != null){
+			try {
+				boolean isSelfSignedCert = isSelfSignedCert(x509ClientCert);
+				logger.info("Certificate received is self signed:" + (isSelfSignedCert ? "true": "false"));
+				if(!isSelfSignedCert){
+					KeyVaultRetriever kvr = new KeyVaultRetriever(keyVaultProperties.getClientId(), keyVaultProperties.getClientKey());
+					X509Certificate x509ServerCert = kvr.getCertificateByCertName(certHolder);
+					Map<String, String> x509ClientCertSubjectDn = getMap(x509ClientCert.getSubjectDN().getName());
+					Map<String, String> x509ClientCertIssuerDn = getMap(x509ClientCert.getIssuerDN().getName());
+					String x509ClientCertThumbPrint = getThumbprint(x509ClientCert);
+					Map<String, String> x509ServerCertSubjectDn = getMap(x509ServerCert.getSubjectDN().getName());
+					Map<String, String> x509ServerCertIssuerDn = getMap(x509ServerCert.getIssuerDN().getName());
+					String x509ServerCertThumbPrint = getThumbprint(x509ServerCert);
+					
+					
+					//1. The certificate is not expired and is active for the current time on server.
+					x509ClientCert.checkValidity(new Date());
+					
+					//2. Check subject name of certificate
+					boolean foundSubject = false;
+					if(x509ClientCertSubjectDn.get("CN").equals(x509ServerCertSubjectDn.get("CN"))){
+						foundSubject = true;
+					}
+					
+					if (!foundSubject) return false;
+					
+					//3. Check issuer name of certificate
+					boolean foundIssuerCN = false, foundIssuerO = false;
+					if(x509ClientCertIssuerDn.get("CN").equals(x509ServerCertIssuerDn.get("CN"))){
+						foundIssuerCN = true;
+					}
+					if(x509ClientCertIssuerDn.get("O").equals(x509ServerCertIssuerDn.get("O"))){
+						foundIssuerO = true;
+					}
+					if (!foundIssuerCN || !foundIssuerO) return false;
+					
+					//4. check the thumbprint of certificate
+					if(!x509ServerCertThumbPrint.equalsIgnoreCase(x509ClientCertThumbPrint)){
+						return false;
+					}
+					return true;
+				}
+			} catch (CertificateException | NoSuchAlgorithmException | NoSuchProviderException e) {
+				logger.debug("Some exceptions are happening in certificate verification");
+				logger.debug(e.getMessage());
+				return false;
+			}
+
+		}
+		return false;
+		
+	}
+
 	/**
 	 * Checks whether given X.509 certificate is self-signed.
 	 * @param cert 

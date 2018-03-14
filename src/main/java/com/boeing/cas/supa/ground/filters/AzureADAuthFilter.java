@@ -2,6 +2,7 @@ package com.boeing.cas.supa.ground.filters;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.security.cert.X509Certificate;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -36,18 +37,17 @@ import com.boeing.cas.supa.ground.utils.CertificateVerifierUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWTParser;
 
-@Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
+//@Component
+//@Order(Ordered.HIGHEST_PRECEDENCE)
 
 public class AzureADAuthFilter implements Filter {
-	
+
 	@Autowired
 	private CertificateVerifierUtil certVerify;
 
-	
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-	@Value("#{'${list.of.apps}'.split(',')}") 
+	@Value("#{'${list.of.apps}'.split(',')}")
 	private List<String> approvedAppId;
 
 	@Value("${tenantId}")
@@ -56,10 +56,8 @@ public class AzureADAuthFilter implements Filter {
 	@Value("${app.id.uri}")
 	private String appIdUri;
 
-	private static final Set<String> ALLOWED_PATHS = Collections.unmodifiableSet(new HashSet<>(
-			Arrays.asList("/login", "/register", "/logfile")));
-
-
+	private static final Set<String> ALLOWED_PATHS = Collections
+			.unmodifiableSet(new HashSet<>(Arrays.asList("/login", "/register", "/logfile")));
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
@@ -71,133 +69,153 @@ public class AzureADAuthFilter implements Filter {
 			throws IOException, ServletException {
 
 		logger.info("filter doing some stuff...");
-		
 
 		if (request instanceof HttpServletRequest) {
+
 			HttpServletRequest httpRequest = (HttpServletRequest) request;
 			HttpServletResponse httpResponse = (HttpServletResponse) response;
-			String path = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length()).replaceAll("[/]+$", ""); 
+			String path = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length())
+					.replaceAll("[/]+$", "");
 			boolean allowedPath = ALLOWED_PATHS.contains(path);
-			
-			if(allowedPath){
-				//Only allow client1 certs
-				if(!isValidClientCert("client1", httpRequest)){
+
+			if (allowedPath) {
+				// Only allow client1 certs
+
+				if (!isValidClientCertHeader("client1", httpRequest)) {
+					
 					httpResponse.setStatus(403);
 					httpResponse.setContentType("application/json");
 
-					//pass down the actual obj that exception handler normally send
+					// pass down the actual obj that exception handler normally
+					// send
 					ObjectMapper mapper = new ObjectMapper();
-					PrintWriter out = httpResponse.getWriter(); 
-					out.print(mapper.writeValueAsString(new Error("certificate missing", "Must provide a valid client certificate")));
+					PrintWriter out = httpResponse.getWriter();
+					out.print(mapper.writeValueAsString(
+							new Error("certificate missing", "Must provide a valid client certificate")));
 					out.flush();
 					return;
-				}else{
+				} else {
 					chain.doFilter(request, response);
 				}
-				
-			}else{
-				if(!isValidClientCert("client2", httpRequest)){
+
+			} else {
+				if (!isValidClientCertHeader("client2", httpRequest)) {
 					httpResponse.setStatus(403);
 					httpResponse.setContentType("application/json");
 
-					//pass down the actual obj that exception handler normally send
+					// pass down the actual obj that exception handler normally
+					// send
 					ObjectMapper mapper = new ObjectMapper();
-					PrintWriter out = httpResponse.getWriter(); 
-					out.print(mapper.writeValueAsString(new Error("Invalid client certificate", "Must provide a valid client certificate")));
+					PrintWriter out = httpResponse.getWriter();
+					out.print(mapper.writeValueAsString(
+							new Error("Invalid client certificate", "Must provide a valid client certificate")));
 					out.flush();
 					return;
-				}else{
+				} else {
 					String xAuth = httpRequest.getHeader("Authorization");
-					if(xAuth == null || xAuth.isEmpty()){
+					if (xAuth == null || xAuth.isEmpty()) {
 
 						httpResponse.setStatus(400);
 						httpResponse.setContentType("application/json");
 
-						//pass down the actual obj that exception handler normally send
+						// pass down the actual obj that exception handler
+						// normally send
 						ObjectMapper mapper = new ObjectMapper();
-						PrintWriter out = httpResponse.getWriter(); 
-						out.print(mapper.writeValueAsString(new Error("Authorization_Missing", "Must provide a Authorizaiton token")));
+						PrintWriter out = httpResponse.getWriter();
+						out.print(mapper.writeValueAsString(
+								new Error("Authorization_Missing", "Must provide a Authorizaiton token")));
 						out.flush();
 
 						return;
 					}
 					try {
-						if(isValidOAuthToken(xAuth)){
+						if (isValidOAuthToken(xAuth)) {
 							User user = HttpClientHelper.getUserInfoFromHeader(httpRequest);
 							logger.info("User: " + user.getGivenName());
 							chain.doFilter(request, response);
 						}
-					} catch (Exception e){
-						//set the response object
+					} catch (Exception e) {
+						// set the response object
 						httpResponse.setStatus(400);
 						httpResponse.setContentType("application/json");
 
-						//pass down the actual obj that exception handler normally send
+						// pass down the actual obj that exception handler
+						// normally send
 						ObjectMapper mapper = new ObjectMapper();
-						PrintWriter out = httpResponse.getWriter(); 
+						PrintWriter out = httpResponse.getWriter();
 						out.print(mapper.writeValueAsString(new Error("JWT_ERROR", e.getMessage())));
 						out.flush();
 
 						return;
 					}
-					
+
 				}
 			}
 		}
 		logger.info("possibly modifying the response...");
 	}
 
-	private boolean isValidClientCert(String certHolder, HttpServletRequest httpRequest) {
+	private boolean isValidClientCertHeader(String certHolder, HttpServletRequest httpRequest) {
 		String certHeader = httpRequest.getHeader("X-ARR-ClientCert");
 		boolean isValid = false;
-		if(!certHeader.isEmpty() || certHeader != null){
+		if (!certHeader.isEmpty() || certHeader != null) {
 			isValid = certVerify.IsValidClientCertificate(certHeader, certHolder);
 		}
 		return isValid;
-		
+
+	}
+
+	private boolean isValidClientCertHeader2(String certHolder, HttpServletRequest httpRequest) {
+		X509Certificate certs[] = (X509Certificate[]) httpRequest.getAttribute("javax.servlet.request.X509Certificate");
+		// ... Test if non-null, non-empty.
+		boolean isValid = false;
+		if (certs != null && certs.length != 0) {
+			X509Certificate clientCert = certs[0];
+			isValid = certVerify.IsValidClientCertificate(clientCert, certHolder);
+
+		}
+		return isValid;
 	}
 
 	private boolean isValidOAuthToken(String xAuth) throws ParseException, SecurityException {
 		boolean ret = false;
-		if(xAuth == null || xAuth.isEmpty()){
-			throw new SecurityException("Not a valid Authorizaiton token"); 
-		}else{
-			if(xAuth.contains("Bearer")){
+		if (xAuth == null || xAuth.isEmpty()) {
+			throw new SecurityException("Not a valid Authorizaiton token");
+		} else {
+			if (xAuth.contains("Bearer")) {
 				xAuth = xAuth.replaceFirst("Bearer ", "");
 				Map<String, Object> claimsMap = JWTParser.parse(xAuth).getJWTClaimsSet().getClaims();
-				if(claimsMap.get("aud") instanceof List<?>){
+				if (claimsMap.get("aud") instanceof List<?>) {
 					Set<String> set = new HashSet<String>((Collection<? extends String>) claimsMap.get("aud"));
 					logger.info(set.toString());
-					if(!set.contains(appIdUri)){
+					if (!set.contains(appIdUri)) {
 
 						logger.info("Aud doesn't exist");
-						throw new SecurityException("Not a valid Authorizaiton token: Aud doesn't exist");  
+						throw new SecurityException("Not a valid Authorizaiton token: Aud doesn't exist");
 					}
 				}
-				if(!claimsMap.get("tid").equals(tenantId)){
+				if (!claimsMap.get("tid").equals(tenantId)) {
 					logger.info("TenantId doesn't exist");
-					throw new SecurityException("Not a valid Authorizaiton token: TenantId doesn't exist");  
+					throw new SecurityException("Not a valid Authorizaiton token: TenantId doesn't exist");
 				}
-				if(!approvedAppId.contains(claimsMap.get("appid"))){
+				if (!approvedAppId.contains(claimsMap.get("appid"))) {
 					logger.info("Not part of approved apps");
-					throw new SecurityException("Not a valid Authorizaiton token: Not part of approved apps");  
+					throw new SecurityException("Not a valid Authorizaiton token: Not part of approved apps");
 				}
 				logger.info(claimsMap.get("exp").getClass().getName());
 
-				if(!((Date) claimsMap.get("exp")).after(new Date())){
+				if (!((Date) claimsMap.get("exp")).after(new Date())) {
 					logger.info("Expired token");
-					throw new SecurityException("Not a valid Authorizaiton token: expired token"); 
+					throw new SecurityException("Not a valid Authorizaiton token: expired token");
 				}
 				logger.info("everything passed...");
 				ret = true;
-			}else{
-				throw new SecurityException("Not a valid Authorizaiton token"); 
+			} else {
+				throw new SecurityException("Not a valid Authorizaiton token");
 			}
 		}
 		return ret;
 	}
-
-
 
 	@Override
 	public void destroy() {

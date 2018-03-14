@@ -85,7 +85,6 @@ public class LoginController {
                     "https://graph.windows.net", clientid, username, password,
                     null);
             result = future.get();
-            System.out.println(context.toString());
         } catch (MalformedURLException e) {
         	System.out.println("MalformedURLException");
         	System.out.println(e.getMessage());

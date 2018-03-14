@@ -129,7 +129,6 @@ public class AzureStorageUtil {
 
         CloudStorageAccount storageAccount;
         try {
-        	logger.info("storage key:" + key);
         	String storageConnectionString = "DefaultEndpointsProtocol=http;" + "AccountName=fdaadw;"
         			+ "AccountKey=" + key + ";EndpointSuffix=core.windows.net;";
             storageAccount = CloudStorageAccount.parse(storageConnectionString);
