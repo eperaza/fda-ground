@@ -57,7 +57,7 @@ public class AzureADAuthFilter implements Filter {
 	private String appIdUri;
 
 	private static final Set<String> ALLOWED_PATHS = Collections
-			.unmodifiableSet(new HashSet<>(Arrays.asList("/login", "/register", "/logfile")));
+			.unmodifiableSet(new HashSet<>(Arrays.asList("/login", "/refresh", "/register", "/logfile")));
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
