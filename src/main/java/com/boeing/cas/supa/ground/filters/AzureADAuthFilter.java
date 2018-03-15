@@ -80,7 +80,6 @@ public class AzureADAuthFilter implements Filter {
 
 			if (allowedPath) {
 				// Only allow client1 certs
-
 				if (!isValidClientCertHeader("client1", httpRequest)) {
 					
 					httpResponse.setStatus(403);
@@ -157,20 +156,26 @@ public class AzureADAuthFilter implements Filter {
 
 	private boolean isValidClientCertHeader(String certHolder, HttpServletRequest httpRequest) {
 		String certHeader = httpRequest.getHeader("X-ARR-ClientCert");
-		boolean isValid = false;
-		if (!certHeader.isEmpty() || certHeader != null) {
-			isValid = certVerify.IsValidClientCertificate(certHeader, certHolder);
+		
+		if (certHeader != null && !certHeader.isEmpty()) {
+			return certVerify.IsValidClientCertificate(certHeader, certHolder);
 		}
-		return isValid;
+		return isValidClientCertHeader2(certHolder, httpRequest);
+
 
 	}
 
 	private boolean isValidClientCertHeader2(String certHolder, HttpServletRequest httpRequest) {
 		X509Certificate certs[] = (X509Certificate[]) httpRequest.getAttribute("javax.servlet.request.X509Certificate");
 		// ... Test if non-null, non-empty.
+		logger.info("certs of length" + certs.length);
+		logger.info("cert properties");
 		boolean isValid = false;
 		if (certs != null && certs.length != 0) {
 			X509Certificate clientCert = certs[0];
+			logger.info("cert properties: " + clientCert.toString());
+			logger.info("cert subject: " + clientCert.getSubjectDN().getName());
+			logger.info("cert issuer: " + clientCert.getIssuerDN().getName());
 			isValid = certVerify.IsValidClientCertificate(clientCert, certHolder);
 
 		}
