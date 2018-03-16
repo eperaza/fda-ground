@@ -2,6 +2,8 @@ package com.boeing.cas.supa.ground.controllers;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,29 +23,33 @@ import com.boeing.cas.supa.ground.utils.KeyVaultRetriever;
 @Controller
 @EnableConfigurationProperties(KeyVaultProperties.class)
 public class FileDownloadController {
-
+	
+//	private static final Map<String, String> CONTAINER_FILE_TYPE_MAP = createMap();
+//    private static Map<String, String> createMap()
+//    {
+//        Map<String,String> myMap = new HashMap<String,String>();
+//        myMap.put("tsp", "json");
+//        myMap.put("config", "mobileconfig");
+//        myMap.put("properties", "properties");
+//        return myMap;
+//    }
+    
 	@Autowired
     private KeyVaultProperties keyVaultProperties;
 	
 	@ResponseBody
 	@RequestMapping(value = "/download", method = RequestMethod.GET)
-	public byte[] downloadJSONFile(@RequestParam("tail") String tail, @RequestParam("type") String type, HttpServletRequest request, HttpServletResponse response){
+	public byte[] downloadJSONFile(@RequestParam("file") String file, @RequestParam("type") String type, HttpServletRequest request, HttpServletResponse response){
 		KeyVaultRetriever kvr = new KeyVaultRetriever(keyVaultProperties.getClientId(), keyVaultProperties.getClientKey());		
 		
 		try {
 			AzureStorageUtil asu = new AzureStorageUtil(kvr.getSecretByKey("StorageKey"));
-			if(tail != null){
+			if(file != null){
 				ByteArrayOutputStream outputStream = null;
-				//Files are always case sensitive so need to change fileparam...PLEASE 
-				if(type.toLowerCase().equals("tsp")){
-					String fileparam=tail+".json";
-					outputStream = asu.downloadFile("tsp", fileparam);
-				}
-				if(type.toLowerCase().equals("properties")){
-					
-					String fileparam = tail+".properties";
-					outputStream = asu.downloadFile("properties", fileparam);
-				}
+				//Files are always case sensitive so no need to change fileparam...PLEASE 
+				type = type.toLowerCase();
+				String fileParam = file;
+				outputStream = asu.downloadFile(type, fileParam);
 				if(outputStream != null){
 					response.setStatus( HttpServletResponse.SC_OK  );
 					return outputStream.toByteArray(); 
@@ -60,4 +66,6 @@ public class FileDownloadController {
 		return null;
 		
 	}
+
+	
 }
