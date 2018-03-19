@@ -37,8 +37,8 @@ import com.boeing.cas.supa.ground.utils.CertificateVerifierUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWTParser;
 
-@Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
+//@Component
+//@Order(Ordered.HIGHEST_PRECEDENCE)
 
 public class AzureADAuthFilter implements Filter {
 
