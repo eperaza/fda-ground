@@ -41,6 +41,15 @@ $ curl  -X POST https://fdagroundtest3.azurewebsites.net/login \
      --cert conf/client1.pfx:password  \
      -H 'Cache-Control: no-cache' -H 'Content-Type: application/json' \
      -d '{"azUsername": "<AZURE USERNAME>", "azPassword": "<AZURE Password>"}'
+$ curl  -X POST https://fdagroundtest3.azurewebsites.net/register \
+       --cert conf/client1.pfx:password \
+      -H 'Cache-Control: no-cache' \
+      -H 'Content-Type: application/json'\
+      -d '{"azUsername": "<AZURE USERNAME>",
+"azPassword": "<AZURE Password>"}'
+
+
+
 ```
 
 
