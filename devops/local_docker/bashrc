@@ -1,0 +1,13 @@
+# Set common aliases
+alias c='clear'
+alias cls='clear'
+alias rm='rm -i'
+alias l='ls -altr'
+alias dir='ls -altr'
+
+# Format terminal prompt
+PS1="[\h:\w] \u\$ "
+
+# source profile settings
+source ~/.profile
+

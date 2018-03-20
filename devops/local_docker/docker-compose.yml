@@ -1,0 +1,10 @@
+version: '2'
+services:
+  supa:
+    build: .
+    image: boeing/fda-supa-docker
+    ports:
+      - "80:8080"
+      - "443:8443"
+    container_name: supa_fda
+

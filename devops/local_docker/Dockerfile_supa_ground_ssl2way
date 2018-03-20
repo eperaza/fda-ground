@@ -1,0 +1,43 @@
+FROM tomcat:8.0.43-jre8-alpine
+
+# Configure Tomcat for two-way SSL (mutual authentication and encryption).
+ADD tomcat/tomcat-users.xml /usr/local/tomcat/conf/tomcat-users.xml
+
+# Add client certificates into container for local testing.
+ADD vault /root/vault
+
+# Add keystore containing self-signed SSL certificate for Tomcat server.
+ADD tomcat/tcKeystore /usr/local/tomcat/conf/tcKeystore
+
+# Configure Tomcat for two-way SSL (mutual authentication and encryption).
+ADD tomcat/server_two_way_ssl.xml /usr/local/tomcat/conf/server.xml
+
+# Add web application distributables to Tomcat (SUPA and Demo).
+ADD dist/supa.war /usr/local/tomcat/webapps/supa.war
+ADD dist/demo.war /usr/local/tomcat/webapps/demo.war
+
+# Add demo flights for SUPA Demo application and configure location in Tomcat..
+ADD flightdata /root/flightdata
+RUN echo demo.data.dir=/root/flightdata >> /usr/local/tomcat/conf/catalina.properties
+
+# Add SUPA application configuration files.
+ADD configuration /root/.supa
+
+# Remove Tomcat ROOT (OOTB web application) and replace with
+# FDA Ground web application.
+RUN rm -rf /usr/local/tomcat/webapps/ROOT
+ADD dist/mobilebackendapi.war /usr/local/tomcat/webapps/ROOT.war
+
+# Set shell preferences and profile
+ADD bashrc /root/.bashrc
+RUN chmod +x /root/.bashrc
+ADD profile /root/.profile
+RUN chmod +x /root/.profile
+
+# Run Linux update, and install necessary modules.
+RUN apk update
+RUN apk add --no-cache man man-pages
+RUN apk add --no-cache bash bash-doc bash-completion
+RUN apk add --no-cache util-linux pciutils usbutils coreutils binutils findutils grep
+RUN apk add --no-cache openssl
+RUN apk add --no-cache tree curl jq
