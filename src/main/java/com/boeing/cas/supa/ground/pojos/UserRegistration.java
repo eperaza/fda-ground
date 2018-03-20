@@ -4,10 +4,11 @@ import com.microsoft.aad.adal4j.AuthenticationResult;
 
 public class UserRegistration extends AccessToken {
 	protected String preferences;
-	
-	public UserRegistration(AuthenticationResult authenticationResult, String cert, String preferences){
+	protected String mobileConfig;
+	public UserRegistration(AuthenticationResult authenticationResult, String cert, String preferences, String mobileConfig){
 		super(authenticationResult, cert);
 		this.preferences = preferences;
+		this.mobileConfig = mobileConfig;
 	}
 
 	public String getPreferences() {
@@ -17,6 +18,14 @@ public class UserRegistration extends AccessToken {
 	public void setPreferences(String preferences) {
 		this.preferences = preferences;
 	}
-	
 
+	public String getMobileConfig() {
+		return mobileConfig;
+	}
+
+	public void setMobileConfig(String mobileConfig) {
+		this.mobileConfig = mobileConfig;
+	}
+	
+	
 }

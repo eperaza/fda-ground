@@ -74,6 +74,14 @@ public class HttpClientHelper {
 		user.setGroups(group);
     	return user;
     }
+    public static User getUserInfoFromAuthToken(String tokenName){
+    	String uniqueId = getUniqueIdFromJWT(tokenName);
+		MicrosoftGraphUtil mgu = new MicrosoftGraphUtil("fdacustomertest.onmicrosoft.com", tokenName.replaceFirst("Bearer ", ""));
+		User user = mgu.getUsernamesFromGraph(uniqueId);
+		ArrayList<Group> group = mgu.getGroupFromGraph(uniqueId);
+		user.setGroups(group);
+    	return user;
+    }
     private static String getUniqueIdFromJWT(String xAuth) {
 		String uniqueId = null;
 		if(xAuth.contains("Bearer")){

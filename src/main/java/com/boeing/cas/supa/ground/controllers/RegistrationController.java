@@ -3,11 +3,14 @@ package com.boeing.cas.supa.ground.controllers;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -22,8 +25,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
+import com.boeing.cas.supa.ground.helpers.HttpClientHelper;
 import com.boeing.cas.supa.ground.pojos.Credential;
 import com.boeing.cas.supa.ground.pojos.Error;
+import com.boeing.cas.supa.ground.pojos.Group;
+import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.pojos.UserRegistration;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.KeyVaultProperties;
@@ -41,19 +47,31 @@ public class RegistrationController {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
 	@RequestMapping(method = {RequestMethod.POST })
-	public ResponseEntity<Object> getAccessToken(@RequestBody Credential cred){
+	public ResponseEntity<Object> getAccessToken(@RequestBody Credential cred, HttpServletRequest httpRequest){
 		KeyVaultRetriever kvr = new KeyVaultRetriever(keyVaultProperties.getClientId(), keyVaultProperties.getClientKey());
 		
 		if (isValid(cred)) {
 			logger.info("it is valid");
 			
 			Object ar = getAccessTokenFromUserCredentials(cred.getAzUsername(), cred.getAzPassword(), kvr.getSecretByKey("azure-ad-authority"), kvr.getSecretByKey("azure-ad-clientid"));
+			/*
+			 * TO DO: GET THE USER GROUP FROM TOKEN
+			 * User user = HttpClientHelper.getUserInfoFromHeader(httpRequest);
+				ArrayList<Group> group = user.getGroups();
+			*/
+
 			if(ar != null){
 				if(ar instanceof AuthenticationResult){
+					User user = HttpClientHelper.getUserInfoFromAuthToken(((AuthenticationResult) ar).getAccessTokenType() + " " + ((AuthenticationResult) ar).getAccessToken() );
+					ArrayList<Group> group = user.getGroups();
+					for(Group g: group){
+						System.out.println(g.getDisplayName());
+					}
 					String getPfxEncodedAsBase64 = kvr.getSecretByKey("client2base64");
-					String getPlistFromBlob = getPlistFromBlob(kvr);
-					if(getPlistFromBlob != null){
-						UserRegistration ur = new UserRegistration((AuthenticationResult) ar, getPfxEncodedAsBase64, getPlistFromBlob);
+					String getPlistFromBlob = getPlistFromBlob(kvr, "preferences", "ADW.plist");
+					String mobileConfigFromBlob = getPlistFromBlob(kvr, "config", "supaConfigEFO.mobileconfig");
+					if(getPlistFromBlob != null && mobileConfigFromBlob != null){
+						UserRegistration ur = new UserRegistration((AuthenticationResult) ar, getPfxEncodedAsBase64, getPlistFromBlob, mobileConfigFromBlob);
 						return new ResponseEntity<>(ur, HttpStatus.OK);	
 					}
 				}
@@ -71,12 +89,12 @@ public class RegistrationController {
 		return null;
 	}
 
-	private String getPlistFromBlob(KeyVaultRetriever kvr) {
+	private String getPlistFromBlob(KeyVaultRetriever kvr, String containerName, String fileName) {
 		ByteArrayOutputStream outputStream = null;
 		String base64 = null;
 		try {
 			AzureStorageUtil asu = new AzureStorageUtil(kvr.getSecretByKey("StorageKey"));
-			outputStream  = asu.downloadFile("preferences", "ADW.plist");
+			outputStream  = asu.downloadFile(containerName, fileName);
 			base64 = Base64.getEncoder().encodeToString(outputStream.toString().getBytes());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
