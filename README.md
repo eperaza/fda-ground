@@ -48,10 +48,36 @@ $ curl  -X POST https://fdagroundtest3.azurewebsites.net/register \
       -d '{"azUsername": "<AZURE USERNAME>",
 "azPassword": "<AZURE Password>"}'
 
-
-
 ```
+```mermaid
+sequenceDiagram
+participant i as iPad 
+    participant a as Azure
+participant g as Ground
+    i->>g: Login (Azure Username and Password)
+a-->>i: Request Client Certificate
+i->>g: Provides Client Certificate 1 and Credentials 
 
+loop Verification
+        g->g: Verify Client Certificate 1 and Credentials
+    end
+alt is valid
+        g-->>i: Returns access token, refresh token, and base64 encoded Client Certificate 2
+    else not valid
+       g-->>i: Error code [403]
+    end
+Note over i,g: Every subsequent requests
+i->>g:Calls endpoints with access token in header and new Client Certificate 2
+a-->>i: Request Client Certificate
+loop Verification
+g->g: Verify Client Certificate 2 and access token
+end
+alt is valid
+       g-->>i: Return secure data back to the app
+    else not valid
+       g-->>i: Error code [403]
+    end
+```
 
 
 
