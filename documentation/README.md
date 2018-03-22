@@ -1,4 +1,4 @@
-#Ground Service Restful IDD
+# Ground Service Restful ICD
 The FDA ground service consists of  RESTful web services based on Spring Boot specifications. The services are implemented using Java 1.8 and hosted on Tomcat 8.  The system utilizes Azure AD Tenant to control the access to various services.  Currently these services are running on Azure Web App.
 
 ## Authentication and Authorization
@@ -34,9 +34,9 @@ sequenceDiagram
 ```
 
 ## Services
-FDA Ground service is provided by RESTful web services.  The base URL for all transactions is https://<HOST>/<RESOURCE>  where Host is the host of the services and RESOURCE  is the resource as documented below. Data is returned as a JSON encoded string.  The HTTP status in the response is also returned as noted below.
-All services require a client certicate for authentication when the request is over TLS/SSL. This mechanism is called TLS mutual authentication or client certificate authentication. Additionally, all services except login and register require a valid access token.  This access token must be included in the Authorization header in the HTTP request.  The format of this header is:  Bearer accesstoken  This format must be followed exactly for the user to be properly authenticated. 
-** Note: To access any resource valid client certificate are required **
+FDA Ground service is provided by RESTful web services.  The base URL for all transactions is `https://<HOST>/<RESOURCE>` where Host is the host of the services and RESOURCE  is the resource as documented below. Data is returned as a JSON encoded string.  The HTTP status in the response is also returned as noted below.
+All services require a client certificate for authentication when the request is over TLS/SSL. This mechanism is called TLS mutual authentication or client certificate authentication. Additionally, all services except login and register require a valid access token.  This access token must be included in the Authorization header in the HTTP request.  The format of this header is:  Bearer accesstoken  This format must be followed exactly for the user to be properly authenticated. 
+** Note: To access any resource valid client certificate is required **  
 ** Currently, client certificate 1 is required for Login, Register, and Refresh. Every other resource requires client certificate 2 and valid  access token **
 
 # Request for Login/ Register
@@ -121,7 +121,8 @@ Content-Type: application/json;charset=UTF-8
 }
 ```
 
-# Request for Download of Files
+# Request for Download of Files  
+** NOTE: `file-name` is case sensitive **
 ```sh
 $ curl -s 'https://HOST/download?file=<file-name>&type=<file-type>' --cert client2.pfx --pass "" -H 'Cache-Control: no-cache' -H 'Authorization: Bearer <access-token>'
 ```
