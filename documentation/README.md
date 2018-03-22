@@ -35,8 +35,7 @@ sequenceDiagram
 
 ## Services
 FDA Ground service is provided by RESTful web services.  The base URL for all transactions is `https://<HOST>/<RESOURCE>` where Host is the host of the services and RESOURCE  is the resource as documented below. Data is returned as a JSON encoded string.  The HTTP status in the response is also returned as noted below.
-All services require a client certificate for authentication when the request is over TLS/SSL. This mechanism is called TLS mutual authentication or client certificate authentication. Additionally, all services except login and register require a valid access token.  This access token must be included in the Authorization header in the HTTP request.  The format of this header is:  Bearer accesstoken  This format must be followed exactly for the user to be properly authenticated. 
-** Note: To access any resource valid client certificate is required **  
+All services require a client certificate for authentication when the request is over TLS/SSL. This mechanism is called TLS mutual authentication or client certificate authentication. Additionally, all services except login and register require a valid access token.  This access token must be included in the Authorization header in the HTTP request.  The format of this header is:  Bearer accesstoken  This format must be followed exactly for the user to be properly authenticated.  ** Note: To access all resource valid client certificate is required **  
 ** Currently, client certificate 1 is required for Login, Register, and Refresh. Every other resource requires client certificate 2 and valid  access token **
 
 # Request for Login/ Register
@@ -194,7 +193,7 @@ Transfer-Encoding: chunked
 }
 ```
 
-#Common errors
+# Common errors
 
 ### Invalid Access Token for Authorized Requests
 ```
