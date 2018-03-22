@@ -40,7 +40,10 @@ All services require a client certificate for authentication when the request is
 
 # Request for Login/ Register
 ```sh
-$ curl -s -X POST https://HOST/login --cert client1.pfx --pass "" -H 'Cache-Control: no-cache' -H 'Content-Type: application/json' -d '{ "azUsername": "test1@fdacustomertest.onmicrosoft.com", "azPassword": "Boeing12" }'
+$ curl -s -X POST https://HOST/login --cert client1.pfx --pass "" \
+       -H 'Cache-Control: no-cache' \
+       -H 'Content-Type: application/json' \
+       -d '{ "azUsername": "test1@fdacustomertest.onmicrosoft.com", "azPassword": "Boeing12" }'
 ```
 
 ### Valid response for login
@@ -123,7 +126,10 @@ Content-Type: application/json;charset=UTF-8
 # Request for Download of Files  
 ** NOTE: `file-name` is case sensitive **
 ```sh
-$ curl -s 'https://HOST/download?file=<file-name>&type=<file-type>' --cert client2.pfx --pass "" -H 'Cache-Control: no-cache' -H 'Authorization: Bearer <access-token>'
+$ curl -s 'https://HOST/download?file=<file-name>&type=<file-type>' \
+       --cert client2.pfx --pass "" \
+       -H 'Cache-Control: no-cache' \
+       -H 'Authorization: Bearer <access-token>'
 ```
 
 ### Valid Response for Download
@@ -143,7 +149,10 @@ Transfer-Encoding: chunked
 
 # Request for New Refresh Token and Access Token
 ```sh
-$ curl -s -X POST https://HOST/refresh --cert client1.pfx --pass "" -H 'cache-control: no-cache' -H 'content-type: application/json' -d '{ "refreshToken" : "<refresh-token>" }'
+$ curl -s -X POST https://HOST/refresh --cert client1.pfx --pass "" \
+       -H 'cache-control: no-cache' \
+       -H 'content-type: application/json' \
+       -d '{ "refreshToken" : "<refresh-token>" }'
 ```
 
 ### Valid Response for Refresh
@@ -177,7 +186,10 @@ Transfer-Encoding: chunked
 
 # Request for File Upload
 ```sh
-$ curl -s -X POST https://HOST/uploadFile --cert client2.pfx --pass "" -H "Authorization: Bearer <access-token>" -H 'content-type: multipart/form-data' -F file=@<absolute-path-of-file> -v
+$ curl -s -X POST https://HOST/uploadFile --cert client2.pfx --pass "" \
+       -H "Authorization: Bearer <access-token>" \
+       -H 'content-type: multipart/form-data' \
+       -F file=@<absolute-path-of-file>
 ```
 ### Valid Response for File Upload
 ```
