@@ -49,3 +49,8 @@ $ curl  -X POST https://fdagroundtest3.azurewebsites.net/register \
 "azPassword": "<AZURE Password>"}'
 
 ```
+
+### Future outstanding tasks:
+* Use Azure KeyVault (L)
+* User management in Azure AD (M)
+* CI/CD for Azure WebApp (L)
