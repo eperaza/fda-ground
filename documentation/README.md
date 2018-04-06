@@ -244,3 +244,90 @@ Content-Type: application/json;charset=ISO-8859-1
 ```
 
 
+
+# Request for Download of TSP Files  
+** NOTE: `file-name` is case sensitive **
+Parameterized Request eg.: https://HOST/download?file=edira.json&type=tsp
+```sh
+$ curl -s 'https://HOST/download?file=<file-name>&type=<file-type>' \
+       --cert client2.pfx --pass "" \
+       -H 'Cache-Control: no-cache' \
+       -H 'Authorization: Bearer <access-token>'
+```
+
+### Valid Response for TSP Download
+```
+HTTP/1.1 200 OK
+X-Application-Context: application
+Content-Type: application/octet-stream
+Content-Length: 470
+
+{
+    "_version": 0.2,
+    "_date": "2017-04-10T00:00:00.000Z",
+    "tail": "XAAMA",
+    "fuelFlowBetas": [
+        1.0442
+    ],
+    "fuelFlowQstar": 0.0000355,
+    "weightBetas": [
+        0.291406843,
+        -733.5750973,
+        5.226925465,
+        1355929.906,
+        -1430289.581,
+        -816.8092703,
+        -12.86987471,
+        683911.9288,
+        34113.82467,
+        -1401.63393,
+        250.8009962,
+        -5560.644018,
+        -500415.1825
+    ]
+}
+
+```
+
+### Invalid Response for TSP Download
+```
+HTTP/1.1 404 Not Found
+X-Application-Context: application
+Transfer-Encoding: chunked
+```
+
+# Request for Download of Aircraft Properties
+** NOTE: `file-name` is case sensitive **
+Parameterized Request eg.: https://HOST/download?file=edira.properties&type=properties
+
+```sh
+$ curl -s 'https://HOST/download?file=<file-name>&type=<file-type>' \
+       --cert client2.pfx --pass "" \
+       -H 'Cache-Control: no-cache' \
+       -H 'Authorization: Bearer <access-token>'
+```
+
+### Valid Response for Aircraft Properties Download
+```
+HTTP/1.1 200 OK
+X-Application-Context: application
+Content-Type: application/octet-stream
+Content-Length: 330
+
+{
+    aircraft.tailNumber=N520AM
+    aircraft.carrier=Boeing
+    aircraft.type=B737-800W
+    aircraft.717format=AppendixD
+}
+
+```
+
+### Invalid Response for Aircraft Properties Download
+```
+HTTP/1.1 404 Not Found
+X-Application-Context: application
+Transfer-Encoding: chunked
+```
+
+
