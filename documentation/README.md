@@ -247,6 +247,7 @@ Content-Type: application/json;charset=ISO-8859-1
 
 # Request for Download of TSP Files  
 ** NOTE: `file-name` is case sensitive **
+
 Parameterized Request eg.: https://HOST/download?file=edira.json&type=tsp
 ```sh
 $ curl -s 'https://HOST/download?file=<file-name>&type=<file-type>' \
@@ -298,6 +299,7 @@ Transfer-Encoding: chunked
 
 # Request for Download of Aircraft Properties
 ** NOTE: `file-name` is case sensitive **
+
 Parameterized Request eg.: https://HOST/download?file=edira.properties&type=properties
 
 ```sh
