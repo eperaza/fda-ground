@@ -333,3 +333,155 @@ Transfer-Encoding: chunked
 ```
 
 
+
+
+# Request for Download of Mobile Configuration
+** NOTE: `file-name` is case sensitive **
+
+Parameterized Request eg.: https://HOST/download?file=supaConfigEFO.config&type=config
+
+```sh
+$ curl -s 'https://HOST/download?file=<file-name>&type=<file-type>' \
+       --cert client2.pfx --pass "" \
+       -H 'Cache-Control: no-cache' \
+       -H 'Authorization: Bearer <access-token>'
+```
+
+### Valid Response for Mobile Configuration Download
+```
+HTTP/1.1 200 OK
+X-Application-Context: application
+Content-Type: application/octet-stream
+Content-Length: 760
+
+{
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ConsentText</key>
+	<dict>
+		<key>default</key>
+		<string>This profile will contains configuration information for the aonboard AID network</string>
+	</dict>
+	<key>DurationUntilRemoval</key>
+	<integer>604800</integer>
+	<key>PayloadContent</key>
+	<array>
+		<dict>
+			<key>AutoJoin</key>
+			<true/>
+			<key>CaptiveBypass</key>
+			<false/>
+			<key>EncryptionType</key>
+			<string>WPA2</string>
+			<key>HIDDEN_NETWORK</key>
+			<true/>
+			<key>IsHotspot</key>
+			<false/>
+			<key>Password</key>
+			<string>6je49RYAmtUCVkJU</string>
+			<key>PayloadDescription</key>
+			<string>Configures Wi-Fi settings</string>
+			<key>PayloadDisplayName</key>
+			<string>Wi-Fi</string>
+			<key>PayloadIdentifier</key>
+			<string>com.apple.wifi.managed.DF6B46C6-9AE0-4D50-AB8C-BEBD2E88D9B0</string>
+			<key>PayloadType</key>
+			<string>com.apple.wifi.managed</string>
+			<key>PayloadUUID</key>
+			<string>DF6B46C6-9AE0-4D50-AB8C-BEBD2E88D9B0</string>
+			<key>PayloadVersion</key>
+			<integer>1</integer>
+			<key>ProxyType</key>
+			<string>None</string>
+			<key>SSID_STR</key>
+			<string>SUPA-EFO-N839BA</string>
+		</dict>
+		<dict>
+			<key>AutoJoin</key>
+			<true/>
+			<key>CaptiveBypass</key>
+			<false/>
+			<key>EncryptionType</key>
+			<string>WPA2</string>
+			<key>HIDDEN_NETWORK</key>
+			<true/>
+			<key>IsHotspot</key>
+			<false/>
+			<key>Password</key>
+			<string>pFhVFcdA7yFuWbdHwiPtmgRmZqW2oXa7</string>
+			<key>PayloadDescription</key>
+			<string>Configures Wi-Fi settings</string>
+			<key>PayloadDisplayName</key>
+			<string>Wi-Fi</string>
+			<key>PayloadIdentifier</key>
+			<string>com.apple.wifi.managed.DAB90823-23C9-471C-B575-64ECB9234FAD</string>
+			<key>PayloadType</key>
+			<string>com.apple.wifi.managed</string>
+			<key>PayloadUUID</key>
+			<string>DAB90823-23C9-471C-B575-64ECB9234FAD</string>
+			<key>PayloadVersion</key>
+			<integer>1</integer>
+			<key>ProxyType</key>
+			<string>None</string>
+			<key>SSID_STR</key>
+			<string>SUPA-EFO-N835BA</string>
+		</dict>
+		<dict>
+			<key>AutoJoin</key>
+			<true/>
+			<key>CaptiveBypass</key>
+			<false/>
+			<key>EncryptionType</key>
+			<string>WPA2</string>
+			<key>HIDDEN_NETWORK</key>
+			<true/>
+			<key>IsHotspot</key>
+			<false/>
+			<key>Password</key>
+			<string>J*?RF)YLKB*.%?hL{7tQq*q?x2zSi2$4</string>
+			<key>PayloadDescription</key>
+			<string>Configures Wi-Fi settings</string>
+			<key>PayloadDisplayName</key>
+			<string>Wi-Fi</string>
+			<key>PayloadIdentifier</key>
+			<string>com.apple.wifi.managed.63DC2797-4D77-4386-9ED0-D137F3CF2485</string>
+			<key>PayloadType</key>
+			<string>com.apple.wifi.managed</string>
+			<key>PayloadUUID</key>
+			<string>63DC2797-4D77-4386-9ED0-D137F3CF2485</string>
+			<key>PayloadVersion</key>
+			<integer>1</integer>
+			<key>ProxyType</key>
+			<string>None</string>
+			<key>SSID_STR</key>
+			<string>SUPA-EFO-N836BA</string>
+		</dict>
+	</array>
+	<key>PayloadDisplayName</key>
+	<string>Supa AID network Configuration</string>
+	<key>PayloadIdentifier</key>
+	<string>macbook-pro.local.2D4C06F5-C40B-455B-B129-AED68434CA10</string>
+	<key>PayloadOrganization</key>
+	<string>The Boeing Company</string>
+	<key>PayloadRemovalDisallowed</key>
+	<false/>
+	<key>PayloadType</key>
+	<string>Configuration</string>
+	<key>PayloadUUID</key>
+	<string>CDF98BB5-B417-4E5A-B6C8-7C9073572C7D</string>
+	<key>PayloadVersion</key>
+	<integer>1</integer>
+</dict>
+</plist>
+
+}
+
+```
+
+### Invalid Response for Mobile Configuration Download
+```
+HTTP/1.1 404 Not Found
+X-Application-Context: application
+Transfer-Encoding: chunked
