@@ -1,47 +1,14 @@
 package com.boeing.cas.supa.ground.pojos;
 
 public class Group extends DirectoryObject {
-	protected String objectId;
-	protected String objectType;
-	protected String displayName;
+
 	protected String description;
     protected String mail;
 
-    private Group() {
-    }
-
-    @Override
-    public String getObjectId() {
-        return objectId;
-    }
-
-    @Override
-    public String getObjectType() {
-        return objectType;
-    }
-
-    @Override
-    public void setObjectType(String objectType) {
-        this.objectType = objectType;
-    }
-
-    @Override
-    public void setObjectId(String objectId) {
-        this.objectId = objectId;
-    }
-
-    @Override
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    @Override
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
+    private Group() {}
 
     public String getDescription() {
-        return description;
+        return this.description;
     }
 
     public void setDescription(String description) {
@@ -49,13 +16,22 @@ public class Group extends DirectoryObject {
     }
 
     public String getMail() {
-        return mail;
+        return this.mail;
     }
 
     public void setMail(String mail) {
         this.mail = mail;
     }
 
-    
+    public String toString() {
 
+    	return new StringBuilder("Group [")
+        		.append("objectId=").append(this.objectId).append(',')
+        		.append("objectType=").append(this.objectType).append(',')
+        		.append("displayName=").append(this.displayName).append(',')
+        		.append("description=").append(this.description).append(',')
+        		.append("mail=").append(this.mail)
+        		.append(']')
+        		.toString();
+    }
 }

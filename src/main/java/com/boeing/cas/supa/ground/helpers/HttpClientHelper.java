@@ -24,10 +24,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.text.ParseException;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.boeing.cas.supa.ground.pojos.Group;
 import com.boeing.cas.supa.ground.pojos.User;
@@ -43,59 +47,69 @@ import com.nimbusds.jwt.JWTParser;
  */
 public class HttpClientHelper {
 
-    private HttpClientHelper() {
-        super();
-    }
+    private static final Logger logger = LoggerFactory.getLogger(HttpClientHelper.class);
+
+    private static final String TENANT_NAME = "fdacustomertest.onmicrosoft.com";
+    private static final String AUTH_TOKEN_PREFIX = "Bearer ";
+
+    // Hide default constructor
+    private HttpClientHelper() {}
 
     public static String getResponseStringFromConn(HttpURLConnection conn, boolean isSuccess) throws IOException {
 
-        BufferedReader reader = null;
-        if (isSuccess) {
-            reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-        } else {
-            reader = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
-        }
         StringBuilder stringBuilder = new StringBuilder();
-        String line = "";
-        while ((line = reader.readLine()) != null) {
-            stringBuilder.append(line);
-        }
+
+    	try (BufferedReader reader = isSuccess
+    			? new BufferedReader(new InputStreamReader(conn.getInputStream()))
+    			: new BufferedReader(new InputStreamReader(conn.getErrorStream()))) {
+    		
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+    	}
 
         return stringBuilder.toString();
     }
     
-    public static User getUserInfoFromHeader(HttpServletRequest httpRequest){
+    public static User getUserInfoFromHeader(HttpServletRequest httpRequest) {
+
     	HeaderMapRequestWrapper header = new HeaderMapRequestWrapper(httpRequest);
 		String tokenName = header.getHeader("authorization");
-		String uniqueId = getUniqueIdFromJWT(tokenName);
-		MicrosoftGraphUtil mgu = new MicrosoftGraphUtil("fdacustomertest.onmicrosoft.com", tokenName.replaceFirst("Bearer ", ""));
+		String uniqueId = HttpClientHelper.getUniqueIdFromJWT(tokenName);
+		MicrosoftGraphUtil mgu = new MicrosoftGraphUtil(TENANT_NAME, tokenName.replaceFirst(AUTH_TOKEN_PREFIX, StringUtils.EMPTY));
 		User user = mgu.getUsernamesFromGraph(uniqueId);
-		ArrayList<Group> group = mgu.getGroupFromGraph(uniqueId);
+		List<Group> group = mgu.getGroupFromGraph(uniqueId);
 		user.setGroups(group);
-    	return user;
+
+		return user;
     }
-    public static User getUserInfoFromAuthToken(String tokenName){
-    	String uniqueId = getUniqueIdFromJWT(tokenName);
-		MicrosoftGraphUtil mgu = new MicrosoftGraphUtil("fdacustomertest.onmicrosoft.com", tokenName.replaceFirst("Bearer ", ""));
+
+    public static User getUserInfoFromAuthToken(String tokenName) {
+
+    	String uniqueId = HttpClientHelper.getUniqueIdFromJWT(tokenName);
+		MicrosoftGraphUtil mgu = new MicrosoftGraphUtil(TENANT_NAME, tokenName.replaceFirst(AUTH_TOKEN_PREFIX, StringUtils.EMPTY));
 		User user = mgu.getUsernamesFromGraph(uniqueId);
-		ArrayList<Group> group = mgu.getGroupFromGraph(uniqueId);
+		List<Group> group = mgu.getGroupFromGraph(uniqueId);
 		user.setGroups(group);
-    	return user;
+
+		return user;
     }
+
     private static String getUniqueIdFromJWT(String xAuth) {
-		String uniqueId = null;
-		if(xAuth.contains("Bearer")){
-    		xAuth = xAuth.replaceFirst("Bearer ", "");
-    		Map<String, Object> claimsMap;
-			try {
-				claimsMap = JWTParser.parse(xAuth).getJWTClaimsSet().getClaims();
-				uniqueId = (String) claimsMap.get("oid");
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-    		
+
+    	String uniqueId = null;
+		if (xAuth.contains(AUTH_TOKEN_PREFIX.trim())) {
+
+            try {
+                Map<String, Object> claimsMap = JWTParser.parse(xAuth.replaceFirst(AUTH_TOKEN_PREFIX, StringUtils.EMPTY)).getJWTClaimsSet().getClaims();
+                uniqueId = (String) claimsMap.get("oid");
+            }
+            catch (ParseException pe) {
+                logger.error("Failed to extract claims and/or unique ID from authentication header: {}", pe.getMessage(), pe);
+            }
 		}
+
 		return uniqueId;
 	}
 }

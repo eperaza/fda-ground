@@ -1,6 +1,5 @@
 package com.boeing.cas.supa.ground.utils;
 
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.cert.CertificateException;
@@ -15,47 +14,57 @@ import com.microsoft.azure.keyvault.models.CertificateBundle;
 import com.microsoft.azure.keyvault.models.SecretBundle;
 
 public class KeyVaultRetriever {
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	
-	private static String keyvaultUri = "https://fda-ground-kv.vault.azure.net/";
-	
-	private static KeyVaultClient kvc;
 
-	
+	private final Logger logger = LoggerFactory.getLogger(KeyVaultRetriever.class);
+
+	private static String keyvaultUri = "https://fda-ground-kv.vault.azure.net/";
+
+	private KeyVaultClient kvc;
+
 	public KeyVaultRetriever(String clientId, String clientKey) {
-		kvc = KeyVaultAuthenticator.getAuthenticatedClient(clientId, clientKey);
+		this.kvc = KeyVaultAuthenticator.getAuthenticatedClient(clientId, clientKey);
 	}
 
-	public String getSecretByKey(String secretName){
-		SecretBundle sb = kvc.getSecret(keyvaultUri, secretName);
+	public String getSecretByKey(String secretName) {
+
+		SecretBundle sb = this.kvc.getSecret(keyvaultUri, secretName);
 		String secretValue = null;
-		if(sb != null){
+		if (sb != null) {
 			secretValue = sb.value();
 		}
+
 		return secretValue;
 	}
 	
-	public X509Certificate getCertificateByCertName(String certName){
-		CertificateBundle cb = kvc.getCertificate(keyvaultUri, certName);
+	public X509Certificate getCertificateByCertName(String certName) {
+
+		CertificateBundle cb = this.kvc.getCertificate(keyvaultUri, certName);
 		X509Certificate x509Certificate = null;
-		if(cb != null){
+
+		if (cb != null) {
+
 			try {
-				x509Certificate = loadCerToX509Certificate(cb);
-			} catch (CertificateException e) {
-				logger.error(e.getMessage());
-			} catch (IOException e) {
-				logger.error(e.getMessage());
-			}
+				x509Certificate = this.loadCerToX509Certificate(cb);
+			} catch (CertificateException ce) {
+                logger.error("CertificateException: {}", ce.getMessage(), ce);
+            }
+            catch (IOException ioe) {
+                logger.error("IOException: {}", ioe.getMessage(), ioe);
+            }
 		}
+
 		return x509Certificate;
-		
 	}
 
 	private X509Certificate loadCerToX509Certificate(CertificateBundle certificateBundle) throws CertificateException, IOException {
-        ByteArrayInputStream cerStream = new ByteArrayInputStream(certificateBundle.cer());
-        CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
-        X509Certificate x509Certificate = (X509Certificate) certificateFactory.generateCertificate(cerStream);
-        cerStream.close();
+
+		X509Certificate x509Certificate = null;
+
+		try (ByteArrayInputStream cerStream = new ByteArrayInputStream(certificateBundle.cer())) {
+			CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+			x509Certificate = (X509Certificate) certificateFactory.generateCertificate(cerStream);
+		}
+
         return x509Certificate;
 	}
 }

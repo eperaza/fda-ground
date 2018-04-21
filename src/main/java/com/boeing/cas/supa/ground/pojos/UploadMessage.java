@@ -2,41 +2,38 @@ package com.boeing.cas.supa.ground.pojos;
 
 public class UploadMessage {
 
-	private String AdwTransfer;
-	private String AzureUpload;
-	private String Message;
-
-	public UploadMessage() {
-		this(null, null, null);
-	}
+	private String adwTransfer;
+	private String azureUpload;
+	private String message;
 
 	public UploadMessage(String adwTransfer, String azureUpload, String message) {
-		AdwTransfer = adwTransfer;
-		AzureUpload = azureUpload;
-		Message = message;
+
+		this.adwTransfer = adwTransfer;
+		this.azureUpload = azureUpload;
+		this.message = message;
 	}
 
 	public String getAdwTransfer() {
-		return AdwTransfer;
+		return this.adwTransfer;
 	}
 
 	public void setAdwTransfer(String adwTransfer) {
-		AdwTransfer = adwTransfer;
+		this.adwTransfer = adwTransfer;
 	}
 
 	public String getAzureUpload() {
-		return AzureUpload;
+		return this.azureUpload;
 	}
 
 	public void setAzureUpload(String azureUpload) {
-		AzureUpload = azureUpload;
+		this.azureUpload = azureUpload;
 	}
 
 	public String getMessage() {
-		return Message;
+		return this.message;
 	}
 
 	public void setMessage(String message) {
-		Message = message;
+		this.message = message;
 	}
 }

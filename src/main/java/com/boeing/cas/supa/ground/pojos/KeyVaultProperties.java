@@ -1,18 +1,16 @@
-package com.boeing.cas.supa.ground.utils;
+package com.boeing.cas.supa.ground.pojos;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-
 @ConfigurationProperties(prefix = "azurekeyvault")
 public class KeyVaultProperties {
-	private String clientKey;
 
-    private String clientId;
-    
-    private String uri;
+	private String clientKey;
+	private String clientId;
+	private String uri;
 
 	public String getClientKey() {
-		return clientKey;
+		return this.clientKey;
 	}
 
 	public void setClientKey(String clientKey) {
@@ -20,7 +18,7 @@ public class KeyVaultProperties {
 	}
 
 	public String getClientId() {
-		return clientId;
+		return this.clientId;
 	}
 
 	public void setClientId(String clientId) {
@@ -28,14 +26,10 @@ public class KeyVaultProperties {
 	}
 
 	public String getUri() {
-		return uri;
+		return this.uri;
 	}
 
 	public void setUri(String uri) {
 		this.uri = uri;
 	}
-    
-    
-    
-    
 }

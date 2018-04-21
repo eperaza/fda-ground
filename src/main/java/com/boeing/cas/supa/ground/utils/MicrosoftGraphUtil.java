@@ -5,6 +5,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,86 +18,107 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 
-
 public class MicrosoftGraphUtil {
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	private String tenant;
+
+    private final Logger logger = LoggerFactory.getLogger(MicrosoftGraphUtil.class);
+
+    private static final String API_VERSION = "2013-04-05";
+    private static final String ACCEPT_CONTENT_TYPE = "application/json;odata=minimalmetadata";
+    
+    private String tenant;
 	private String accessToken;
+
 	public MicrosoftGraphUtil(String tenant, String accessToken) {
 		this.tenant = tenant;
 		this.accessToken = accessToken;
 	}
+
 	public User getUsernamesFromGraph(String uniqueId) {
-        logger.debug("getting user object object info from graph");
-        User userClass = null;
-		URL url;
+
+		logger.debug("Getting user object object info from graph");
+        User userObj = null;
 		try {
-			url = new URL(String.format("https://graph.windows.net/%s/users/%s?api-version=2013-04-05", tenant,uniqueId));
+
+			URL url = new URL(
+					new StringBuilder("https://graph.windows.net/").append(this.tenant)
+						.append("/users/").append(uniqueId)
+						.append("?api-version=2013-04-05")
+						.toString());
 	        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 	        // Set the appropriate header fields in the request header.
-	        conn.setRequestProperty("api-version", "2013-04-05");
+	        conn.setRequestProperty("api-version", API_VERSION);
 	        conn.setRequestProperty("Authorization", accessToken);
-	        conn.setRequestProperty("Accept", "application/json;odata=minimalmetadata");
-	        String goodRespStr = HttpClientHelper.getResponseStringFromConn(conn, true);
+	        conn.setRequestProperty("Accept", ACCEPT_CONTENT_TYPE);
+
+	        String responseStr = HttpClientHelper.getResponseStringFromConn(conn, true);
 	        int responseCode = conn.getResponseCode();
+
 	        ObjectMapper objectMapper = new ObjectMapper();
 	        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			ObjectReader objectReader = objectMapper.readerFor(User.class);
+	        if (responseCode == 200){
+	        	userObj = objectReader.readValue(responseStr);
+	        }
+		} catch (MalformedURLException e) {
+            this.logger.error("MalformedURLException while retrieving user names from graph: {}", e.getMessage(), e);
+        }
+        catch (IOException e) {
+            this.logger.error("I/O Exception while retrieving user names from graph: {}", e.getMessage(), e);
+        }
 
-	        @SuppressWarnings("deprecation")
-			ObjectReader objectReader = objectMapper.reader(User.class);
-	        if(responseCode == 200){
-	        	userClass = objectReader.readValue(goodRespStr);
-	        }
-	        return userClass;
-		} catch (MalformedURLException e) {
-			logger.error(e.getMessage());
-		} catch (IOException e) {
-			logger.error(e.getMessage());
-		}
-		return userClass;
-        
+		return userObj;
     }
-	public ArrayList<Group> getGroupFromGraph(String uniqueId) {
-        logger.debug("getting group object list info from graph");
-		URL url;
-		ArrayList<Group> groupList = new ArrayList<Group>();
+
+	public List<Group> getGroupFromGraph(String uniqueId) {
+
+		logger.debug("Getting group object list info from graph");
+		List<Group> groupList = new ArrayList<>();
 		try {
-			url = new URL(String.format("https://graph.windows.net/%s/users/%s/memberOf?api-version=2013-04-05", tenant,uniqueId));
-	        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-	        // Set the appropriate header fields in the request header.
-	        conn.setRequestProperty("api-version", "2013-04-05");
+
+			URL url = new URL(
+					new StringBuilder("https://graph.windows.net/").append(this.tenant)
+						.append("/users/").append(uniqueId)
+						.append("/memberOf?api-version=2013-04-05")
+						.toString());
+			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			// Set the appropriate header fields in the request header.
+	        conn.setRequestProperty("api-version", API_VERSION);
 	        conn.setRequestProperty("Authorization", accessToken);
-	        conn.setRequestProperty("Accept", "application/json;odata=minimalmetadata");
-	        String goodRespStr = HttpClientHelper.getResponseStringFromConn(conn, true);
-	        groupList = getGroupListFromString(goodRespStr);
+	        conn.setRequestProperty("Accept", ACCEPT_CONTENT_TYPE);
+	        String responseStr = HttpClientHelper.getResponseStringFromConn(conn, true);
+	        groupList = getGroupListFromString(responseStr);
 	        int responseCode = conn.getResponseCode();
-	        if(responseCode == 200){
-	        	groupList = getGroupListFromString(goodRespStr);
+	        if (responseCode == 200){
+	        	groupList = getGroupListFromString(responseStr);
 	        }
 		} catch (MalformedURLException e) {
-			logger.error(e.getMessage());
+			logger.error("MalformedURLException while retrieving groups from graph: {}", e.getMessage(), e);
 		} catch (IOException e) {
-			logger.error(e.getMessage());
+			logger.error("I/O Exception while retrieving groups from graph: {}", e.getMessage(), e);
 		}
+
 		return groupList;        
     }
-	public ArrayList<Group> getGroupListFromString(String respStr){
-		ArrayList<Group> groupList = new ArrayList<Group>();
+
+	public List<Group> getGroupListFromString(String responseStr) {
+
+		List<Group> groupList = new ArrayList<>();
 		try {
+
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			JsonNode arrNode = mapper.readTree(responseStr).get("value");			
+			if (arrNode.isArray()) {
 
-			JsonNode arrNode = mapper.readTree(respStr).get("value");
-			
-			if(arrNode.isArray()){
 				for (JsonNode objNode : arrNode) {
 					Group group = mapper.treeToValue(objNode, Group.class);
 					groupList.add(group);
 			    }
 			}
 		} catch (IOException e) {
-			logger.error(e.getMessage());
+			logger.error("I/O Exception while reading groups from list: {}", e.getMessage(), e);
 		}
+
 		return groupList;
 	}
 }

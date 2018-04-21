@@ -3,16 +3,20 @@ package com.boeing.cas.supa.ground.pojos;
 import com.microsoft.aad.adal4j.AuthenticationResult;
 
 public class UserRegistration extends AccessToken {
+
 	protected String preferences;
 	protected String mobileConfig;
-	public UserRegistration(AuthenticationResult authenticationResult, String cert, String preferences, String mobileConfig){
+
+	public UserRegistration(AuthenticationResult authenticationResult, String cert,
+			String preferences, String mobileConfig) {
+
 		super(authenticationResult, cert);
 		this.preferences = preferences;
 		this.mobileConfig = mobileConfig;
 	}
 
 	public String getPreferences() {
-		return preferences;
+		return this.preferences;
 	}
 
 	public void setPreferences(String preferences) {
@@ -20,12 +24,10 @@ public class UserRegistration extends AccessToken {
 	}
 
 	public String getMobileConfig() {
-		return mobileConfig;
+		return this.mobileConfig;
 	}
 
 	public void setMobileConfig(String mobileConfig) {
 		this.mobileConfig = mobileConfig;
 	}
-	
-	
 }

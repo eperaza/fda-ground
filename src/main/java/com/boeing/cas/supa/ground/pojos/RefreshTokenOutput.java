@@ -1,63 +1,72 @@
 package com.boeing.cas.supa.ground.pojos;
 
 public class RefreshTokenOutput {
-	protected String token_type;
-	protected String expires_in;
-	protected String expires_on;
-	protected String not_before;
-	protected String access_token;
-	protected String refresh_token;
-	
 
-	public  RefreshTokenOutput() {
-		// private constructor hides implicit public one
-		this(null, null, null, null, null, null);
+	protected String tokenType;
+	protected String expiresIn;
+	protected String expiresOn;
+	protected String notBefore;
+	protected String accessToken;
+	protected String refreshToken;
+
+	public RefreshTokenOutput() {}
+
+	public RefreshTokenOutput(String tokenType, String expiresIn, String expiresOn, String notBefore,
+			String accessToken, String refreshToken) {
+
+		this.tokenType = tokenType;
+		this.expiresIn = expiresIn;
+		this.expiresOn = expiresOn;
+		this.notBefore = notBefore;
+		this.accessToken = accessToken;
+		this.refreshToken = refreshToken;
 	}
 
-	public RefreshTokenOutput(String token_type, String expires_in, String expires_on, String not_before,
-			String access_token, String refresh_token) {
-		this.token_type = token_type;
-		this.expires_in = expires_in;
-		this.expires_on = expires_on;
-		this.not_before = not_before;
-		this.access_token = access_token;
-		this.refresh_token = refresh_token;
+	public String getTokenType() {
+		return this.tokenType;
 	}
-	public String getToken_type() {
-		return token_type;
+
+	public void setTokenType(String tokenType) {
+		this.tokenType = tokenType;
 	}
-	public String getExpires_in() {
-		return expires_in;
+
+	public String getExpiresIn() {
+		return this.expiresIn;
 	}
-	public String getExpires_on() {
-		return expires_on;
+
+	public void setExpiresIn(String expiresIn) {
+		this.expiresIn = expiresIn;
 	}
-	public String getNot_before() {
-		return not_before;
+
+	public String getExpiresOn() {
+		return this.expiresOn;
 	}
-	public String getAccess_token() {
-		return access_token;
+
+	public void setExpiresOn(String expiresOn) {
+		this.expiresOn = expiresOn;
 	}
-	public String getRefresh_token() {
-		return refresh_token;
+
+	public String getNotBefore() {
+		return this.notBefore;
 	}
-	public void setToken_type(String token_type) {
-		this.token_type = token_type;
+
+	public void setNotBefore(String notBefore) {
+		this.notBefore = notBefore;
 	}
-	public void setExpires_in(String expires_in) {
-		this.expires_in = expires_in;
+
+	public String getAccessToken() {
+		return this.accessToken;
 	}
-	public void setExpires_on(String expires_on) {
-		this.expires_on = expires_on;
+
+	public void setAccessToken(String accessToken) {
+		this.accessToken = accessToken;
 	}
-	public void setNot_before(String not_before) {
-		this.not_before = not_before;
+
+	public String getRefreshToken() {
+		return this.refreshToken;
 	}
-	public void setAccess_token(String access_token) {
-		this.access_token = access_token;
+
+	public void setRefreshToken(String refreshToken) {
+		this.refreshToken = refreshToken;
 	}
-	public void setRefresh_token(String refresh_token) {
-		this.refresh_token = refresh_token;
-	}
-	
 }

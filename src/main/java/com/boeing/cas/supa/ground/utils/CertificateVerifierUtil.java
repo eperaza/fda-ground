@@ -19,184 +19,122 @@ import java.util.stream.Collectors;
 
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import com.boeing.cas.supa.ground.pojos.KeyVaultProperties;
+
 @Component
 @EnableConfigurationProperties(KeyVaultProperties.class)
 public class CertificateVerifierUtil {
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	
+
+	private final Logger logger = LoggerFactory.getLogger(CertificateVerifierUtil.class);
+
 	@Autowired
     private KeyVaultProperties keyVaultProperties;
 
-
 	private X509Certificate getCertFromHeader(String certHeader) {
+
 		X509Certificate cert = null;
-		if(!certHeader.isEmpty() || certHeader != null){
+		if (StringUtils.isNotBlank(certHeader)) {
+
 			byte[] decodedBytes = Base64.getDecoder().decode(certHeader);
-			CertificateFactory cf;
 			try {
-				cf = CertificateFactory.getInstance("X.509");
-				cert = (X509Certificate)cf.generateCertificate(new ByteArrayInputStream(decodedBytes));
+				CertificateFactory cf = CertificateFactory.getInstance("X.509");
+				cert = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(decodedBytes));
 			} catch (Exception e ) {
-				cert = null;
-				logger.info(e.getMessage());
+                logger.info("Failed to extract certificate from request header: {}", e.getMessage(), e);
 			}
 		}
+
 		return cert;
 	}
-	
-	public boolean IsValidClientCertificate(String certHeader, String certHolder){
-		//Refer: https://docs.microsoft.com/en-us/azure/app-service/app-service-web-configure-tls-mutual-auth
-		X509Certificate x509ClientCert = getCertFromHeader(certHeader);
-		if(x509ClientCert != null){
-			try {
-				boolean isSelfSignedCert = isSelfSignedCert(x509ClientCert);
-				logger.info("Certificate received is self signed:" + (isSelfSignedCert ? "true": "false"));
-				if(!isSelfSignedCert){
-					KeyVaultRetriever kvr = new KeyVaultRetriever(keyVaultProperties.getClientId(), keyVaultProperties.getClientKey());
-					X509Certificate x509ServerCert = kvr.getCertificateByCertName(certHolder);
-					Map<String, String> x509ClientCertSubjectDn = getMap(x509ClientCert.getSubjectDN().getName());
-					Map<String, String> x509ClientCertIssuerDn = getMap(x509ClientCert.getIssuerDN().getName());
-					String x509ClientCertThumbPrint = getThumbprint(x509ClientCert);
-					Map<String, String> x509ServerCertSubjectDn = getMap(x509ServerCert.getSubjectDN().getName());
-					Map<String, String> x509ServerCertIssuerDn = getMap(x509ServerCert.getIssuerDN().getName());
-					String x509ServerCertThumbPrint = getThumbprint(x509ServerCert);
-					
-					
-					//1. The certificate is not expired and is active for the current time on server.
-					x509ClientCert.checkValidity(new Date());
-					
-					//2. Check subject name of certificate
-					boolean foundSubject = false;
-					if(x509ClientCertSubjectDn.get("CN").equals(x509ServerCertSubjectDn.get("CN"))){
-						foundSubject = true;
-					}
-					
-					if (!foundSubject) return false;
-					
-					//3. Check issuer name of certificate
-					boolean foundIssuerCN = false, foundIssuerO = false;
-					if(x509ClientCertIssuerDn.get("CN").equals(x509ServerCertIssuerDn.get("CN"))){
-						foundIssuerCN = true;
-					}
-					if(x509ClientCertIssuerDn.get("O").equals(x509ServerCertIssuerDn.get("O"))){
-						foundIssuerO = true;
-					}
-					if (!foundIssuerCN || !foundIssuerO) return false;
-					
-					//4. check the thumbprint of certificate
-					if(!x509ServerCertThumbPrint.equalsIgnoreCase(x509ClientCertThumbPrint)){
-						return false;
-					}
-					return true;
-				}
-			} catch (CertificateException | NoSuchAlgorithmException | NoSuchProviderException e) {
-				logger.debug("Some exceptions are happening in certificate verification");
-				logger.debug(e.getMessage());
-				return false;
-			}
 
-		}
-		return false;
+    public boolean isValidClientCertificate(String certHeader, String certHolder) {
 
-	}
-	public boolean IsValidClientCertificate(X509Certificate x509ClientCert, String certHolder) {
-		if(x509ClientCert != null){
-			try {
-				boolean isSelfSignedCert = isSelfSignedCert(x509ClientCert);
-				logger.info("Certificate received is self signed:" + (isSelfSignedCert ? "true": "false"));
-				if(!isSelfSignedCert){
-					KeyVaultRetriever kvr = new KeyVaultRetriever(keyVaultProperties.getClientId(), keyVaultProperties.getClientKey());
-					X509Certificate x509ServerCert = kvr.getCertificateByCertName(certHolder);
-					Map<String, String> x509ClientCertSubjectDn = getMap(x509ClientCert.getSubjectDN().getName());
-					Map<String, String> x509ClientCertIssuerDn = getMap(x509ClientCert.getIssuerDN().getName());
-					String x509ClientCertThumbPrint = getThumbprint(x509ClientCert);
-					Map<String, String> x509ServerCertSubjectDn = getMap(x509ServerCert.getSubjectDN().getName());
-					Map<String, String> x509ServerCertIssuerDn = getMap(x509ServerCert.getIssuerDN().getName());
-					String x509ServerCertThumbPrint = getThumbprint(x509ServerCert);
-					
-					
-					//1. The certificate is not expired and is active for the current time on server.
-					x509ClientCert.checkValidity(new Date());
-					
-					//2. Check subject name of certificate
-					boolean foundSubject = false;
-					if(x509ClientCertSubjectDn.get("CN").equals(x509ServerCertSubjectDn.get("CN"))){
-						foundSubject = true;
-					}
-					
-					if (!foundSubject) return false;
-					
-					//3. Check issuer name of certificate
-					boolean foundIssuerCN = false, foundIssuerO = false;
-					if(x509ClientCertIssuerDn.get("CN").equals(x509ServerCertIssuerDn.get("CN"))){
-						foundIssuerCN = true;
-					}
-					if(x509ClientCertIssuerDn.get("O").equals(x509ServerCertIssuerDn.get("O"))){
-						foundIssuerO = true;
-					}
-					if (!foundIssuerCN || !foundIssuerO) return false;
-					
-					//4. check the thumbprint of certificate
-					if(!x509ServerCertThumbPrint.equalsIgnoreCase(x509ClientCertThumbPrint)){
-						return false;
-					}
-					return true;
-				}
-			} catch (CertificateException | NoSuchAlgorithmException | NoSuchProviderException e) {
-				logger.debug("Some exceptions are happening in certificate verification");
-				logger.debug(e.getMessage());
-				return false;
-			}
+    	X509Certificate x509ClientCert = this.getCertFromHeader(certHeader);
+        return this.isValidClientCertificate(x509ClientCert, certHolder);
+    }
 
-		}
-		return false;
+	public boolean isValidClientCertificate(X509Certificate x509ClientCert, String certHolder) {
+
+		// Article ref: https://docs.microsoft.com/en-us/azure/app-service/app-service-web-configure-tls-mutual-auth
+		try {
 		
+			if (this.isSelfSignedCert(x509ClientCert)) {
+				throw new SecurityException("Self-signed certificates are not accepted");
+			}
+
+            KeyVaultRetriever kvr = new KeyVaultRetriever(this.keyVaultProperties.getClientId(), this.keyVaultProperties.getClientKey());
+            X509Certificate x509ServerCert = kvr.getCertificateByCertName(certHolder);
+            Map<String, String> x509ClientCertSubjectDn = this.getMap(x509ClientCert.getSubjectDN().getName());
+            Map<String, String> x509ClientCertIssuerDn = this.getMap(x509ClientCert.getIssuerDN().getName());
+            String x509ClientCertThumbPrint = this.getThumbprint(x509ClientCert);
+            Map<String, String> x509ServerCertSubjectDn = this.getMap(x509ServerCert.getSubjectDN().getName());
+            Map<String, String> x509ServerCertIssuerDn = this.getMap(x509ServerCert.getIssuerDN().getName());
+            String x509ServerCertThumbPrint = this.getThumbprint(x509ServerCert);
+            x509ClientCert.checkValidity(new Date());
+            if (!x509ClientCertSubjectDn.get("CN").equals(x509ServerCertSubjectDn.get("CN"))) {
+                throw new SecurityException("Subject name invalid");
+            }
+            if (!x509ClientCertIssuerDn.get("CN").equals(x509ServerCertIssuerDn.get("CN"))) {
+                throw new SecurityException("Issuer name (CN) invalid");
+            }
+            if (!x509ClientCertIssuerDn.get("O").equals(x509ServerCertIssuerDn.get("O"))) {
+                throw new SecurityException("Issuer name (0) invalid");
+            }
+            if (!x509ServerCertThumbPrint.equalsIgnoreCase(x509ClientCertThumbPrint)) {
+                throw new SecurityException("Thumbprint mismatch");
+            }
+            return true;
+		}
+        catch (SecurityException | NoSuchAlgorithmException | CertificateException e) {
+            this.logger.error("Certificate verification failed: {}", (Object)e.getMessage());
+        }
+        catch (Exception e) {
+            this.logger.error("Certificate verification failure: {}", (Object)e.getMessage());
+        }
+
+		return false;
 	}
 
 	/**
 	 * Checks whether given X.509 certificate is self-signed.
 	 * @param cert 
 	 */
-	private boolean isSelfSignedCert(X509Certificate cert)
-			throws CertificateException, NoSuchAlgorithmException,
-			NoSuchProviderException {
-		try {
-			// Try to verify certificate signature with its own public key
-			PublicKey key = cert.getPublicKey();
-			cert.verify(key);
-			return true;
-		} catch (SignatureException sigEx) {
-			// Invalid signature --> not self-signed
-			return false;
-		} catch (InvalidKeyException keyEx) {
-			// Invalid key --> not self-signed
-			return false;
-		}
-	}
+    private boolean isSelfSignedCert(X509Certificate cert) throws CertificateException, NoSuchAlgorithmException, NoSuchProviderException {
+        try {
+            PublicKey key = cert.getPublicKey();
+            cert.verify(key);
+            return true;
+        }
+        catch (SignatureException se) {
+            logger.warn("SignatureException: {}", se.getMessage());
+        }
+        catch (InvalidKeyException ike) {
+            logger.warn("InvalidKeyException: {}", ike.getMessage());
+        }
 
-	private String getThumbprint(X509Certificate cert)
-			throws NoSuchAlgorithmException, CertificateEncodingException {
-		MessageDigest md = MessageDigest.getInstance("SHA-1");
-		byte[] der = cert.getEncoded();
-		md.update(der);
-		byte[] digest = md.digest();
-		String digestHex = DatatypeConverter.printHexBinary(digest);
-		return digestHex.toLowerCase();
-	}
+        return false;
+    }
 
-	
-	private Map<String, String> getMap(String str){
-		Map<String, String> tokens = Arrays.stream(str.split(","))
-				.map(item -> item.split("="))
-				.collect(Collectors.toMap(item -> item[0].trim(), item -> item[1].trim()));
-		return tokens;
-	}
+    private String getThumbprint(X509Certificate cert) throws NoSuchAlgorithmException, CertificateEncodingException {
+        MessageDigest md = MessageDigest.getInstance("SHA-1");
+        byte[] der = cert.getEncoded();
+        md.update(der);
+        byte[] digest = md.digest();
+        String digestHex = DatatypeConverter.printHexBinary(digest);
+        return digestHex.toLowerCase();
+    }
 
+    private Map<String, String> getMap(String str) {
 
+    	return Arrays.stream(str.split(","))
+        			.map(item -> item.split("="))
+        			.collect(Collectors.toMap(item -> item[0].trim(), item -> item[1].trim()));
+    }
 }

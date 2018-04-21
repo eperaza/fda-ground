@@ -1,45 +1,17 @@
-/*******************************************************************************
- * Copyright © Microsoft Open Technologies, Inc.
- * 
- * All Rights Reserved
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * THIS CODE IS PROVIDED *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION
- * ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A
- * PARTICULAR PURPOSE, MERCHANTABILITY OR NON-INFRINGEMENT.
- * 
- * See the Apache License, Version 2.0 for the specific language
- * governing permissions and limitations under the License.
- ******************************************************************************/
 package com.boeing.cas.supa.ground.pojos;
 
-import java.security.acl.Group;
 import java.util.ArrayList;
+import java.util.List;
 
-/**
- * The User Class holds together all the members of a WAAD User entity and all
- * the access methods and set methods
- * 
- * @author Azure Active Directory Contributor
- */
+import org.apache.commons.lang3.StringUtils;
+
 public class User extends DirectoryObject {
 
-	// The following are the individual private members of a User object that
-	// holds a particular simple attribute of an User object.
-	protected String objectId;
-	protected String objectType;
 	protected String accountEnabled;
 	protected String city;
 	protected String country;
 	protected String department;
 	protected String dirSyncEnabled;
-	protected String displayName;
 	protected String facsimileTelephoneNumber;
 	protected String givenName;
 	protected String jobTitle;
@@ -47,9 +19,7 @@ public class User extends DirectoryObject {
 	protected String mail;
 	protected String mailNickname;
 	protected String mobile;
-	protected ArrayList<String> otherMails;
-
-
+	protected List<String> otherMails;
 	protected String password;
 	protected String passwordPolicies;
 	protected String physicalDeliveryOfficeName;
@@ -62,449 +32,272 @@ public class User extends DirectoryObject {
 	protected String usageLocation;
 	protected String userPrincipalName;
 
-	/**
-	 * below 2 properties are for future use
-	 */
-	// The groups holds a list of group entity this user belongs to.
-	private ArrayList<com.boeing.cas.supa.ground.pojos.Group> groups;
+	// The groups holds a list of group entity(s) this user belongs to.
+	private List<Group> groups = new ArrayList<>();
 
-	// The roles holds a list of role entity this user belongs to.
-	private ArrayList<Group> roles;
+	// The roles holds a list of role entity(s) this user belongs to.
+	private List<Group> roles = new ArrayList<>();
 
-	/**
-	 * The constructor for the User class. Initializes the dynamic lists and
-	 * managerDisplayname variables.
-	 */
-	public User() {
-
-		this.groups = new ArrayList<com.boeing.cas.supa.ground.pojos.Group>();
-		this.roles = new ArrayList<Group>();
-	}
-
-
-	/**
-	 * @return The objectId of this user.
-	 */
 	public String getObjectId() {
-		return objectId;
+		return this.objectId;
 	}
 
-	/**
-	 * @param objectId
-	 *            The objectId to set to this User object.
-	 */
 	public void setObjectId(String objectId) {
 		this.objectId = objectId;
 	}
 
-	/**
-	 * @return The objectType of this User.
-	 */
 	public String getObjectType() {
-		return objectType;
+		return this.objectType;
 	}
 
-	/**
-	 * @param objectType
-	 *            The objectType to set to this User object.
-	 */
 	public void setObjectType(String objectType) {
 		this.objectType = objectType;
 	}
 
-	/**
-	 * @return The userPrincipalName of this User.
-	 */
 	public String getUserPrincipalName() {
-		return userPrincipalName;
+		return this.userPrincipalName;
 	}
 
-	/**
-	 * @param userPrincipalName
-	 *            The userPrincipalName to set to this User object.
-	 */
 	public void setUserPrincipalName(String userPrincipalName) {
 		this.userPrincipalName = userPrincipalName;
 	}
 
-	/**
-	 * @return The usageLocation of this User.
-	 */
 	public String getUsageLocation() {
-		return usageLocation;
+		return this.usageLocation;
 	}
 
-	/**
-	 * @param usageLocation
-	 *            The usageLocation to set to this User object.
-	 */
 	public void setUsageLocation(String usageLocation) {
 		this.usageLocation = usageLocation;
 	}
 
-	/**
-	 * @return The telephoneNumber of this User.
-	 */
 	public String getTelephoneNumber() {
-		return telephoneNumber;
+		return this.telephoneNumber;
 	}
 
-	/**
-	 * @param telephoneNumber
-	 *            The telephoneNumber to set to this User object.
-	 */
 	public void setTelephoneNumber(String telephoneNumber) {
 		this.telephoneNumber = telephoneNumber;
 	}
 
-	/**
-	 * @return The surname of this User.
-	 */
 	public String getSurname() {
-		return surname;
+		return this.surname;
 	}
 
-	/**
-	 * @param surname
-	 *            The surname to set to this User Object.
-	 */
 	public void setSurname(String surname) {
 		this.surname = surname;
 	}
 
-	/**
-	 * @return The streetAddress of this User.
-	 */
 	public String getStreetAddress() {
-		return streetAddress;
+		return this.streetAddress;
 	}
 
-	/**
-	 * @param streetAddress
-	 *            The streetAddress to set to this User.
-	 */
 	public void setStreetAddress(String streetAddress) {
 		this.streetAddress = streetAddress;
 	}
 
-	/**
-	 * @return The state of this User.
-	 */
 	public String getState() {
-		return state;
+		return this.state;
 	}
 
-	/**
-	 * @param state
-	 *            The state to set to this User object.
-	 */
 	public void setState(String state) {
 		this.state = state;
 	}
 
-	/**
-	 * @return The preferredLanguage of this User.
-	 */
 	public String getPreferredLanguage() {
-		return preferredLanguage;
+		return this.preferredLanguage;
 	}
 
-	/**
-	 * @param preferredLanguage
-	 *            The preferredLanguage to set to this User.
-	 */
 	public void setPreferredLanguage(String preferredLanguage) {
 		this.preferredLanguage = preferredLanguage;
 	}
 
-	/**
-	 * @return The postalCode of this User.
-	 */
 	public String getPostalCode() {
-		return postalCode;
+		return this.postalCode;
 	}
 
-	/**
-	 * @param postalCode
-	 *            The postalCode to set to this User.
-	 */
 	public void setPostalCode(String postalCode) {
 		this.postalCode = postalCode;
 	}
 
-	/**
-	 * @return The physicalDeliveryOfficeName of this User.
-	 */
 	public String getPhysicalDeliveryOfficeName() {
-		return physicalDeliveryOfficeName;
+		return this.physicalDeliveryOfficeName;
 	}
 
-	/**
-	 * @param physicalDeliveryOfficeName
-	 *            The physicalDeliveryOfficeName to set to this User Object.
-	 */
 	public void setPhysicalDeliveryOfficeName(String physicalDeliveryOfficeName) {
 		this.physicalDeliveryOfficeName = physicalDeliveryOfficeName;
 	}
 
-	/**
-	 * @return The passwordPolicies of this User.
-	 */
 	public String getPasswordPolicies() {
-		return passwordPolicies;
+		return this.passwordPolicies;
 	}
 
-	/**
-	 * @param passwordPolicies
-	 *            The passwordPolicies to set to this User object.
-	 */
 	public void setPasswordPolicies(String passwordPolicies) {
 		this.passwordPolicies = passwordPolicies;
 	}
 
-	/**
-	 * @return The mobile of this User.
-	 */
 	public String getMobile() {
-		return mobile;
+		return this.mobile;
 	}
 
-	/**
-	 * @param mobile
-	 *            The mobile to set to this User object.
-	 */
 	public void setMobile(String mobile) {
 		this.mobile = mobile;
 	}
 
-	/**
-	 * @return The Password of this User.
-	 */
 	public String getPassword() {
-		return password;
+		return this.password;
 	}
 
-	/**
-	 * @param password
-	 *            The mobile to set to this User object.
-	 */
 	public void setPassword(String password) {
 		this.password = password;
 	}
 
-	/**
-	 * @return The mail of this User.
-	 */
 	public String getMail() {
-		return mail;
+		return this.mail;
 	}
 
-	/**
-	 * @param mail
-	 *            The mail to set to this User object.
-	 */
 	public void setMail(String mail) {
 		this.mail = mail;
 	}
 
-	/**
-	 * @return The MailNickname of this User.
-	 */
 	public String getMailNickname() {
-		return mailNickname;
+		return this.mailNickname;
 	}
 
-	/**
-	 * @param mail
-	 *            The MailNickname to set to this User object.
-	 */
 	public void setMailNickname(String mailNickname) {
 		this.mailNickname = mailNickname;
 	}
 
-	/**
-	 * @return The jobTitle of this User.
-	 */
 	public String getJobTitle() {
-		return jobTitle;
+		return this.jobTitle;
 	}
 
-	/**
-	 * @param jobTitle
-	 *            The jobTitle to set to this User Object.
-	 */
 	public void setJobTitle(String jobTitle) {
 		this.jobTitle = jobTitle;
 	}
 
-	/**
-	 * @return The givenName of this User.
-	 */
 	public String getGivenName() {
-		return givenName;
+		return this.givenName;
 	}
 
-	/**
-	 * @param givenName
-	 *            The givenName to set to this User.
-	 */
 	public void setGivenName(String givenName) {
 		this.givenName = givenName;
 	}
 
-	/**
-	 * @return The facsimileTelephoneNumber of this User.
-	 */
 	public String getFacsimileTelephoneNumber() {
-		return facsimileTelephoneNumber;
+		return this.facsimileTelephoneNumber;
 	}
 
-	/**
-	 * @param facsimileTelephoneNumber
-	 *            The facsimileTelephoneNumber to set to this User Object.
-	 */
 	public void setFacsimileTelephoneNumber(String facsimileTelephoneNumber) {
 		this.facsimileTelephoneNumber = facsimileTelephoneNumber;
 	}
 
-	/**
-	 * @return The displayName of this User.
-	 */
 	public String getDisplayName() {
-		return displayName;
+		return this.displayName;
 	}
 
-	/**
-	 * @param displayName
-	 *            The displayName to set to this User Object.
-	 */
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
 	}
 
-	/**
-	 * @return The dirSyncEnabled of this User.
-	 */
 	public String getDirSyncEnabled() {
-		return dirSyncEnabled;
+		return this.dirSyncEnabled;
 	}
 
-	/**
-	 * @param dirSyncEnabled
-	 *            The dirSyncEnabled to set to this User.
-	 */
 	public void setDirSyncEnabled(String dirSyncEnabled) {
 		this.dirSyncEnabled = dirSyncEnabled;
 	}
 
-	/**
-	 * @return The department of this User.
-	 */
 	public String getDepartment() {
-		return department;
+		return this.department;
 	}
 
-	/**
-	 * @param department
-	 *            The department to set to this User.
-	 */
 	public void setDepartment(String department) {
 		this.department = department;
 	}
 
-	/**
-	 * @return The lastDirSyncTime of this User.
-	 */
 	public String getLastDirSyncTime() {
-		return lastDirSyncTime;
+		return this.lastDirSyncTime;
 	}
 
-	/**
-	 * @param lastDirSyncTime
-	 *            The lastDirSyncTime to set to this User.
-	 */
 	public void setLastDirSyncTime(String lastDirSyncTime) {
 		this.lastDirSyncTime = lastDirSyncTime;
 	}
 
-	/**
-	 * @return The country of this User.
-	 */
 	public String getCountry() {
-		return country;
+		return this.country;
 	}
 
-	/**
-	 * @param country
-	 *            The country to set to this User.
-	 */
 	public void setCountry(String country) {
 		this.country = country;
 	}
 
-	/**
-	 * @return The city of this User.
-	 */
 	public String getCity() {
-		return city;
+		return this.city;
 	}
 
-	/**
-	 * @param city
-	 *            The city to set to this User.
-	 */
 	public void setCity(String city) {
 		this.city = city;
 	}
 
-	/**
-	 * @return The accountEnabled attribute of this User.
-	 */
 	public String getAccountEnabled() {
-		return accountEnabled;
+		return this.accountEnabled;
 	}
 
-	/**
-	 * @param accountEnabled
-	 *            The accountEnabled to set to this User.
-	 */
 	public void setAccountEnabled(String accountEnabled) {
 		this.accountEnabled = accountEnabled;
 	}
 
-	public ArrayList<com.boeing.cas.supa.ground.pojos.Group> getGroups() {
-		return groups;
+	public List<Group> getGroups() {
+		return this.groups;
 	}
 
-	public void setGroups(ArrayList<com.boeing.cas.supa.ground.pojos.Group> group) {
+	public void setGroups(List<Group> group) {
 		this.groups = group;
 	}
 
-	public ArrayList<Group> getRoles() {
-		return roles;
+	public List<Group> getRoles() {
+		return this.roles;
 	}
 
-	public void setRoles(ArrayList<Group> roles) {
+	public void setRoles(List<Group> roles) {
 		this.roles = roles;
 	}
-	public ArrayList<String> getOtherMails() {
-		return otherMails;
+
+	public List<String> getOtherMails() {
+		return this.otherMails;
 	}
 
-
-	@Override
+    @Override
 	public String toString() {
-		return "User [objectId=" + objectId + ", objectType=" + objectType + ", accountEnabled=" + accountEnabled
-				+ ", city=" + city + ", country=" + country + ", department=" + department + ", dirSyncEnabled="
-				+ dirSyncEnabled + ", displayName=" + displayName + ", facsimileTelephoneNumber="
-				+ facsimileTelephoneNumber + ", givenName=" + givenName + ", jobTitle=" + jobTitle
-				+ ", lastDirSyncTime=" + lastDirSyncTime + ", mail=" + mail + ", mailNickname=" + mailNickname
-				+ ", mobile=" + mobile + ", otherMails=" + otherMails + ", password=" + password + ", passwordPolicies="
-				+ passwordPolicies + ", physicalDeliveryOfficeName=" + physicalDeliveryOfficeName + ", postalCode="
-				+ postalCode + ", preferredLanguage=" + preferredLanguage + ", state=" + state + ", streetAddress="
-				+ streetAddress + ", surname=" + surname + ", telephoneNumber=" + telephoneNumber + ", usageLocation="
-				+ usageLocation + ", userPrincipalName=" + userPrincipalName + ", groups=" + groups + ", roles=" + roles
-				+ "]";
+
+		return new StringBuilder("User [")
+				.append("objectId=").append(this.objectId).append(',')
+				.append("objectType=").append(this.objectType).append(',')
+				.append("displayName=").append(this.displayName).append(',')
+				.append("accountEnabled=").append(this.accountEnabled).append(',')
+				.append("city=").append(this.city).append(',')
+				.append("country=").append(this.country).append(',')
+				.append("department=").append(this.department).append(',')
+				.append("dirSyncEnabled=").append(this.dirSyncEnabled).append(',')
+				.append("facsimileTelephoneNumber=").append(this.facsimileTelephoneNumber).append(',')
+				.append("givenName=").append(this.givenName).append(',')
+				.append("jobTitle=").append(this.jobTitle).append(',')
+				.append("lastDirSyncTime=").append(this.lastDirSyncTime).append(',')
+				.append("mail=").append(this.mail).append(',')
+				.append("mailNickname=").append(this.mailNickname).append(',')
+				.append("mobile=").append(this.mobile).append(',')
+				.append("password=").append(this.password).append(',')
+				.append("passwordPolicies=").append(this.passwordPolicies).append(',')
+				.append("physicalDeliveryOfficeName=").append(this.physicalDeliveryOfficeName).append(',')
+				.append("postalCode=").append(this.postalCode).append(',')
+				.append("preferredLanguage=").append(this.preferredLanguage).append(',')
+				.append("state=").append(this.state).append(',')
+				.append("streetAddress=").append(this.streetAddress).append(',')
+				.append("surname=").append(this.surname).append(',')
+				.append("telephoneNumber=").append(this.telephoneNumber).append(',')
+				.append("usageLocation=").append(this.usageLocation).append(',')
+				.append("userPrincipalName=").append(this.userPrincipalName).append(',')
+				.append("otherMails=").append(StringUtils.join(this.otherMails, ","))
+				.append(']')
+			.toString();
 	}
-	
 }

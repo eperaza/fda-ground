@@ -22,48 +22,36 @@ package com.boeing.cas.supa.ground.pojos;
 
 /**
  * @author Azure Active Directory Contributor
+ * This class has been modified to be a regular class
  *
  */
-public abstract class DirectoryObject {
+public class DirectoryObject {
 	
-	public DirectoryObject() {
-		super();
-	}
-	
-	/**
-	 * 
-	 * @return
-	 */
-	public abstract String getObjectId();
-	
-	/**
-	 * @param objectId
-	 */
-	public abstract void setObjectId(String objectId);
+	protected String objectId;
+	protected String objectType;
+	protected String displayName;
 
-	/**
-	 * 
-	 * @return
-	 */
-	public abstract String getObjectType();
+    public String getObjectId() {
+        return this.objectId;
+    }
 
-	/**
-	 * 
-	 * @param objectType
-	 */
-	public abstract void setObjectType(String objectType);
-	
-	/**
-	 * 
-	 * @return
-	 */
-	public abstract String getDisplayName();
+    public void setObjectId(String objectId) {
+        this.objectId = objectId;
+    }
 
-	/**
-	 * 
-	 * @param displayName
-	 */
-	public abstract void setDisplayName(String displayName);
+    public String getObjectType() {
+        return this.objectType;
+    }
 
+    public void setObjectType(String objectType) {
+        this.objectType = objectType;
+    }
+
+    public String getDisplayName() {
+        return this.displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
 }
-

@@ -6,11 +6,4 @@
     <root level="INFO">
         <appender-ref ref="FILE" />
     </root>
-    <appender name="test" class="com.microsoft.applicationinsights.logback.ApplicationInsightsAppender">
-        <instrumentationKey>6615f637-2dcf-4a3c-a6ef-49b9a0eaf68d</instrumentationKey>
-    </appender>
-
-    <root level="trace">
-        <appender-ref ref="test" />
-    </root>
 </configuration>

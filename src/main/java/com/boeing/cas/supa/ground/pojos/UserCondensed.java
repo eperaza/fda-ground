@@ -1,50 +1,63 @@
 package com.boeing.cas.supa.ground.pojos;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class UserCondensed {
+
 	protected String surname;
 	protected String givenName;
 	protected String displayName;
-	protected ArrayList<String> otherMails;
-	protected ArrayList<Group> groups;
-	public UserCondensed(String surname, String givenName, String displayName, ArrayList<String> otherMails, ArrayList<Group> groups) {
+	protected List<String> otherMails;
+
+	protected List<Group> groups = new ArrayList<>();
+
+	public UserCondensed(String surname, String givenName, String displayName, List<String> otherMails, List<Group> groups) {
+
 		this.surname = surname;
 		this.givenName = givenName;
 		this.displayName = displayName;
 		this.otherMails = otherMails;
 		this.groups = groups;
 	}
+
 	public String getSurname() {
-		return surname;
+		return this.surname;
 	}
+
 	public void setSurname(String surname) {
 		this.surname = surname;
 	}
+
 	public String getGivenName() {
-		return givenName;
+		return this.givenName;
 	}
+
 	public void setGivenName(String givenName) {
 		this.givenName = givenName;
 	}
+
 	public String getDisplayName() {
-		return displayName;
+		return this.displayName;
 	}
+
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
 	}
-	public ArrayList<String> getOtherMails() {
-		return otherMails;
+
+	public List<String> getOtherMails() {
+		return this.otherMails;
 	}
-	public void setOtherMails(ArrayList<String> otherMails) {
+
+	public void setOtherMails(List<String> otherMails) {
 		this.otherMails = otherMails;
 	}
-	public ArrayList<Group> getGroups() {
-		return groups;
+
+	public List<Group> getGroups() {
+		return this.groups;
 	}
-	public void setGroups(ArrayList<Group> groups) {
+
+	public void setGroups(List<Group> groups) {
 		this.groups = groups;
 	}
-	
-
 }

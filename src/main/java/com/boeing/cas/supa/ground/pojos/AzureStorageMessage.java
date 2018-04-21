@@ -1,16 +1,14 @@
-package com.boeing.cas.supa.ground.utils;
-
-import com.boeing.cas.supa.ground.pojos.UserCondensed;
+package com.boeing.cas.supa.ground.pojos;
 
 public class AzureStorageMessage {
+
 	protected String containerName;
 	protected String fileName;
 	protected UserCondensed uploadedBy;
 	protected long uploadedOn;
 
-
 	public String getContainerName() {
-		return containerName;
+		return this.containerName;
 	}
 
 	public void setContainerName(String containerName) {
@@ -18,7 +16,7 @@ public class AzureStorageMessage {
 	}
 
 	public String getFileName() {
-		return fileName;
+		return this.fileName;
 	}
 
 	public void setFileName(String fileName) {
@@ -26,11 +24,11 @@ public class AzureStorageMessage {
 	}
 	
 	public UserCondensed getUploadedBy() {
-		return uploadedBy;
+		return this.uploadedBy;
 	}
 
 	public long getUploadedOn() {
-		return uploadedOn;
+		return this.uploadedOn;
 	}
 
 	public void setUploadedBy(UserCondensed uploadedBy) {
@@ -43,6 +41,11 @@ public class AzureStorageMessage {
 
 	@Override
 	public String toString() {
-		return "StorageMessage [containerName=" + containerName + ", fileName=" + fileName + "]";
+
+		return new StringBuilder("AzureStorageMessage [")
+				.append("containerName=").append(containerName).append(',')
+				.append("fileName=").append(fileName)
+				.append(']')
+				.toString();
 	}
 }

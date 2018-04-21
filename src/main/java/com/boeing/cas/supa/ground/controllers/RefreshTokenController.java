@@ -23,59 +23,58 @@ import com.boeing.cas.supa.ground.pojos.RefreshTokenOutput;
 @RestController
 @RequestMapping("/refresh")
 public class RefreshTokenController {
-	private static String tenantId = "fdacustomertest.onmicrosoft.com";
-	private static String clientId = "95d69a21-369b-46cc-aa1d-0b67a2353f59";
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	
-	@RequestMapping(method = {RequestMethod.POST })
-	public ResponseEntity<Object> getRefreshToken(@RequestBody RefreshTokenInput rft) throws IOException{
-		if (isValid(rft)) {
-			logger.info("it is valid");
-			Object obj = getToken(rft.getRefreshToken());
-			if(obj != null){
-				if(obj instanceof Error){
+
+	private final Logger logger = LoggerFactory.getLogger(RefreshTokenController.class);
+
+	private static final String TENANT_ID = "fdacustomertest.onmicrosoft.com";
+	private static final String CLIENT_ID = "95d69a21-369b-46cc-aa1d-0b67a2353f59";
+
+	@RequestMapping(method = { RequestMethod.POST })
+	public ResponseEntity<Object> getRefreshToken(@RequestBody RefreshTokenInput refreshTokenInput) throws IOException {
+
+		if (isValid(refreshTokenInput)) {
+
+			logger.debug("Request contains refresh token");
+			Object obj = RefreshTokenController.getToken(refreshTokenInput.getRefreshToken());
+			if (obj != null) {
+
+				if (obj instanceof Error) {
 					return new ResponseEntity<>((Error) obj, HttpStatus.BAD_REQUEST);
-				}else{
-					return new ResponseEntity<>((RefreshTokenOutput) obj, HttpStatus.OK);
 				}
+
+				return new ResponseEntity<>((RefreshTokenOutput) obj, HttpStatus.OK);
 			}
-		}else{
-			return new ResponseEntity<>("Not a valid haha", HttpStatus.BAD_REQUEST);
 		}
-		return null;
-	}
-	private boolean isValid(RefreshTokenInput rft) {
-		return rft != null
-		        && rft.getRefreshToken() != null;
-	}
-	 public static Object getToken(String refreshToken) throws IOException {
 
-	        String encoding = "UTF-8";
-	        String params = "client_id=" + clientId + "&refresh_token=" + refreshToken
-	                + "&grant_type=refresh_token&resource=https%3A%2F%2Fgraph.windows.net";
-	        String path = "https://login.microsoftonline.com/" + tenantId + "/oauth2/token";
-	        byte[] data = params.getBytes(encoding);
-	        URL url = new URL(path);
-	        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-	        conn.setRequestMethod("POST");
-	        conn.setDoOutput(true);
-	        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-	        conn.setRequestProperty("Content-Length", String.valueOf(data.length));
-	        conn.setConnectTimeout(5 * 1000);
-	        OutputStream outStream = conn.getOutputStream();
-	        outStream.write(data);
-	        outStream.flush();
-	        outStream.close();
-	        String responseString = "";
-	        if (conn.getResponseCode() != 200) {
-	        	responseString = HttpClientHelper.getResponseStringFromConn(conn, false);
-	        	Error error = AzureADClientHelper.getLoginErrorFromString(responseString);
-	        	return error;
-	        } else {
-	        	responseString = HttpClientHelper.getResponseStringFromConn(conn, true);
-	        	RefreshTokenOutput rto = AzureADClientHelper.getRefreshTokenOutputFromString(responseString);
-	        	return rto;
-	        }
-	    }
+		return new ResponseEntity<>("Request missing refresh token", HttpStatus.BAD_REQUEST);
+	}
 
+	private boolean isValid(RefreshTokenInput refreshTokenInput) {
+		return refreshTokenInput != null && refreshTokenInput.getRefreshToken() != null;
+	}
+
+	public static Object getToken(String refreshToken) throws IOException {
+
+		String encoding = "UTF-8";
+		String params = new StringBuilder("client_id=").append(CLIENT_ID).append("&refresh_token=").append(refreshToken)
+						.append("&grant_type=refresh_token&resource=https%3A%2F%2Fgraph.windows.net").toString();
+		String path = new StringBuilder("https://login.microsoftonline.com/").append(TENANT_ID).append("/oauth2/token").toString();
+		byte[] data = params.getBytes(encoding);
+		URL url = new URL(path);
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		conn.setRequestMethod("POST");
+		conn.setDoOutput(true);
+		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+		conn.setRequestProperty("Content-Length", String.valueOf(data.length));
+		conn.setConnectTimeout(5 * 1_000);
+
+		try (OutputStream outputStream = conn.getOutputStream()) {
+			outputStream.write(data);
+			outputStream.flush();
+		}
+
+		return (conn.getResponseCode() != 200)
+				? AzureADClientHelper.getLoginErrorFromString(HttpClientHelper.getResponseStringFromConn(conn, false))
+				: AzureADClientHelper.getRefreshTokenOutputFromString(HttpClientHelper.getResponseStringFromConn(conn, true));
+	}
 }
