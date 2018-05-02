@@ -109,16 +109,19 @@ public class AzureADAuthFilter implements Filter {
             else if (!validClientCert) {
             	responseCode = 403;
                 responseException = new Error("Invalid client certificate", "Must provide a valid client certificate");
-                return;            	
             }
             else {
-            	responseCode = 400;
+            	responseCode = 401;
                 responseException = new Error("Authorization_Missing", "Must provide a valid authorization token");
             }
         }
-        catch (ParseException e) {
+        catch (ParseException pe) {
             responseCode = 400;
-            responseException = new Error("JWT_ERROR", e.getMessage());
+            responseException = new Error("JWT_ERROR", pe.getMessage());
+        }
+        catch (SecurityException se) {
+        	responseCode = 401;
+        	responseException = new Error("MISSING_INVALID_CLIENT_AUTH", se.getMessage());
         }
         finally {
 
@@ -170,7 +173,7 @@ public class AzureADAuthFilter implements Filter {
 
 		logger.debug("xAuth token -> {}", xAuth);
 		if (StringUtils.isBlank(xAuth) || !xAuth.contains(AUTH_TOKEN_PREFIX.trim())) {
-			throw new SecurityException("Not a valid Authorization token");
+			throw new SecurityException("Missing or invalid Authorization token");
 		}
 
 		Map<String, Object> claimsMap = JWTParser.parse(xAuth.replace(AUTH_TOKEN_PREFIX, StringUtils.EMPTY)).getJWTClaimsSet().getClaims();

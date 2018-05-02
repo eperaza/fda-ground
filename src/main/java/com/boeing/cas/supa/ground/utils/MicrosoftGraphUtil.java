@@ -7,6 +7,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,8 +23,7 @@ public class MicrosoftGraphUtil {
 
     private final Logger logger = LoggerFactory.getLogger(MicrosoftGraphUtil.class);
 
-    private static final String API_VERSION = "2013-04-05";
-    private static final String ACCEPT_CONTENT_TYPE = "application/json;odata=minimalmetadata";
+    private static final String AZURE_AD_GRAPH_API_VERSION = "api-version=1.6";
     
     private String tenant;
 	private String accessToken;
@@ -35,20 +35,20 @@ public class MicrosoftGraphUtil {
 
 	public User getUsernamesFromGraph(String uniqueId) {
 
-		logger.debug("Getting user object object info from graph");
+		logger.debug("Getting user object info from graph");
         User userObj = null;
 		try {
 
 			URL url = new URL(
 					new StringBuilder("https://graph.windows.net/").append(this.tenant)
 						.append("/users/").append(uniqueId)
-						.append("?api-version=2013-04-05")
+						.append('?').append(AZURE_AD_GRAPH_API_VERSION)
 						.toString());
 	        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 	        // Set the appropriate header fields in the request header.
-	        conn.setRequestProperty("api-version", API_VERSION);
+	        conn.setRequestProperty("api-version", AZURE_AD_GRAPH_API_VERSION.replace(Constants.AZURE_API_VERSION_PREFIX, StringUtils.EMPTY));
 	        conn.setRequestProperty("Authorization", accessToken);
-	        conn.setRequestProperty("Accept", ACCEPT_CONTENT_TYPE);
+	        conn.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
 
 	        String responseStr = HttpClientHelper.getResponseStringFromConn(conn, true);
 	        int responseCode = conn.getResponseCode();
@@ -56,7 +56,7 @@ public class MicrosoftGraphUtil {
 	        ObjectMapper objectMapper = new ObjectMapper();
 	        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			ObjectReader objectReader = objectMapper.readerFor(User.class);
-	        if (responseCode == 200){
+	        if (responseCode == 200) {
 	        	userObj = objectReader.readValue(responseStr);
 	        }
 		} catch (MalformedURLException e) {
@@ -78,13 +78,14 @@ public class MicrosoftGraphUtil {
 			URL url = new URL(
 					new StringBuilder("https://graph.windows.net/").append(this.tenant)
 						.append("/users/").append(uniqueId)
-						.append("/memberOf?api-version=2013-04-05")
+						.append("/memberOf")
+						.append('?').append(AZURE_AD_GRAPH_API_VERSION)
 						.toString());
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			// Set the appropriate header fields in the request header.
-	        conn.setRequestProperty("api-version", API_VERSION);
+	        conn.setRequestProperty("api-version", AZURE_AD_GRAPH_API_VERSION.replace(Constants.AZURE_API_VERSION_PREFIX, StringUtils.EMPTY));
 	        conn.setRequestProperty("Authorization", accessToken);
-	        conn.setRequestProperty("Accept", ACCEPT_CONTENT_TYPE);
+	        conn.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
 	        String responseStr = HttpClientHelper.getResponseStringFromConn(conn, true);
 	        groupList = getGroupListFromString(responseStr);
 	        int responseCode = conn.getResponseCode();
@@ -112,6 +113,7 @@ public class MicrosoftGraphUtil {
 
 				for (JsonNode objNode : arrNode) {
 					Group group = mapper.treeToValue(objNode, Group.class);
+					logger.info(group.toString());
 					groupList.add(group);
 			    }
 			}
