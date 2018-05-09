@@ -2,6 +2,7 @@ package com.boeing.cas.supa.ground.helpers;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -9,16 +10,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.boeing.cas.supa.ground.pojos.Error;
 import com.boeing.cas.supa.ground.pojos.RefreshTokenOutput;
+import com.boeing.cas.supa.ground.utils.Constants;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.aad.adal4j.AuthenticationContext;
 import com.microsoft.aad.adal4j.AuthenticationException;
 import com.microsoft.aad.adal4j.AuthenticationResult;
+import com.nimbusds.jwt.JWTParser;
 
 public class AzureADClientHelper {
 
@@ -95,6 +99,22 @@ public class AzureADClientHelper {
         }
 
         return result;
+	}
+	
+	public static String getUniqueIdFromJWT(String xAuth) {
+
+		String uniqueId = null;
+		try {
+			Map<String, Object> claimsMap = JWTParser
+					.parse(xAuth.contains(Constants.AUTH_HEADER_PREFIX.trim()) ? xAuth.replaceFirst(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY) : xAuth).getJWTClaimsSet()
+					.getClaims();
+			uniqueId = (String) claimsMap.get("oid");
+		} catch (ParseException pe) {
+			logger.error("Failed to extract claims and/or unique ID from authentication header: {}",
+					pe.getMessage(), pe);
+		}
+
+		return uniqueId;
 	}
 }
 

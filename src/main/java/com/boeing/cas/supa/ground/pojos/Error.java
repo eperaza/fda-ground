@@ -2,9 +2,9 @@ package com.boeing.cas.supa.ground.pojos;
 
 public class Error {
 
-	protected String errorLabel;
-	protected String errorDescription;
-	protected long timestamp;
+	private String errorLabel;
+	private String errorDescription;
+	private long timestamp;
 
 	public Error() {}
 
