@@ -22,14 +22,15 @@ import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
 import com.boeing.cas.supa.ground.pojos.Credential;
 import com.boeing.cas.supa.ground.pojos.Error;
 import com.boeing.cas.supa.ground.pojos.KeyVaultProperties;
+import com.boeing.cas.supa.ground.pojos.UserAccountActivation;
 import com.boeing.cas.supa.ground.pojos.UserRegistration;
+import com.boeing.cas.supa.ground.services.AzureADClientService;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.KeyVaultRetriever;
 import com.microsoft.aad.adal4j.AuthenticationException;
 import com.microsoft.aad.adal4j.AuthenticationResult;
 
 @RestController
-@RequestMapping("/register")
 @EnableConfigurationProperties(KeyVaultProperties.class)
 public class RegistrationController {
 
@@ -38,7 +39,10 @@ public class RegistrationController {
 	@Autowired
     private KeyVaultProperties keyVaultProperties;
 	
-	@RequestMapping(method = { RequestMethod.POST })
+	@Autowired
+	private AzureADClientService aadClient;
+
+	@RequestMapping(path="/register", method = { RequestMethod.POST })
 	public ResponseEntity<Object> getAccessToken(@RequestBody Credential cred, HttpServletRequest httpRequest) {
 
 		KeyVaultRetriever kvr = new KeyVaultRetriever(this.keyVaultProperties.getClientId(), this.keyVaultProperties.getClientKey());
@@ -75,6 +79,18 @@ public class RegistrationController {
 
 		logger.warn("User registration requested (improper token information received in request)!");
 		return null;
+	}
+
+	@RequestMapping(path="/registeruser", method = { RequestMethod.POST })
+	public ResponseEntity<Object> registerUserAccount(@RequestBody UserAccountActivation userAccountActivation, HttpServletRequest httpRequest) {
+
+		Object result = aadClient.enableUserAndSetPassword(userAccountActivation);
+
+		if (result instanceof Error) {
+			return new ResponseEntity<>(result, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+
+		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
 
     private String getPlistFromBlob(KeyVaultRetriever kvr, String containerName, String fileName) {

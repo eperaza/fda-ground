@@ -13,4 +13,8 @@ public class Constants {
 	public static enum PermissionType {
 		DELEGATED, APPLICATION, IMPERSONATION
 	}
+
+	public static enum UserAccountState {
+		PENDING_USER_ACTIVATION, USER_ACTIVATED, PENDING_DEVICE_ACTIVATION, DEVICE_ACTIVATED
+	}
 }

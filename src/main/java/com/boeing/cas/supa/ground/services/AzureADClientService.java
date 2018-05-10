@@ -1,6 +1,7 @@
 package com.boeing.cas.supa.ground.services;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -25,6 +26,7 @@ import javax.mail.internet.MimeMessage;
 import javax.net.ssl.HttpsURLConnection;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +39,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.boeing.cas.supa.ground.dao.UserAccountRegistrationDao;
+import com.boeing.cas.supa.ground.exceptions.ElevatedPermissionException;
+import com.boeing.cas.supa.ground.exceptions.MobileConfigurationException;
 import com.boeing.cas.supa.ground.exceptions.UserAccountRegistrationException;
 import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
 import com.boeing.cas.supa.ground.helpers.HttpClientHelper;
@@ -45,9 +49,13 @@ import com.boeing.cas.supa.ground.pojos.Group;
 import com.boeing.cas.supa.ground.pojos.KeyVaultProperties;
 import com.boeing.cas.supa.ground.pojos.NewUser;
 import com.boeing.cas.supa.ground.pojos.User;
+import com.boeing.cas.supa.ground.pojos.UserAccountActivation;
 import com.boeing.cas.supa.ground.pojos.UserAccountRegistration;
+import com.boeing.cas.supa.ground.pojos.UserRegistration;
+import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.Constants.PermissionType;
+import com.boeing.cas.supa.ground.utils.KeyVaultRetriever;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -93,6 +101,9 @@ public class AzureADClientService {
 
 	@Value("${azuread.userAuth.clientId}")
 	private String userAuthClientId;
+
+	@Autowired
+    private KeyVaultProperties keyVaultProperties;
 
 	@Autowired
 	private JavaMailSender emailSender;
@@ -314,7 +325,7 @@ public class AzureADClientService {
 				
 				// Register new user in the account registration database
 				String registrationToken = UUID.randomUUID().toString();
-				UserAccountRegistration registration = new UserAccountRegistration(registrationToken, newlyCreatedUser.getObjectId(), newlyCreatedUser.getUserPrincipalName(), airlineGroup.getDisplayName(), newUserPayload.getOtherMails().get(0), null);
+				UserAccountRegistration registration = new UserAccountRegistration(registrationToken, newlyCreatedUser.getObjectId(), newlyCreatedUser.getUserPrincipalName(), airlineGroup.getDisplayName(), newUserPayload.getOtherMails().get(0), Constants.UserAccountState.PENDING_USER_ACTIVATION.toString());
 				userAccountRegister.registerNewUserAccount(registration);
 				progressLog.append("\nRegistered new user account in database");
 				
@@ -366,81 +377,167 @@ public class AzureADClientService {
 		return resultObj;
 	}
 
-	public Object enableUserAndSetPassword(String accessTokenInRequest, String userId, String password) {
-		
+	public Object enableUserAndSetPassword(UserAccountActivation userAccountActivation) {
+
 		Object resultObj = null;
-		
-		// Get access token based on delegated permission via impersonation with a Local Administrator of the tenant.
-		String accessToken = null;
-		Object authResult = getElevatedPermissionsAccessToken(PermissionType.IMPERSONATION);
-		if (authResult instanceof Error) {
-			return authResult;
-		}
-		// access token could not be obtained either via delegated permissions or application permissions.
-		else if (authResult == null) {
-			return new Error("CREATE_USER_FAILURE", "Failed to acquire permissions");
-		}
-		else {
-			accessToken = String.valueOf(authResult);
-		}
+		StringBuilder progressLog = new StringBuilder("Activate user -");
 
-		// Proceed with request - build a payload for enabling user account and setting the password
-		ObjectMapper mapper = new ObjectMapper();
-		ObjectNode rootNode = mapper.createObjectNode();
-		rootNode.put("accountEnabled", true);
-		ObjectNode pwdProfileNode = mapper.createObjectNode();
-		pwdProfileNode.put("password", password);
-		pwdProfileNode.put("forceChangePasswordNextLogin", false);
-		rootNode.set("passwordProfile", pwdProfileNode);
-
+		HttpsURLConnection connGetUser = null, connEnableUser = null;
 		try {
 
+			// Check if token exists and corresponds to PENDING_USER_ACTIVATION in the database
+			boolean isUserNotActivated = userAccountRegister.isUserAccountNotActivated(userAccountActivation.getRegistrationToken(), userAccountActivation.getUsername(), Constants.UserAccountState.PENDING_USER_ACTIVATION.toString());
+			if (!isUserNotActivated) {
+				logger.warn("User registration record/token not found");
+				throw new UserAccountRegistrationException("Invalid or expired user account activation token");
+			}
+			progressLog.append("\nUser account registration record/token found");
+
+			// Check if user corresponding to userPrincipalName exists in Azure AD and is currently not enabled.
+			// Get access token based on delegated permission via impersonation with a Local Administrator of the tenant.
+			String accessToken = null;
+			Object elevatedAuthResult = getElevatedPermissionsAccessToken(PermissionType.IMPERSONATION);
+			if (elevatedAuthResult instanceof Error) {
+				throw new ElevatedPermissionException(((Error) elevatedAuthResult).getErrorDescription());
+			}
+			// access token could not be obtained either via delegated permissions or application permissions.
+			else if (elevatedAuthResult == null) {
+				throw new ElevatedPermissionException("Failed to acquire permissions");
+			}
+			else {
+				accessToken = String.valueOf(elevatedAuthResult);
+				progressLog.append("\nObtained impersonation access token");
+			}
+
 			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.azureadTenantName)
-					.append("/users/").append(userId)
+					.append("/users/").append(userAccountActivation.getUsername())
 					.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
 							.append(AZURE_AD_GRAPH_API_VERSION).toString())
 					.toString());
 
-			HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+			connGetUser = (HttpsURLConnection) url.openConnection();
 			// Set the appropriate header fields in the request header.
-			conn.setRequestMethod(RequestMethod.POST.toString());
-			conn.setRequestProperty("X-HTTP-Method-Override", RequestMethod.PATCH.toString());
-			conn.setRequestProperty("api-version", AZURE_AD_GRAPH_API_VERSION);
-			conn.setRequestProperty("Authorization", accessToken);
-			conn.setRequestProperty("Content-Type", "application/json");
-			conn.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
-			conn.setDoOutput(true);
-			try (DataOutputStream dos = new DataOutputStream(conn.getOutputStream())) {
+			connGetUser.setRequestMethod(RequestMethod.GET.toString());
+			connGetUser.setRequestProperty("api-version", AZURE_AD_GRAPH_API_VERSION);
+			connGetUser.setRequestProperty("Authorization", accessToken);
+			connGetUser.setRequestProperty("Content-Type", "application/json");
+			connGetUser.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
+
+			String responseStr = HttpClientHelper.getResponseStringFromConn(connGetUser, connGetUser.getResponseCode() == HttpStatus.OK.value());
+			User userObj = null;
+			if (connGetUser.getResponseCode() == 200) {
+
+				ObjectMapper mapper = new ObjectMapper()
+						.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+						.setSerializationInclusion(Include.NON_NULL);
+				userObj = mapper.readValue(responseStr, User.class);
+				
+				if (Boolean.parseBoolean(userObj.getAccountEnabled())) {
+					throw new UserAccountRegistrationException("User account is already activated");
+				}
+				progressLog.append("\nRetrieved user object from Azure AD Graph");
+			}
+
+			// Send PATCH request via impersonation to Azure AD Graph, to enable account and set password
+			// Build a payload for enabling user account and setting the password
+			ObjectMapper mapper = new ObjectMapper();
+			ObjectNode rootNode = mapper.createObjectNode();
+			rootNode.put("accountEnabled", true);
+			ObjectNode pwdProfileNode = mapper.createObjectNode();
+			pwdProfileNode.put("password", userAccountActivation.getPassword());
+			pwdProfileNode.put("forceChangePasswordNextLogin", false);
+			rootNode.set("passwordProfile", pwdProfileNode);
+
+			url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.azureadTenantName)
+					.append("/users/").append(userAccountActivation.getUsername())
+					.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
+							.append(AZURE_AD_GRAPH_API_VERSION).toString())
+					.toString());
+
+			connEnableUser = (HttpsURLConnection) url.openConnection();
+			// Set the appropriate header fields in the request header.
+			connEnableUser.setRequestMethod(RequestMethod.POST.toString());
+			connEnableUser.setRequestProperty("X-HTTP-Method-Override", RequestMethod.PATCH.toString());
+			connEnableUser.setRequestProperty("api-version", AZURE_AD_GRAPH_API_VERSION);
+			connEnableUser.setRequestProperty("Authorization", accessToken);
+			connEnableUser.setRequestProperty("Content-Type", "application/json");
+			connEnableUser.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
+			connEnableUser.setDoOutput(true);
+			try (DataOutputStream dos = new DataOutputStream(connEnableUser.getOutputStream())) {
 				dos.writeBytes(mapper.writeValueAsString(rootNode));
 				dos.flush();
 			}
 			
-			String responseStr = HttpClientHelper.getResponseStringFromConn(conn, conn.getResponseCode() == HttpStatus.NO_CONTENT.value());
-			logger.debug("-------> Response to enable user and set password: {}::{}", conn.getResponseCode(), responseStr);
-
+			responseStr = HttpClientHelper.getResponseStringFromConn(connEnableUser, connEnableUser.getResponseCode() == HttpStatus.NO_CONTENT.value());
 			JsonNode errorNode = StringUtils.isBlank(responseStr) ? null : mapper.readTree(responseStr).path("odata.error");
-			if (conn.getResponseCode() == HttpStatus.NO_CONTENT.value() && errorNode == null) {
+			if (connEnableUser.getResponseCode() == HttpStatus.NO_CONTENT.value() && errorNode == null) {
 				logger.debug("Enabled user and set password");
+				progressLog.append("\nEnabled user and set password");
 			}
 			else {
 
 				JsonNode messageNode = errorNode.path("message");
 				JsonNode valueNode = messageNode.path("value");
-
-				resultObj = new Error("USER_ACTIVATION_FAILED", valueNode.asText());
+				logger.error("Failed to enable user and set password: {}", valueNode.asText());
+				throw new UserAccountRegistrationException("Failed to enable user and set password");
 			}
-		} catch (JsonProcessingException jpe) {
-			logger.error("JsonProcessingException: {}", jpe.getMessage());
-			resultObj = new Error("USER_ACTIVATION_FAILED", jpe.getMessage());
+
+			// Update UserAccountRegistrations database table to invalidate token (by updating account state)
+			userAccountRegister.enableNewUserAccount(userAccountActivation.getRegistrationToken(), userObj.getUserPrincipalName(), Constants.UserAccountState.PENDING_USER_ACTIVATION.toString(), Constants.UserAccountState.USER_ACTIVATED.toString());
+			progressLog.append("\nActivated new user account in database");
+			
+			KeyVaultRetriever kvr = new KeyVaultRetriever(this.keyVaultProperties.getClientId(), this.keyVaultProperties.getClientKey());
+			progressLog.append("\nInstantiated KeyVaultRetriever instance to get application secrets");
+			
+			Object ar = getAccessTokenFromUserCredentials(userObj.getUserPrincipalName(), userAccountActivation.getPassword());
+			if (ar == null) {
+				throw new UserAccountRegistrationException("Failed to obtain OAuth2 tokens with user credentials");
+			}
+			
+			if (ar instanceof AuthenticationResult) {
+
+				AuthenticationResult authResult = (AuthenticationResult) ar;
+				String getPfxEncodedAsBase64 = kvr.getSecretByKey("client2base64");
+				String getPlistFromBlob = getPlistFromBlob(kvr, "preferences", "ADW.plist");
+				String mobileConfigFromBlob = getPlistFromBlob(kvr, "config", "supaConfigEFO.mobileconfig");
+				if (getPlistFromBlob != null && mobileConfigFromBlob != null) {
+					UserRegistration userReg = new UserRegistration(authResult, getPfxEncodedAsBase64, getPlistFromBlob, mobileConfigFromBlob);
+					resultObj = userReg;
+				}
+				else {
+					throw new MobileConfigurationException("Failed to retrieve plist and/or mobile configuration");
+				}
+			}
+
+			if (resultObj == null && ExceptionUtils.indexOfThrowable((Throwable) ar, AuthenticationException.class) >= 0) {
+				//resultObj = AzureADClientHelper.getLoginErrorFromString(((AuthenticationException) ar).getMessage());
+				throw new AuthenticationException(((AuthenticationException) ar).getMessage());
+			}
+		} catch (UserAccountRegistrationException uare) {
+			logger.error("Failed to activate user account: {}", uare.getMessage());
+			resultObj = new Error("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0001");
+		} catch (AuthenticationException ae) {
+			logger.error("Failed to activate user account: {}", ae.getMessage());
+			resultObj = new Error("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0002");
+		} catch (MobileConfigurationException mce) {
+			logger.error("Failed to activate user account: {}", mce.getMessage());
+			resultObj = new Error("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0001");
+		} catch (ElevatedPermissionException epe) {
+			logger.error("Failed to activate user account: {}", epe.getMessage());
+			resultObj = new Error("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0004");
 		} catch (MalformedURLException murle) {
 			logger.error("MalformedURLException: {}", murle.getMessage(), murle);
-			resultObj = new Error("USER_ACTIVATION_FAILED", murle.getMessage());
+			resultObj = new Error("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0008");
 		} catch (ProtocolException pe) {
 			logger.error("ProtocolException: {}", pe.getMessage(), pe);
-			resultObj = new Error("USER_ACTIVATION_FAILED", pe.getMessage());
+			resultObj = new Error("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0016");
 		} catch (IOException ioe) {
 			logger.error("IOException: {}", ioe.getMessage(), ioe);
-			resultObj = new Error("USER_ACTIVATION_FAILED", ioe.getMessage());
+			resultObj = new Error("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0032");
+		} finally {
+			
+			if (connGetUser != null) { try { connGetUser.disconnect(); } catch (Exception e) {} }
+			if (connEnableUser != null) { try { connEnableUser.disconnect(); } catch (Exception e) {} }
 		}
 
 		return resultObj;
@@ -659,7 +756,23 @@ public class AzureADClientService {
 		
 		return emailMessageBody.toString();
 	}
-	
+
+    private String getPlistFromBlob(KeyVaultRetriever kvr, String containerName, String fileName) {
+
+        String base64 = null;
+        try {
+            AzureStorageUtil asu = new AzureStorageUtil(kvr.getSecretByKey("StorageKey"));
+            try (ByteArrayOutputStream outputStream = asu.downloadFile(containerName, fileName)) {
+                base64 = Base64.getEncoder().encodeToString(outputStream.toString().getBytes());
+            }
+        }
+        catch (IOException ioe) {
+            logger.error("Failed to retrieve Plist [{}]: {}", fileName, ioe.getMessage(), ioe);
+        }
+
+        return base64;
+    }
+
 	public Error getLoginErrorFromString(String responseString) {
 
 		Error errorObj = null;
