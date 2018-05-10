@@ -534,10 +534,6 @@ public class AzureADClientService {
 		} catch (IOException ioe) {
 			logger.error("IOException: {}", ioe.getMessage(), ioe);
 			resultObj = new Error("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0032");
-		} finally {
-			
-			if (connGetUser != null) { try { connGetUser.disconnect(); } catch (Exception e) {} }
-			if (connEnableUser != null) { try { connEnableUser.disconnect(); } catch (Exception e) {} }
 		}
 
 		return resultObj;
