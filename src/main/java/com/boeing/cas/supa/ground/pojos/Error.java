@@ -1,9 +1,12 @@
 package com.boeing.cas.supa.ground.pojos;
 
+import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
+
 public class Error {
 
 	private String errorLabel;
 	private String errorDescription;
+	private RequestFailureReason failureReason;
 	private long timestamp;
 
 	public Error() {}
@@ -12,9 +15,19 @@ public class Error {
 
 		this.errorLabel = error;
 		this.errorDescription = errorDescription;
+		this.failureReason = RequestFailureReason.INTERNAL_SERVER_ERROR;
 		this.timestamp = System.currentTimeMillis() / 1_000L;
 	}
 
+	public Error(String error, String errorDescription, RequestFailureReason failureReason) {
+
+		this.errorLabel = error;
+		this.errorDescription = errorDescription;
+		this.failureReason = failureReason;
+		this.timestamp = System.currentTimeMillis() / 1_000L;
+	}
+
+	
 	public String getErrorLabel() {
 		return this.errorLabel;
 	}
@@ -29,6 +42,14 @@ public class Error {
 
 	public void setErrorDescription(String errorDescription) {
 		this.errorDescription = errorDescription;
+	}
+
+	public RequestFailureReason getFailureReason() {
+		return failureReason;
+	}
+
+	public void setFailureReason(RequestFailureReason failureReason) {
+		this.failureReason = failureReason;
 	}
 
 	public long getTimestamp() {

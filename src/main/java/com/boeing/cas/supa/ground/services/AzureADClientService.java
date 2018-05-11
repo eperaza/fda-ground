@@ -13,6 +13,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -20,6 +21,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -55,6 +57,7 @@ import com.boeing.cas.supa.ground.pojos.UserRegistration;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.Constants.PermissionType;
+import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 import com.boeing.cas.supa.ground.utils.KeyVaultRetriever;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -64,6 +67,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.MissingNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.microsoft.aad.adal4j.AuthenticationContext;
 import com.microsoft.aad.adal4j.AuthenticationException;
@@ -268,7 +272,7 @@ public class AzureADClientService {
 			accessToken = String.valueOf(authResult);
 			progressLog.append("\nObtained impersonation access token");
 		}
-		
+
 		// Proceed with request 
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = convertNewUserObjectToJsonPayload(mapper, newUserPayload);
@@ -304,6 +308,7 @@ public class AzureADClientService {
 				progressLog.append("\nDeserialized create user response to obtain User object");
 
 				User newlyCreatedUser = (User) resultObj;
+				logger.info("Created new user: {}", newlyCreatedUser.getUserPrincipalName());
 				// Assign user to airline-related group and role-related group
 				boolean addedUserToAirlineGroup = addUserToGroup(airlineGroup.getObjectId(), newlyCreatedUser.getObjectId(), accessToken);
 				progressLog.append("\nAdded user to airline group");
@@ -322,12 +327,14 @@ public class AzureADClientService {
 
 				// User creation looks good... set new user to the return value [resultObj]
 				resultObj = newlyCreatedUser;
-				
+				logger.info("Added new user {} to {} and {} groups", newlyCreatedUser.getUserPrincipalName(), airlineGroup.getDisplayName(), roleGroupName);
+
 				// Register new user in the account registration database
 				String registrationToken = UUID.randomUUID().toString();
 				UserAccountRegistration registration = new UserAccountRegistration(registrationToken, newlyCreatedUser.getObjectId(), newlyCreatedUser.getUserPrincipalName(), airlineGroup.getDisplayName(), newUserPayload.getOtherMails().get(0), Constants.UserAccountState.PENDING_USER_ACTIVATION.toString());
 				userAccountRegister.registerNewUserAccount(registration);
 				progressLog.append("\nRegistered new user account in database");
+				logger.info("Registered new user {} in the account registration database", newlyCreatedUser.getUserPrincipalName());
 				
 				// New user account registration is successful. Now send email to user (use otherMail address)
 				MimeMessage message = emailSender.createMimeMessage();
@@ -338,7 +345,7 @@ public class AzureADClientService {
 				helper.setTo(newUserPayload.getOtherMails().get(0));
 				helper.setText(composeNewUserAccountActivationEmail(newlyCreatedUser, registrationToken), true);
 				emailSender.send(message);
-				logger.debug("Successfully queued email for delivery");
+				logger.info("Sent account activation email to new user {}", newlyCreatedUser.getUserPrincipalName());
 				progressLog.append("\nSuccessfully queued email for delivery");
 			}
 			else {
@@ -365,8 +372,221 @@ public class AzureADClientService {
 			logger.error("IOException: {}", ioe.getMessage(), ioe);
 			resultObj = new Error("USER_CREATE_FAILED", "FDAGNDSVCERR0016");
 		} catch (MessagingException me) {
-			logger.error("Failed to send email: {}", me.getMessage());
+			logger.error("Failed to send email: {}", me.getMessage(), me);
 			resultObj = new Error("USER_CREATE_FAILED", "FDAGNDSVCERR0032");
+		} finally {
+			
+			if (resultObj instanceof Error) {
+				logger.error("FDAGndSvcLog> {}", progressLog.toString());
+			}
+		}
+
+		return resultObj;
+	}
+
+	public Object getUsers(String accessTokenInRequest) {
+
+		Object resultObj = null;
+		StringBuilder progressLog = new StringBuilder("Delete user -");
+
+		try {
+
+			// Get group membership of user issuing request. Ensure that user belongs to role-airlinefocal group
+			 // and one and only one airline group.
+			User airlineFocalCurrentUser = getUserInfoFromJwtAccessToken(accessTokenInRequest);
+
+			// Validate user privileges by checking group membership. Must belong to Role-AirlineFocal group and a single Airline group.
+			List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("airline-")).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
+			List<Group> roleAirlineFocalGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).peek(g -> logger.info("Role Group: {}", g)).collect(Collectors.toList());
+			if (airlineGroups.size() != 1 || roleAirlineFocalGroups.size() != 1) {
+				return new Error("USERS_LIST_FAILED", "User membership is ambiguous", RequestFailureReason.UNAUTHORIZED);
+			}
+			progressLog.append("\nRequesting user belongs to single airline group and airline focal role group");
+
+			// Get access token based on delegated permission via impersonation with a Local Administrator of the tenant.
+			String accessToken = null;
+			Object authResult = getElevatedPermissionsAccessToken(PermissionType.IMPERSONATION);
+			if (authResult instanceof Error) {
+				return authResult;
+			}
+			// access token could not be obtained either via delegated permissions or application permissions.
+			else if (authResult == null) {
+				return new Error("USERS_LIST_FAILED", "Failed to acquire permissions", RequestFailureReason.UNAUTHORIZED);
+			}
+			else {
+				accessToken = String.valueOf(authResult);
+				progressLog.append("\nObtained impersonation access token");
+			}
+
+			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.azureadTenantName)
+					.append("/groups/").append(airlineGroups.get(0).getObjectId()).append("/members")
+					.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
+							.append(AZURE_AD_GRAPH_API_VERSION).toString())
+					.toString());
+
+			HttpsURLConnection connListUsers = (HttpsURLConnection) url.openConnection();
+			// Set the appropriate header fields in the request header.
+			connListUsers.setRequestMethod("GET");
+			connListUsers.setRequestProperty("api-version", AZURE_AD_GRAPH_API_VERSION);
+			connListUsers.setRequestProperty("Authorization", accessToken);
+			connListUsers.setRequestProperty("Content-Type", "application/json");
+			connListUsers.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
+			
+			String responseStr = HttpClientHelper.getResponseStringFromConn(connListUsers, connListUsers.getResponseCode() == HttpStatus.OK.value());
+			ObjectMapper mapper = new ObjectMapper()
+					.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+					.setSerializationInclusion(Include.NON_NULL);
+			JsonNode errorNode = StringUtils.isBlank(responseStr) ? null : mapper.readTree(responseStr).path("odata.error");
+			if (connListUsers.getResponseCode() == HttpStatus.OK.value() && (errorNode == null || errorNode instanceof MissingNode)) {
+
+				List<User> membersOfAirlineGroup = new ArrayList<>();
+				logger.info("List of users in {} group in Azure AD", airlineGroups.get(0).getDisplayName());
+				Iterator<JsonNode> iterator = mapper.readTree(responseStr).path("value").iterator();
+				while (iterator.hasNext()) {
+					JsonNode nextElemNode = iterator.next();
+					if (nextElemNode.path("objectType").asText().equals("User")) {
+
+						User member = mapper.readValue(nextElemNode.toString(), User.class);
+						if (member.getObjectId().equals(airlineFocalCurrentUser.getObjectId())) {
+							continue;
+						}
+						membersOfAirlineGroup.add(member);
+					}
+				}
+				resultObj = mapper.setSerializationInclusion(Include.NON_NULL).setSerializationInclusion(Include.NON_EMPTY)
+						.writeValueAsString(membersOfAirlineGroup);
+				progressLog.append("\nObtained members of group in Azure AD");
+			}
+		} catch (JsonProcessingException jpe) {
+			logger.error("JsonProcessingException: {}", jpe.getMessage(), jpe);
+			resultObj = new Error("USERS_LIST_FAILED", "FDAGNDSVCERR0002");
+		} catch (MalformedURLException murle) {
+			logger.error("MalformedURLException: {}", murle.getMessage(), murle);
+			resultObj = new Error("USERS_LIST_FAILED", "FDAGNDSVCERR0004");
+		} catch (ProtocolException pe) {
+			logger.error("ProtocolException: {}", pe.getMessage(), pe);
+			resultObj = new Error("USERS_LIST_FAILED", "FDAGNDSVCERR0008");
+		} catch (IOException ioe) {
+			logger.error("IOException: {}", ioe.getMessage(), ioe);
+			resultObj = new Error("USERS_LIST_FAILED", "FDAGNDSVCERR0016");
+		} finally {
+			
+			if (resultObj instanceof Error) {
+				logger.error("FDAGndSvcLog> {}", progressLog.toString());
+			}
+		}
+		
+		return resultObj;
+	}
+	
+	public Object deleteUser(String userId, String accessTokenInRequest) {
+
+		Object resultObj = null;
+		StringBuilder progressLog = new StringBuilder("Delete user -");
+
+		try {
+
+			// Get group membership of user issuing request. Ensure that user belongs to role-airlinefocal group
+			 // and one and only one airline group.
+			User airlineFocalCurrentUser = getUserInfoFromJwtAccessToken(accessTokenInRequest);
+			
+			// Ensure requesting user is not trying to delete self!
+			if (airlineFocalCurrentUser.getObjectId().equals(userId)) {
+				return new Error("USER_DELETE_FAILED", "Airline focal user cannot delete self", RequestFailureReason.BAD_REQUEST);
+			}
+
+			// Validate user privileges by checking group membership. Must belong to Role-AirlineFocal group and a single Airline group.
+			List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("airline-")).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
+			List<Group> roleAirlineFocalGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).peek(g -> logger.info("Role Group: {}", g)).collect(Collectors.toList());
+			if (airlineGroups.size() != 1 || roleAirlineFocalGroups.size() != 1) {
+				return new Error("USER_DELETE_FAILED", "User membership is ambiguous", RequestFailureReason.UNAUTHORIZED);
+			}
+			progressLog.append("\nRequesting user belongs to single airline group and airline focal role group");
+
+			// Get access token based on delegated permission via impersonation with a Local Administrator of the tenant.
+			String accessToken = null;
+			Object authResult = getElevatedPermissionsAccessToken(PermissionType.IMPERSONATION);
+			if (authResult instanceof Error) {
+				return authResult;
+			}
+			// access token could not be obtained either via delegated permissions or application permissions.
+			else if (authResult == null) {
+				return new Error("USER_DELETE_FAILED", "Failed to acquire permissions", RequestFailureReason.UNAUTHORIZED);
+			}
+			else {
+				accessToken = String.valueOf(authResult);
+				progressLog.append("\nObtained impersonation access token");
+			}
+
+			// Ensure another airline focal user is not being deleted, by getting group membership
+			User deleteUser = getUserInfoFromGraph(userId, accessToken);
+			if (deleteUser == null) {
+				return new Error("USER_DELETE_FAILED", "Not allowed to delete user if not in same airline group", RequestFailureReason.NOT_FOUND);
+			}
+			List<Group> deleteUserGroups = getUserGroupMembershipFromGraph(deleteUser.getObjectId(), accessToken);
+			if (deleteUserGroups != null) {
+
+				List<Group> deleteUserAirlineGroups = deleteUserGroups.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("airline-")).collect(Collectors.toList());
+				List<Group> deleteUserRoleGroups = deleteUserGroups.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("role-")).collect(Collectors.toList());
+				if (deleteUserAirlineGroups.size() != 1 || !deleteUserAirlineGroups.get(0).getObjectId().equals(airlineGroups.get(0).getObjectId())) {
+					return new Error("USER_DELETE_FAILED", "Not allowed to delete user if not in same airline group", RequestFailureReason.UNAUTHORIZED);
+				}
+				else if (deleteUserRoleGroups.stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).collect(Collectors.toList()).size() > 0) {
+					return new Error("USER_DELETE_FAILED", "Not allowed to delete another airline focal user", RequestFailureReason.UNAUTHORIZED);
+				}
+				else {
+					// continue
+				}
+			}
+			else {
+				return new Error("USER_DELETE_FAILED", "Not allowed to delete user if not in same airline group", RequestFailureReason.UNAUTHORIZED);
+			}
+			progressLog.append("\nUser to be deleted is in same airline group and is not another airline focal");
+
+			// All checks passed. The user can be deleted by invoking the Azure AD Graph API.
+			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.azureadTenantName)
+					.append("/users/").append(userId)
+					.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
+							.append(AZURE_AD_GRAPH_API_VERSION).toString())
+					.toString());
+
+			HttpURLConnection connDeleteUser = (HttpsURLConnection) url.openConnection();
+			// Set the appropriate header fields in the request header.
+			connDeleteUser.setRequestMethod(RequestMethod.DELETE.toString());
+			connDeleteUser.setRequestProperty("api-version", AZURE_AD_GRAPH_API_VERSION);
+			connDeleteUser.setRequestProperty("Authorization", accessToken);
+			connDeleteUser.setRequestProperty("Content-Type", "application/json");
+			connDeleteUser.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
+			
+			String responseStr = HttpClientHelper.getResponseStringFromConn(connDeleteUser, connDeleteUser.getResponseCode() == HttpStatus.NO_CONTENT.value());
+			ObjectMapper mapper = new ObjectMapper()
+					.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+					.setSerializationInclusion(Include.NON_NULL);
+			JsonNode errorNode = StringUtils.isBlank(responseStr) ? null : mapper.readTree(responseStr).path("odata.error");
+			if (connDeleteUser.getResponseCode() == HttpStatus.NO_CONTENT.value() && errorNode == null) {
+				logger.info("Deleted user {} in Azure AD", deleteUser.getUserPrincipalName());
+				progressLog.append("\nDeleted user in Azure AD");
+			}
+
+			// Delete any associated records in the User Account Registration database table
+			userAccountRegister.removeUserAccountRegistrationData(deleteUser.getUserPrincipalName());
+			logger.info("Removed account registration records for user {} in Azure AD", deleteUser.getUserPrincipalName());
+			progressLog.append("\nDeleted corresponding data in user account registration database");
+		} catch (UserAccountRegistrationException uare) {
+			logger.error("Failed to register new user account: {}", uare.getMessage());
+			resultObj = new Error("USER_DELETE_FAILED", "FDAGNDSVCERR0001");
+		} catch (JsonProcessingException jpe) {
+			logger.error("JsonProcessingException: {}", jpe.getMessage(), jpe);
+			resultObj = new Error("USER_DELETE_FAILED", "FDAGNDSVCERR0002");
+		} catch (MalformedURLException murle) {
+			logger.error("MalformedURLException: {}", murle.getMessage(), murle);
+			resultObj = new Error("USER_DELETE_FAILED", "FDAGNDSVCERR0004");
+		} catch (ProtocolException pe) {
+			logger.error("ProtocolException: {}", pe.getMessage(), pe);
+			resultObj = new Error("USER_DELETE_FAILED", "FDAGNDSVCERR0008");
+		} catch (IOException ioe) {
+			logger.error("IOException: {}", ioe.getMessage(), ioe);
+			resultObj = new Error("USER_DELETE_FAILED", "FDAGNDSVCERR0016");
 		} finally {
 			
 			if (resultObj instanceof Error) {

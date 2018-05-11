@@ -21,6 +21,7 @@ public class UserAccountRegistratioDaoImpl implements UserAccountRegistrationDao
 	private static final String USER_ACCOUNT_REGISTRATION_SQL = "INSERT INTO user_account_registrations (registration_token, user_object_id, user_principal_name, airline, work_email, account_state) VALUES (:registration_token, :user_object_id, :user_principal_name, :airline, :work_email, :account_state)";
 	private static final String USER_ACCOUNT_ACTIVATION_PRECHECK_SQL = "SELECT COUNT(1) FROM user_account_registrations WHERE registration_token = :registration_token AND user_principal_name = :user_principal_name AND account_state = :account_state";
 	private static final String USER_ACCOUNT_ACTIVATION_SQL = "UPDATE user_account_registrations SET account_state = :account_state_to WHERE registration_token = :registration_token AND user_principal_name = :user_principal_name AND account_state = :account_state_from";
+	private static final String USER_ACCOUNT_REMOVAL_SQL = "DELETE FROM user_account_registrations WHERE user_principal_name = :user_principal_name";
 	
 	@Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;
@@ -91,6 +92,20 @@ public class UserAccountRegistratioDaoImpl implements UserAccountRegistrationDao
 			logger.warn("Failed to activate user account registration record in database: {}", dae.getMessage(), dae);
 			throw new UserAccountRegistrationException("Database exception");
 		}
+	}
 
+	@Override
+	public void removeUserAccountRegistrationData(String userPrincipalName) throws UserAccountRegistrationException {
+
+		Map<String,Object> namedParameters = new HashMap<>();
+		namedParameters.put("user_principal_name", userPrincipalName);
+		try {
+			jdbcTemplate.update(USER_ACCOUNT_REMOVAL_SQL, namedParameters);
+		}
+		catch (DataAccessException dae) {
+
+			logger.warn("Failed to remove user account registration records in database: {}", dae.getMessage(), dae);
+			throw new UserAccountRegistrationException("Database exception");
+		}
 	}
 }
