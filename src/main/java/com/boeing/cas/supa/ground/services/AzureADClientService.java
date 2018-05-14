@@ -374,8 +374,18 @@ public class AzureADClientService {
 		} catch (MessagingException me) {
 			logger.error("Failed to send email: {}", me.getMessage(), me);
 			resultObj = new Error("USER_CREATE_FAILED", "FDAGNDSVCERR0032");
+		} catch (Exception e) {
+
+			Throwable nestedException = null;
+			if ((nestedException = e.getCause()) != null) {
+				logger.error("Failed to send email: {}", nestedException.getMessage(), nestedException);
+			}
+			else {
+				logger.error("Failed to send email: {}", e.getMessage(), e);
+			}
+			resultObj = new Error("USER_CREATE_FAILED", "FDAGNDSVCERR0064");
 		} finally {
-			
+
 			if (resultObj instanceof Error) {
 				logger.error("FDAGndSvcLog> {}", progressLog.toString());
 			}
