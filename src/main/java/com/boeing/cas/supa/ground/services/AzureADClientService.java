@@ -23,7 +23,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.net.ssl.HttpsURLConnection;
 
@@ -35,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -371,17 +371,17 @@ public class AzureADClientService {
 		} catch (IOException ioe) {
 			logger.error("IOException: {}", ioe.getMessage(), ioe);
 			resultObj = new Error("USER_CREATE_FAILED", "FDAGNDSVCERR0016");
-		} catch (MessagingException me) {
+		} catch (MailException me) {
 			logger.error("Failed to send email: {}", me.getMessage(), me);
 			resultObj = new Error("USER_CREATE_FAILED", "FDAGNDSVCERR0032");
 		} catch (Exception e) {
 
 			Throwable nestedException = null;
 			if ((nestedException = e.getCause()) != null) {
-				logger.error("Failed to send email: {}", nestedException.getMessage(), nestedException);
+				logger.error("Failed to complete user creation flow: {}", nestedException.getMessage(), nestedException);
 			}
 			else {
-				logger.error("Failed to send email: {}", e.getMessage(), e);
+				logger.error("Failed to complete user creation flow: {}", e.getMessage(), e);
 			}
 			resultObj = new Error("USER_CREATE_FAILED", "FDAGNDSVCERR0064");
 		} finally {
