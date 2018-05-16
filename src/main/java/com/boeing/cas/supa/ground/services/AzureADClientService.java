@@ -10,6 +10,7 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -32,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -48,7 +48,6 @@ import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
 import com.boeing.cas.supa.ground.helpers.HttpClientHelper;
 import com.boeing.cas.supa.ground.pojos.Error;
 import com.boeing.cas.supa.ground.pojos.Group;
-import com.boeing.cas.supa.ground.pojos.KeyVaultProperties;
 import com.boeing.cas.supa.ground.pojos.NewUser;
 import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.pojos.UserAccountActivation;
@@ -58,7 +57,6 @@ import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.Constants.PermissionType;
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
-import com.boeing.cas.supa.ground.utils.KeyVaultRetriever;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -75,40 +73,22 @@ import com.microsoft.aad.adal4j.AuthenticationResult;
 import com.microsoft.aad.adal4j.ClientCredential;
 
 @Service
-@EnableConfigurationProperties(KeyVaultProperties.class)
 public class AzureADClientService {
 
 	private final Logger logger = LoggerFactory.getLogger(AzureADClientService.class);
 
-	private static final String AZURE_AD_GRAPH_API_VERSION = "1.6";
+	@Value("${api.azuread.version}")
+	private String azureadApiVersion;
 
-	private static final String FDA_USER_MGMT_APP_CLIENT_ID = "e1e8a743-8b61-4511-8520-aa112780f93a";
-	private static final String FDA_USER_MGMT_APP_CLIENT_SECRET = "2seyObSAThZZWyux6we7UYmJj/Ezyftu+uCNaMIetKA=";
-	
-	private static final String FDA_USER_MGMT_ADMIN_USERNAME = "fdausermgmtadmin@fdacustomertest.onmicrosoft.com";
-	private static final String FDA_USER_MGMT_ADMIN_PASSWORD = "FD@U$3rMgmt@dm|n";
-	
 	@Value("${api.azuread.uri}")
 	private String azureadApiUri;
 
 	@Value("${api.msgraph.uri}")
 	private String msgraphApiUri;
 
-	@Value("${azuread.app.tenantId}")
-	private String azureadTenantId;
-
-	@Value("${azuread.app.tenantName}")
-	private String azureadTenantName;
-
-	@Value("${azuread.userAuth.authority}")
-	private String userAuthAuthority;
-
-	@Value("${azuread.userAuth.clientId}")
-	private String userAuthClientId;
-
 	@Autowired
-    private KeyVaultProperties keyVaultProperties;
-
+	private Map<String, String> appProps;
+	
 	@Autowired
 	private JavaMailSender emailSender;
 
@@ -123,8 +103,8 @@ public class AzureADClientService {
 		try {
 
 			service = Executors.newFixedThreadPool(1);
-			AuthenticationContext context = new AuthenticationContext(userAuthAuthority, false, service);
-			Future<AuthenticationResult> future = context.acquireToken(azureadApiUri, userAuthClientId, username,
+			AuthenticationContext context = new AuthenticationContext(this.appProps.get("AzureADTenantAuthEndpoint"), false, service);
+			Future<AuthenticationResult> future = context.acquireToken(azureadApiUri, this.appProps.get("AzureADAppClientID"), username,
 					password, null);
 			result = future.get();
 		} catch (MalformedURLException murle) {
@@ -156,11 +136,11 @@ public class AzureADClientService {
 		try {
 
 			service = Executors.newFixedThreadPool(1);
-			AuthenticationContext context = new AuthenticationContext(userAuthAuthority, false, service);
+			AuthenticationContext context = new AuthenticationContext(this.appProps.get("AzureADTenantAuthEndpoint"), false, service);
 			Future<AuthenticationResult> future =
 					context.acquireToken(
 							azureadApiUri,
-							new ClientCredential(FDA_USER_MGMT_APP_CLIENT_ID, FDA_USER_MGMT_APP_CLIENT_SECRET),
+							new ClientCredential(this.appProps.get("UserManagementAppClientId"), this.appProps.get("UserManagementAppClientSecret")),
 							null);
 
 			result = future.get();
@@ -194,7 +174,7 @@ public class AzureADClientService {
 		else if (permissionType == PermissionType.IMPERSONATION) {
 
 			// Get access token based on delegated permission via impersonation with a Local Administrator of the tenant.
-			Object authResult = getAccessTokenFromUserCredentials(FDA_USER_MGMT_ADMIN_USERNAME, FDA_USER_MGMT_ADMIN_PASSWORD);
+			Object authResult = getAccessTokenFromUserCredentials(this.appProps.get("UserManagementAdminUsername"), this.appProps.get("UserManagementAdminPassword"));
 			if (authResult instanceof AuthenticationResult) {
 				accessToken = ((AuthenticationResult) authResult).getAccessToken();
 			} else {
@@ -215,17 +195,17 @@ public class AzureADClientService {
 
 		try {
 
-			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.azureadTenantName)
+			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
 					.append("/groups")
-					.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX).append(AZURE_AD_GRAPH_API_VERSION)
+					.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX).append(azureadApiVersion)
 							.toString())
-					.append("&$filter=").append(URLEncoder.encode(String.format("displayName eq '%s'", groupName), "UTF-8"))
+					.append("&$filter=").append(URLEncoder.encode(String.format("displayName eq '%s'", groupName), StandardCharsets.UTF_8.name()))
 					.toString());
 
 			HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
 			// Set the appropriate header fields in the request header.
 			conn.setRequestMethod("GET");
-			conn.setRequestProperty("api-version", AZURE_AD_GRAPH_API_VERSION);
+			conn.setRequestProperty("api-version", azureadApiVersion);
 			conn.setRequestProperty("Authorization", applicationToken);
 			conn.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
 			
@@ -278,16 +258,16 @@ public class AzureADClientService {
 		ObjectNode rootNode = convertNewUserObjectToJsonPayload(mapper, newUserPayload);
 		try {
 
-			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.azureadTenantName)
+			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
 					.append("/users")
 					.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
-							.append(AZURE_AD_GRAPH_API_VERSION).toString())
+							.append(azureadApiVersion).toString())
 					.toString());
 
 			HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
 			// Set the appropriate header fields in the request header.
 			conn.setRequestMethod("POST");
-			conn.setRequestProperty("api-version", AZURE_AD_GRAPH_API_VERSION);
+			conn.setRequestProperty("api-version", azureadApiVersion);
 			conn.setRequestProperty("Authorization", accessToken);
 			conn.setRequestProperty("Content-Type", "application/json");
 			conn.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
@@ -339,8 +319,8 @@ public class AzureADClientService {
 				// New user account registration is successful. Now send email to user (use otherMail address)
 				MimeMessage message = emailSender.createMimeMessage();
 				MimeMessageHelper helper = new MimeMessageHelper(message);
-				helper.setFrom(new StringBuilder("support@").append(azureadTenantName).toString());
-				helper.setReplyTo(new StringBuilder("support@").append(azureadTenantName).toString());
+				helper.setFrom(new StringBuilder("support@").append(this.appProps.get("AzureADTenantName")).toString());
+				helper.setReplyTo(new StringBuilder("support@").append(this.appProps.get("AzureADTenantName")).toString());
 				helper.setSubject("FD Advisor user account activation");
 				helper.setTo(newUserPayload.getOtherMails().get(0));
 				helper.setText(composeNewUserAccountActivationEmail(newlyCreatedUser, registrationToken), true);
@@ -428,16 +408,16 @@ public class AzureADClientService {
 				progressLog.append("\nObtained impersonation access token");
 			}
 
-			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.azureadTenantName)
+			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
 					.append("/groups/").append(airlineGroups.get(0).getObjectId()).append("/members")
 					.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
-							.append(AZURE_AD_GRAPH_API_VERSION).toString())
+							.append(azureadApiVersion).toString())
 					.toString());
 
 			HttpsURLConnection connListUsers = (HttpsURLConnection) url.openConnection();
 			// Set the appropriate header fields in the request header.
 			connListUsers.setRequestMethod("GET");
-			connListUsers.setRequestProperty("api-version", AZURE_AD_GRAPH_API_VERSION);
+			connListUsers.setRequestProperty("api-version", azureadApiVersion);
 			connListUsers.setRequestProperty("Authorization", accessToken);
 			connListUsers.setRequestProperty("Content-Type", "application/json");
 			connListUsers.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
@@ -554,16 +534,16 @@ public class AzureADClientService {
 			progressLog.append("\nUser to be deleted is in same airline group and is not another airline focal");
 
 			// All checks passed. The user can be deleted by invoking the Azure AD Graph API.
-			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.azureadTenantName)
+			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
 					.append("/users/").append(userId)
 					.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
-							.append(AZURE_AD_GRAPH_API_VERSION).toString())
+							.append(azureadApiVersion).toString())
 					.toString());
 
 			HttpURLConnection connDeleteUser = (HttpsURLConnection) url.openConnection();
 			// Set the appropriate header fields in the request header.
 			connDeleteUser.setRequestMethod(RequestMethod.DELETE.toString());
-			connDeleteUser.setRequestProperty("api-version", AZURE_AD_GRAPH_API_VERSION);
+			connDeleteUser.setRequestProperty("api-version", azureadApiVersion);
 			connDeleteUser.setRequestProperty("Authorization", accessToken);
 			connDeleteUser.setRequestProperty("Content-Type", "application/json");
 			connDeleteUser.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
@@ -639,16 +619,16 @@ public class AzureADClientService {
 				progressLog.append("\nObtained impersonation access token");
 			}
 
-			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.azureadTenantName)
+			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
 					.append("/users/").append(userAccountActivation.getUsername())
 					.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
-							.append(AZURE_AD_GRAPH_API_VERSION).toString())
+							.append(azureadApiVersion).toString())
 					.toString());
 
 			connGetUser = (HttpsURLConnection) url.openConnection();
 			// Set the appropriate header fields in the request header.
 			connGetUser.setRequestMethod(RequestMethod.GET.toString());
-			connGetUser.setRequestProperty("api-version", AZURE_AD_GRAPH_API_VERSION);
+			connGetUser.setRequestProperty("api-version", azureadApiVersion);
 			connGetUser.setRequestProperty("Authorization", accessToken);
 			connGetUser.setRequestProperty("Content-Type", "application/json");
 			connGetUser.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
@@ -678,17 +658,17 @@ public class AzureADClientService {
 			pwdProfileNode.put("forceChangePasswordNextLogin", false);
 			rootNode.set("passwordProfile", pwdProfileNode);
 
-			url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.azureadTenantName)
+			url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
 					.append("/users/").append(userAccountActivation.getUsername())
 					.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
-							.append(AZURE_AD_GRAPH_API_VERSION).toString())
+							.append(azureadApiVersion).toString())
 					.toString());
 
 			connEnableUser = (HttpsURLConnection) url.openConnection();
 			// Set the appropriate header fields in the request header.
 			connEnableUser.setRequestMethod(RequestMethod.POST.toString());
 			connEnableUser.setRequestProperty("X-HTTP-Method-Override", RequestMethod.PATCH.toString());
-			connEnableUser.setRequestProperty("api-version", AZURE_AD_GRAPH_API_VERSION);
+			connEnableUser.setRequestProperty("api-version", azureadApiVersion);
 			connEnableUser.setRequestProperty("Authorization", accessToken);
 			connEnableUser.setRequestProperty("Content-Type", "application/json");
 			connEnableUser.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
@@ -715,10 +695,7 @@ public class AzureADClientService {
 			// Update UserAccountRegistrations database table to invalidate token (by updating account state)
 			userAccountRegister.enableNewUserAccount(userAccountActivation.getRegistrationToken(), userObj.getUserPrincipalName(), Constants.UserAccountState.PENDING_USER_ACTIVATION.toString(), Constants.UserAccountState.USER_ACTIVATED.toString());
 			progressLog.append("\nActivated new user account in database");
-			
-			KeyVaultRetriever kvr = new KeyVaultRetriever(this.keyVaultProperties.getClientId(), this.keyVaultProperties.getClientKey());
-			progressLog.append("\nInstantiated KeyVaultRetriever instance to get application secrets");
-			
+
 			Object ar = getAccessTokenFromUserCredentials(userObj.getUserPrincipalName(), userAccountActivation.getPassword());
 			if (ar == null) {
 				throw new UserAccountRegistrationException("Failed to obtain OAuth2 tokens with user credentials");
@@ -727,9 +704,9 @@ public class AzureADClientService {
 			if (ar instanceof AuthenticationResult) {
 
 				AuthenticationResult authResult = (AuthenticationResult) ar;
-				String getPfxEncodedAsBase64 = kvr.getSecretByKey("client2base64");
-				String getPlistFromBlob = getPlistFromBlob(kvr, "preferences", "ADW.plist");
-				String mobileConfigFromBlob = getPlistFromBlob(kvr, "config", "supaConfigEFO.mobileconfig");
+				String getPfxEncodedAsBase64 = this.appProps.get("client2base64");
+				String getPlistFromBlob = getPlistFromBlob("preferences", "ADW.plist");
+				String mobileConfigFromBlob = getPlistFromBlob("config", "supaConfigEFO.mobileconfig");
 				if (getPlistFromBlob != null && mobileConfigFromBlob != null) {
 					UserRegistration userReg = new UserRegistration(authResult, getPfxEncodedAsBase64, getPlistFromBlob, mobileConfigFromBlob);
 					resultObj = userReg;
@@ -775,22 +752,22 @@ public class AzureADClientService {
 
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
-		rootNode.put("url", new StringBuilder(azureadApiUri).append('/').append(this.azureadTenantName)
+		rootNode.put("url", new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
 				.append("/directoryObjects/").append(userObjectId)
 				.toString());
 
 		try {
 
-			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.azureadTenantName)
+			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
 					.append("/groups/").append(groupObjectId).append("/$links/members")
 					.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
-							.append(AZURE_AD_GRAPH_API_VERSION).toString())
+							.append(azureadApiVersion).toString())
 					.toString());
 
 			HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
 			// Set the appropriate header fields in the request header.
 			conn.setRequestMethod("POST");
-			conn.setRequestProperty("api-version", AZURE_AD_GRAPH_API_VERSION);
+			conn.setRequestProperty("api-version", azureadApiVersion);
 			conn.setRequestProperty("Authorization", applicationToken);
 			conn.setRequestProperty("Content-Type", "application/json");
 			conn.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
@@ -828,14 +805,14 @@ public class AzureADClientService {
 		User userObj = null;
 		try {
 
-			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.azureadTenantName)
+			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
 					.append("/users/").append(uniqueId)
 					.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
-							.append(AZURE_AD_GRAPH_API_VERSION).toString())
+							.append(azureadApiVersion).toString())
 					.toString());
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			// Set the appropriate header fields in the request header.
-			conn.setRequestProperty("api-version", AZURE_AD_GRAPH_API_VERSION);
+			conn.setRequestProperty("api-version", azureadApiVersion);
 			conn.setRequestProperty("Authorization", accessToken);
 			conn.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
 
@@ -866,14 +843,14 @@ public class AzureADClientService {
 		List<Group> groupList = new ArrayList<>();
 		try {
 
-			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.azureadTenantName)
+			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
 					.append("/users/").append(uniqueId).append("/memberOf")
 					.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
-							.append(AZURE_AD_GRAPH_API_VERSION).toString())
+							.append(azureadApiVersion).toString())
 					.toString());
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			// Set the appropriate header fields in the request header.
-			conn.setRequestProperty("api-version", AZURE_AD_GRAPH_API_VERSION);
+			conn.setRequestProperty("api-version", azureadApiVersion);
 			conn.setRequestProperty("Authorization", accessToken);
 			conn.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
 			String responseStr = HttpClientHelper.getResponseStringFromConn(conn, true);
@@ -945,7 +922,7 @@ public class AzureADClientService {
 		
 		ObjectNode rootNode = mapper.createObjectNode();
 		if (newUserPayload.getUserPrincipalName().indexOf('@') < 0) {
-			rootNode.put("userPrincipalName", new StringBuilder(newUserPayload.getUserPrincipalName()).append('@').append(azureadTenantName).toString());
+			rootNode.put("userPrincipalName", new StringBuilder(newUserPayload.getUserPrincipalName()).append('@').append(this.appProps.get("AzureADTenantName")).toString());
 			rootNode.put("mailNickname", newUserPayload.getUserPrincipalName());
 		}
 		else {
@@ -983,11 +960,11 @@ public class AzureADClientService {
 		return emailMessageBody.toString();
 	}
 
-    private String getPlistFromBlob(KeyVaultRetriever kvr, String containerName, String fileName) {
+    private String getPlistFromBlob(String containerName, String fileName) {
 
         String base64 = null;
         try {
-            AzureStorageUtil asu = new AzureStorageUtil(kvr.getSecretByKey("StorageKey"));
+            AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
             try (ByteArrayOutputStream outputStream = asu.downloadFile(containerName, fileName)) {
                 base64 = Base64.getEncoder().encodeToString(outputStream.toString().getBytes());
             }

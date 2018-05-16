@@ -23,20 +23,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import com.boeing.cas.supa.ground.pojos.KeyVaultProperties;
-
 @Component
-@EnableConfigurationProperties(KeyVaultProperties.class)
 public class CertificateVerifierUtil {
 
 	private final Logger logger = LoggerFactory.getLogger(CertificateVerifierUtil.class);
 
 	@Autowired
-    private KeyVaultProperties keyVaultProperties;
-
+	private Map<String, X509Certificate> appCertificates;
+	
 	private X509Certificate getCertFromHeader(String certHeader) {
 
 		X509Certificate cert = null;
@@ -69,8 +65,7 @@ public class CertificateVerifierUtil {
 				throw new SecurityException("Self-signed certificates are not accepted");
 			}
 
-            KeyVaultRetriever kvr = new KeyVaultRetriever(this.keyVaultProperties.getClientId(), this.keyVaultProperties.getClientKey());
-            X509Certificate x509ServerCert = kvr.getCertificateByCertName(certHolder);
+            X509Certificate x509ServerCert = this.appCertificates.get(certHolder);
             Map<String, String> x509ClientCertSubjectDn = this.getMap(x509ClientCert.getSubjectDN().getName());
             Map<String, String> x509ClientCertIssuerDn = this.getMap(x509ClientCert.getIssuerDN().getName());
             String x509ClientCertThumbPrint = this.getThumbprint(x509ClientCert);

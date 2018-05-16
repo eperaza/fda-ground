@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -21,7 +22,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,30 +31,25 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.boeing.cas.supa.ground.helpers.HttpClientHelper;
-import com.boeing.cas.supa.ground.pojos.KeyVaultProperties;
 import com.boeing.cas.supa.ground.pojos.UploadMessage;
 import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.utils.ADWTransferUtil;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
-import com.boeing.cas.supa.ground.utils.KeyVaultRetriever;
 
 @RestController
 @RequestMapping("/uploadFile")
-@EnableConfigurationProperties(KeyVaultProperties.class)
 public class FileUploadController {
 
 	private final Logger logger = LoggerFactory.getLogger(FileUploadController.class);
-	
+
 	@Autowired
-    private KeyVaultProperties keyVaultProperties;
+	private Map<String, String> appProps;
 
 	private static final String SUCCESS_MESSAGE = "Success";
 	private static final String FAILURE_MESSAGE = "Fail";
 
 	@RequestMapping(method = { RequestMethod.POST })
 	public ResponseEntity<Object> uploadFile(final @RequestParam("file") MultipartFile uploadfile, final HttpServletRequest httpRequest) {
-
-		final KeyVaultRetriever kvr = new KeyVaultRetriever(this.keyVaultProperties.getClientId(), this.keyVaultProperties.getClientKey());
 
 		this.logger.info("Upload File method invoked -  Single file upload!");
 
@@ -81,6 +76,7 @@ public class FileUploadController {
 		logger.debug("Adding file to ADW");
 		ExecutorService es = Executors.newFixedThreadPool(3);
 		List<Future<Boolean>> futures = new ArrayList<>();
+		final Map<String, String> properties = this.appProps;
 		Future<Boolean> adwFuture = es.submit(new Callable<Boolean>() {
 
 			@Override
@@ -90,10 +86,10 @@ public class FileUploadController {
 				try {
 
 					logger.info("Starting ADW Transfer");
-					String host = kvr.getSecretByKey("adwHost");
-					String usr = kvr.getSecretByKey("adwUser");
-					String pwd = kvr.getSecretByKey("adwPwd");
-					String path = kvr.getSecretByKey("adwPath" );
+					String host = properties.get("adwHost");
+					String usr = properties.get("adwUser");
+					String pwd = properties.get("adwPwd");
+					String path = properties.get("adwPath");
 					ADWTransferUtil adw = new ADWTransferUtil(host, usr, pwd, path);
 					logger.info(uploadFolderPath.toFile().getAbsolutePath());
 					xfr = adw.sendFile(uploadFolderPath.toFile().getAbsolutePath());
@@ -118,7 +114,7 @@ public class FileUploadController {
 				try {
 
 					logger.info("Starting Azure upload");
-					AzureStorageUtil asu = new AzureStorageUtil(kvr.getSecretByKey("StorageKey"));
+					AzureStorageUtil asu = new AzureStorageUtil(properties.get("StorageAccountName"), properties.get("StorageKey"));
 					upload = asu.uploadFile(uploadFolderPath.toFile().getAbsolutePath(), uploadfile.getOriginalFilename(), user);
 					logger.info("Upload to Azure complete: {}", upload);
 				}

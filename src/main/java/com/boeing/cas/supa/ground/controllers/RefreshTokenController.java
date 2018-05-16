@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,8 +28,8 @@ public class RefreshTokenController {
 
 	private final Logger logger = LoggerFactory.getLogger(RefreshTokenController.class);
 
-	private static final String TENANT_ID = "fdacustomertest.onmicrosoft.com";
-	private static final String CLIENT_ID = "95d69a21-369b-46cc-aa1d-0b67a2353f59";
+	@Autowired
+	private Map<String, String> appProps;
 
 	@RequestMapping(method = { RequestMethod.POST })
 	public ResponseEntity<Object> getRefreshToken(@RequestBody RefreshTokenInput refreshTokenInput) throws IOException {
@@ -35,7 +37,7 @@ public class RefreshTokenController {
 		if (isValid(refreshTokenInput)) {
 
 			logger.debug("Request contains refresh token");
-			Object obj = RefreshTokenController.getToken(refreshTokenInput.getRefreshToken());
+			Object obj = this.getToken(refreshTokenInput.getRefreshToken());
 			if (obj != null) {
 
 				if (obj instanceof Error) {
@@ -53,12 +55,12 @@ public class RefreshTokenController {
 		return refreshTokenInput != null && refreshTokenInput.getRefreshToken() != null;
 	}
 
-	public static Object getToken(String refreshToken) throws IOException {
+	public Object getToken(String refreshToken) throws IOException {
 
 		String encoding = "UTF-8";
-		String params = new StringBuilder("client_id=").append(CLIENT_ID).append("&refresh_token=").append(refreshToken)
+		String params = new StringBuilder("client_id=").append(this.appProps.get("AzureADAppClientID")).append("&refresh_token=").append(refreshToken)
 						.append("&grant_type=refresh_token&resource=https%3A%2F%2Fgraph.windows.net").toString();
-		String path = new StringBuilder("https://login.microsoftonline.com/").append(TENANT_ID).append("/oauth2/token").toString();
+		String path = new StringBuilder(this.appProps.get("AzureADTenantAuthEndpoint")).append("/oauth2/token").toString();
 		byte[] data = params.getBytes(encoding);
 		URL url = new URL(path);
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();

@@ -2,6 +2,7 @@ package com.boeing.cas.supa.ground.controllers;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -10,7 +11,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -18,17 +18,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.util.HtmlUtils;
 
-import com.boeing.cas.supa.ground.pojos.KeyVaultProperties;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
-import com.boeing.cas.supa.ground.utils.KeyVaultRetriever;
 
 @Controller
-@EnableConfigurationProperties(KeyVaultProperties.class)
 public class FileDownloadController {
-	
+
 	@Autowired
-    private KeyVaultProperties keyVaultProperties;
-	
+	private Map<String, String> appProps;
+
 	@ResponseBody
 	@RequestMapping(value = "/download", method = RequestMethod.GET)
 	public byte[] downloadJSONFile(@RequestParam("file") String file, @RequestParam("type") String type,
@@ -36,11 +33,9 @@ public class FileDownloadController {
 
 		Logger logger = LoggerFactory.getLogger(FileDownloadController.class);
 
-		KeyVaultRetriever kvr = new KeyVaultRetriever(this.keyVaultProperties.getClientId(), this.keyVaultProperties.getClientKey());		
-		
 		try {
 
-			AzureStorageUtil asu = new AzureStorageUtil(kvr.getSecretByKey("StorageKey"));
+			AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
 			if (file != null) {
 
 				ByteArrayOutputStream outputStream = null;

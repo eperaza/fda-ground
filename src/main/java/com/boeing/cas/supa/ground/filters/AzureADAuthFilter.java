@@ -35,6 +35,7 @@ import org.springframework.stereotype.Component;
 
 import com.boeing.cas.supa.ground.pojos.Error;
 import com.boeing.cas.supa.ground.utils.CertificateVerifierUtil;
+import com.boeing.cas.supa.ground.utils.Constants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWTParser;
 
@@ -44,23 +45,18 @@ public class AzureADAuthFilter implements Filter {
 
 	private final Logger logger = LoggerFactory.getLogger(AzureADAuthFilter.class);
 
-    private static final String AUTH_TOKEN_PREFIX = "Bearer ";
+	@Value("${api.azuread.uri}")
+	private String azureadApiUri;
+
+	@Autowired
+	private Map<String, String> appProps;
 
 	private static final Set<String> ALLOWED_PATHS = Collections.unmodifiableSet(
 			new HashSet<>(
-					Arrays.asList("/login", "/refresh", "/register", "/logfile")));
+					Arrays.asList("/login", "/refresh", "/register", "/registeruser", "/logfile")));
 
 	@Autowired
 	private CertificateVerifierUtil certVerify;
-
-	@Value("#{'${list.of.apps}'.split(',')}")
-	private List<String> approvedAppId;
-
-	@Value("${tenantId}")
-	private String tenantId;
-
-	@Value("${app.id.uri}")
-	private String appIdUri;
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
@@ -77,32 +73,32 @@ public class AzureADAuthFilter implements Filter {
 
 		logger.debug("Possibly modifying the response...");
 
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        HttpServletResponse httpResponse = (HttpServletResponse) response;
-        String path = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length()).replaceAll("[/]+$", StringUtils.EMPTY);
-        boolean allowedPath = ALLOWED_PATHS.contains(path);
+		HttpServletRequest httpRequest = (HttpServletRequest) request;
+		HttpServletResponse httpResponse = (HttpServletResponse) response;
+		String path = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length()).replaceAll("[/]+$", StringUtils.EMPTY);
+		boolean allowedPath = ALLOWED_PATHS.contains(path);
 
-        int responseCode = 400;
-        Error responseException = null;
+		int responseCode = 400;
+		Error responseException = null;
 
-        if (allowedPath) {
+		if (allowedPath) {
 
-        	if (this.isValidClientCertInReqHeader("client1", httpRequest)) {
-        		chain.doFilter(request, response);
-        		return;
-        	}
+			if (this.isValidClientCertInReqHeader("client1", httpRequest)) {
+				chain.doFilter(request, response);
+				return;
+			}
 
-        	responseCode = 403;
-            responseException = new Error("certificate missing", "Must provide a valid client certificate");
-        	sendResponse(responseCode, responseException, httpResponse);
-        	return;
-        }
+			responseCode = 403;
+			responseException = new Error("certificate missing", "Must provide a valid client certificate");
+			sendResponse(responseCode, responseException, httpResponse);
+			return;
+		}
 
-        try {
+		try {
 
-            boolean validClientCert = this.isValidClientCertInReqHeader("client2", httpRequest);
-            boolean validOAuthToken = this.isValidOAuthToken(httpRequest.getHeader("Authorization"));
-            if (validClientCert && validOAuthToken) {
+			boolean validClientCert = this.isValidClientCertInReqHeader("client2", httpRequest);
+			boolean validOAuthToken = this.isValidOAuthToken(httpRequest.getHeader("Authorization"));
+			if (validClientCert && validOAuthToken) {
                 chain.doFilter(request, response);
                 return;
             }
@@ -141,7 +137,7 @@ public class AzureADAuthFilter implements Filter {
         out.flush();
 	}
 	
-    private boolean isValidClientCertInReqHeader(String certHolder, HttpServletRequest httpRequest) {
+	private boolean isValidClientCertInReqHeader(String certHolder, HttpServletRequest httpRequest) {
 
     	String certHeader = httpRequest.getHeader("X-ARR-ClientCert");
         if (StringUtils.isNotBlank(certHeader)) {
@@ -172,11 +168,11 @@ public class AzureADAuthFilter implements Filter {
 	private boolean isValidOAuthToken(String xAuth) throws ParseException {
 
 		logger.debug("xAuth token -> {}", xAuth);
-		if (StringUtils.isBlank(xAuth) || !xAuth.contains(AUTH_TOKEN_PREFIX.trim())) {
+		if (StringUtils.isBlank(xAuth) || !xAuth.contains(Constants.AUTH_HEADER_PREFIX.trim())) {
 			throw new SecurityException("Missing or invalid Authorization token");
 		}
 
-		Map<String, Object> claimsMap = JWTParser.parse(xAuth.replace(AUTH_TOKEN_PREFIX, StringUtils.EMPTY)).getJWTClaimsSet().getClaims();
+		Map<String, Object> claimsMap = JWTParser.parse(xAuth.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY)).getJWTClaimsSet().getClaims();
 		if (claimsMap.get("aud") instanceof List<?>) {
 
 			Set<String> set = ((List<?>) claimsMap.get("aud"))
@@ -185,17 +181,17 @@ public class AzureADAuthFilter implements Filter {
 								.map(Object::toString)
 								.collect(Collectors.toSet());
 			logger.debug("aud Claims: {}", set.toString());
-			if (!set.contains(this.appIdUri)) {
+			if (!set.contains(this.azureadApiUri)) {
 				logger.info("Aud does not exist");
 				throw new SecurityException("Not a valid Authorization token: Aud does not exist");
 			}
 		}
 
-        if (!claimsMap.get("tid").equals(this.tenantId)) {
+        if (!claimsMap.get("tid").equals(this.appProps.get("AzureADTenantID"))) {
             logger.error("TenantId doesn't exist");
             throw new SecurityException("Not a valid Authorization token: TenantId doesn't exist");
         }
-        if (!this.approvedAppId.contains(claimsMap.get("appid"))) {
+        if (!this.appProps.get("AzureADAppClientID").equals(claimsMap.get("appid"))) {
             logger.error("Not part of approved apps");
             throw new SecurityException("Not a valid Authorization token: Not part of approved apps");
         }

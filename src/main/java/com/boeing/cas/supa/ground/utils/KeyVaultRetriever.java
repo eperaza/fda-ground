@@ -17,17 +17,19 @@ public class KeyVaultRetriever {
 
 	private final Logger logger = LoggerFactory.getLogger(KeyVaultRetriever.class);
 
-	private static String keyvaultUri = "https://fda-ground-kv.vault.azure.net/";
+	private String keyVaultUri;
 
 	private KeyVaultClient kvc;
 
-	public KeyVaultRetriever(String clientId, String clientKey) {
+	public KeyVaultRetriever(String keyVaultUri, String clientId, String clientKey) {
+
+		this.keyVaultUri = keyVaultUri;
 		this.kvc = KeyVaultAuthenticator.getAuthenticatedClient(clientId, clientKey);
 	}
 
 	public String getSecretByKey(String secretName) {
 
-		SecretBundle sb = this.kvc.getSecret(keyvaultUri, secretName);
+		SecretBundle sb = this.kvc.getSecret(this.keyVaultUri, secretName);
 		String secretValue = null;
 		if (sb != null) {
 			secretValue = sb.value();
@@ -38,7 +40,7 @@ public class KeyVaultRetriever {
 	
 	public X509Certificate getCertificateByCertName(String certName) {
 
-		CertificateBundle cb = this.kvc.getCertificate(keyvaultUri, certName);
+		CertificateBundle cb = this.kvc.getCertificate(this.keyVaultUri, certName);
 		X509Certificate x509Certificate = null;
 
 		if (cb != null) {

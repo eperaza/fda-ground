@@ -30,12 +30,14 @@ public class AzureStorageUtil {
 
 	private final Logger logger = LoggerFactory.getLogger(AzureStorageUtil.class);
 	
+	private String accountName;
 	private String key;
 	private CloudStorageAccount storageAccount;
 
-	public AzureStorageUtil(String key) throws IOException {
+	public AzureStorageUtil(String accountName, String key) throws IOException {
 
 		try {
+			this.accountName = accountName;
 			this.key = key;
 			this.storageAccount = this.getcloudStorageAccount();
 		} catch (IllegalArgumentException e) {
@@ -122,7 +124,8 @@ public class AzureStorageUtil {
 	private CloudStorageAccount getcloudStorageAccount() {
 
         try {
-        	String storageConnectionString = new StringBuilder("DefaultEndpointsProtocol=http;AccountName=").append("fdaadw")
+        	String storageConnectionString = new StringBuilder()
+        			.append("DefaultEndpointsProtocol=http;AccountName=").append(this.accountName)
         			.append(";AccountKey=").append(this.key)
         			.append(";EndpointSuffix=core.windows.net;")
         			.toString();
