@@ -26,12 +26,12 @@ public class FileDownloadController {
 	@Autowired
 	private Map<String, String> appProps;
 
+	private final Logger logger = LoggerFactory.getLogger(FileDownloadController.class);
+
 	@ResponseBody
 	@RequestMapping(value = "/download", method = RequestMethod.GET)
 	public byte[] downloadJSONFile(@RequestParam("file") String file, @RequestParam("type") String type,
 			HttpServletRequest request, HttpServletResponse response) {
-
-		Logger logger = LoggerFactory.getLogger(FileDownloadController.class);
 
 		try {
 

@@ -337,7 +337,7 @@ public class AzureADClientService {
 				resultObj = new Error("USER_CREATE_FAILED", valueNode.asText());
 			}
 		} catch (UserAccountRegistrationException uare) {
-			logger.error("Failed to register new user account: {}", uare.getMessage());
+			logger.error("Failed to register new user account: {}", uare.getMessage(), uare);
 			resultObj = new Error("USER_CREATE_FAILED", "FDAGNDSVCERR0001");
 		} catch (JsonProcessingException jpe) {
 			logger.error("JsonProcessingException: {}", jpe.getMessage(), jpe);
