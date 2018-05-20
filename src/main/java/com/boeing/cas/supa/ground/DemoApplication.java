@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -122,6 +123,7 @@ public class DemoApplication {
 
 		DataSourceBuilder factory = DataSourceBuilder.create()
 				.driverClassName(keyVaultRetriever.getSecretByKey("SQLDriverClassName"))
+				.type(BasicDataSource.class)
 				.url(keyVaultRetriever.getSecretByKey("SQLDatabaseUrl"))
 				.username(keyVaultRetriever.getSecretByKey("SQLDatabaseUsername"))
 				.password(keyVaultRetriever.getSecretByKey("SQLDatabasePassword"));
