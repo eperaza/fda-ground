@@ -125,7 +125,7 @@ public class AzureStorageUtil {
 
         try {
         	String storageConnectionString = new StringBuilder()
-        			.append("DefaultEndpointsProtocol=http;AccountName=").append(this.accountName)
+        			.append("DefaultEndpointsProtocol=https;AccountName=").append(this.accountName)
         			.append(";AccountKey=").append(this.key)
         			.append(";EndpointSuffix=core.windows.net;")
         			.toString();

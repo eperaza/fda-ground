@@ -53,7 +53,7 @@ public class AzureADAuthFilter implements Filter {
 
 	private static final Set<String> ALLOWED_PATHS = Collections.unmodifiableSet(
 			new HashSet<>(
-					Arrays.asList("/login", "/refresh", "/register", "/registeruser", "/logfile")));
+					Arrays.asList("/login", "/refresh", "/register", "/registeruser", "/logfile", "/error" )));
 
 	@Autowired
 	private CertificateVerifierUtil certVerify;
