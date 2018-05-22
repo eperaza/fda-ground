@@ -53,6 +53,10 @@ public class DemoApplication {
 
 		Map<String, String> appSecrets = new ConcurrentHashMap<String, String>();
 
+		appSecrets.put("adwHost", keyVaultRetriever.getSecretByKey("adwHost"));
+		appSecrets.put("adwPath", keyVaultRetriever.getSecretByKey("adwPath"));
+		appSecrets.put("adwPwd", keyVaultRetriever.getSecretByKey("adwPwd"));
+		appSecrets.put("adwUser", keyVaultRetriever.getSecretByKey("adwUser"));
 		appSecrets.put("AzureADTenantName", keyVaultRetriever.getSecretByKey("AzureADTenantName"));
 		appSecrets.put("AzureADTenantID", keyVaultRetriever.getSecretByKey("AzureADTenantID"));
 		appSecrets.put("AzureADTenantAuthEndpoint", keyVaultRetriever.getSecretByKey("AzureADTenantAuthEndpoint"));
