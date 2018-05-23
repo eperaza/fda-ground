@@ -57,6 +57,7 @@ import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.Constants.PermissionType;
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
+import com.boeing.cas.supa.ground.utils.ControllerUtils;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -307,7 +308,7 @@ public class AzureADClientService {
 
 				// User creation looks good... set new user to the return value [resultObj]
 				resultObj = newlyCreatedUser;
-				logger.info("Added new user {} to {} and {} groups", newlyCreatedUser.getUserPrincipalName(), airlineGroup.getDisplayName(), roleGroupName);
+				logger.info("Added new user {} to {} and {} groups", newlyCreatedUser.getUserPrincipalName(), airlineGroup.getDisplayName(), ControllerUtils.sanitizeString(roleGroupName));
 
 				// Register new user in the account registration database
 				String registrationToken = UUID.randomUUID().toString();
@@ -367,7 +368,7 @@ public class AzureADClientService {
 		} finally {
 
 			if (resultObj instanceof Error) {
-				logger.error("FDAGndSvcLog> {}", progressLog.toString());
+				logger.error("FDAGndSvcLog> {}", ControllerUtils.sanitizeString(progressLog.toString()));
 			}
 		}
 
@@ -462,7 +463,7 @@ public class AzureADClientService {
 		} finally {
 			
 			if (resultObj instanceof Error) {
-				logger.error("FDAGndSvcLog> {}", progressLog.toString());
+				logger.error("FDAGndSvcLog> {}", ControllerUtils.sanitizeString(progressLog.toString()));
 			}
 		}
 		
@@ -580,7 +581,7 @@ public class AzureADClientService {
 		} finally {
 			
 			if (resultObj instanceof Error) {
-				logger.error("FDAGndSvcLog> {}", progressLog.toString());
+				logger.error("FDAGndSvcLog> {}", ControllerUtils.sanitizeString(progressLog.toString()));
 			}
 		}
 
@@ -741,6 +742,11 @@ public class AzureADClientService {
 		} catch (IOException ioe) {
 			logger.error("IOException: {}", ioe.getMessage(), ioe);
 			resultObj = new Error("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0032");
+		} finally {
+			
+			if (resultObj instanceof Error) {
+				logger.error("FDAGndSvcLog> {}", ControllerUtils.sanitizeString(progressLog.toString()));
+			}
 		}
 
 		return resultObj;
@@ -789,7 +795,7 @@ public class AzureADClientService {
 
 	public User getUserInfoFromJwtAccessToken(String accessToken) {
 
-		logger.debug("-------> Access token for logged in user: {}", accessToken);
+		logger.debug("Access token for logged in user: {}", ControllerUtils.sanitizeString(accessToken));
 		
 		String uniqueId = AzureADClientHelper.getUniqueIdFromJWT(accessToken);
 		User user = getUserInfoFromGraph(uniqueId, accessToken);
@@ -818,7 +824,7 @@ public class AzureADClientService {
 
 			String responseStr = HttpClientHelper.getResponseStringFromConn(conn, true);
 
-			logger.debug("-------> User response from graph API: {}", responseStr);
+			logger.debug("User response from graph API: {}", responseStr);
 			
 			int responseCode = conn.getResponseCode();
 

@@ -7,7 +7,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.util.HtmlUtils;
 
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
+import com.boeing.cas.supa.ground.utils.ControllerUtils;
 
 @Controller
 public class FileDownloadController {
@@ -50,10 +49,8 @@ public class FileDownloadController {
 				return new byte[0];
 			}
 		} catch (IOException e) {
-
-			String fileParam = !StringUtils.isEmpty(file) ? HtmlUtils.htmlEscape(file.toLowerCase().replaceAll("[\\r\\n]", "_")) : "";
-            String typeParam = !StringUtils.isEmpty(file) ? HtmlUtils.htmlEscape(type.toLowerCase().replaceAll("[\\r\\n]", "_")) : "";
-            logger.error("Error retrieving file [{}] of type [{}]: {}", fileParam, typeParam, e.getMessage(), e);
+			logger.error("Error retrieving file [{}] of type [{}]: {}", ControllerUtils.sanitizeString(file),
+					ControllerUtils.sanitizeString(type), e.getMessage(), e);
 		}
 
 		response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
