@@ -49,7 +49,7 @@ public class FileDownloadController {
 				return new byte[0];
 			}
 		} catch (IOException e) {
-			logger.error("Error retrieving file [{}] of type [{}]: {}", ControllerUtils.sanitizeString(file),
+			logger.error("ApiError retrieving file [{}] of type [{}]: {}", ControllerUtils.sanitizeString(file),
 					ControllerUtils.sanitizeString(type), e.getMessage(), e);
 		}
 

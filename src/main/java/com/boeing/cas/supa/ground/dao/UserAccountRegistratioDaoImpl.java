@@ -11,7 +11,9 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.boeing.cas.supa.ground.exceptions.UserAccountRegistrationException;
+import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.UserAccountRegistration;
+import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 
 @Repository
 public class UserAccountRegistratioDaoImpl implements UserAccountRegistrationDao {
@@ -41,13 +43,13 @@ public class UserAccountRegistratioDaoImpl implements UserAccountRegistrationDao
 			int returnVal = jdbcTemplate.update(USER_ACCOUNT_REGISTRATION_SQL, namedParameters);
 			if (returnVal != 1) {
 				logger.warn("Could not record user account registration in database: {} record(s) updated", returnVal);
-				throw new UserAccountRegistrationException(String.format("%d record(s) updated", returnVal));
+				throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", String.format("%d record(s) updated", returnVal), RequestFailureReason.INTERNAL_SERVER_ERROR));
 			}
 		}
 		catch (DataAccessException dae) {
 
 			logger.warn("Failed to insert user account registration record in database: {}", dae.getMessage(), dae);
-			throw new UserAccountRegistrationException("Database exception");
+			throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 	}
 
@@ -66,7 +68,7 @@ public class UserAccountRegistratioDaoImpl implements UserAccountRegistrationDao
 		catch (DataAccessException dae) {
 
 			logger.warn("Failed to determine user account activation status: {}", dae.getMessage(), dae);
-			throw new UserAccountRegistrationException("Database exception");
+			throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 	}
 
@@ -84,13 +86,13 @@ public class UserAccountRegistratioDaoImpl implements UserAccountRegistrationDao
 			int returnVal = jdbcTemplate.update(USER_ACCOUNT_ACTIVATION_SQL, namedParameters);
 			if (returnVal != 1) {
 				logger.warn("Could not activate user account in database: {} record(s) updated", returnVal);
-				throw new UserAccountRegistrationException(String.format("%d record(s) updated", returnVal));
+				throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", String.format("%d record(s) updated", returnVal), RequestFailureReason.INTERNAL_SERVER_ERROR));
 			}
 		}
 		catch (DataAccessException dae) {
 
 			logger.warn("Failed to activate user account registration record in database: {}", dae.getMessage(), dae);
-			throw new UserAccountRegistrationException("Database exception");
+			throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 	}
 
@@ -105,7 +107,7 @@ public class UserAccountRegistratioDaoImpl implements UserAccountRegistrationDao
 		catch (DataAccessException dae) {
 
 			logger.warn("Failed to remove user account registration records in database: {}", dae.getMessage(), dae);
-			throw new UserAccountRegistrationException("Database exception");
+			throw new UserAccountRegistrationException(new ApiError("DELETE_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 	}
 }

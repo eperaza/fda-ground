@@ -1,10 +1,5 @@
 package com.boeing.cas.supa.ground.controllers;
 
-import java.util.Map;
-
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,51 +8,27 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
+import com.boeing.cas.supa.ground.exceptions.UserAuthenticationException;
 import com.boeing.cas.supa.ground.pojos.AccessToken;
+import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.Credential;
-import com.boeing.cas.supa.ground.pojos.Error;
-import com.microsoft.aad.adal4j.AuthenticationException;
-import com.microsoft.aad.adal4j.AuthenticationResult;
-
-// Article ref: https://stackoverflow.com/questions/45694705/adal4j-java-use-refresh-token-with-username-and-password-to-get-the-access-tok
+import com.boeing.cas.supa.ground.services.AzureADClientService;
+import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 
 @RestController
 @RequestMapping("/login")
 public class LoginController {
 
-	private final Logger logger = LoggerFactory.getLogger(LoginController.class);
-
 	@Autowired
-	private Map<String, String> appProps;
-	
+	private AzureADClientService aadClient;
+
 	@RequestMapping(method = { RequestMethod.POST })
-	public ResponseEntity<Object> getAccessToken(@RequestBody Credential cred) {
+	public ResponseEntity<AccessToken> getAccessToken(@RequestBody Credential cred) throws UserAuthenticationException {
 
-		if (cred != null && cred.isValid()) {
-
-			logger.info("Credentials received in proper form");
-
-			Object ar = AzureADClientHelper.getAccessTokenFromUserCredentials(cred.getAzUsername(), cred.getAzPassword(), this.appProps.get("AzureADTenantAuthEndpoint"), this.appProps.get("AzureADAppClientID"));
-			if (ar != null) {
-
-				if (ar instanceof AuthenticationResult) {
-					// Article ref: //https://stackoverflow.com/questions/31971673/how-can-i-get-a-pem-base-64-from-a-pfx-in-java
-					String getPfxEncodedAsBase64 = this.appProps.get("client2base64");
-					AccessToken at = new AccessToken((AuthenticationResult) ar, getPfxEncodedAsBase64);
-					return new ResponseEntity<>(at, HttpStatus.OK);					
-				}
-
-				if (ExceptionUtils.indexOfThrowable((Throwable) ar, AuthenticationException.class) >= 0) {
-					Error error = AzureADClientHelper.getLoginErrorFromString(((AuthenticationException) ar).getMessage());
-					return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
-				}
-			}
-		}
-		else {
-			return new ResponseEntity<>("Request does not contain properly formed credentials", HttpStatus.BAD_REQUEST);
+		if (cred == null || !cred.isValid()) {
+			throw new UserAuthenticationException(new ApiError("USER_AUTH_FAILURE", "Request does not contain properly formed credentials", RequestFailureReason.BAD_REQUEST));
 		}
 
-		return new ResponseEntity<>("Missing or invalid authentication result", HttpStatus.BAD_REQUEST);
+		return new ResponseEntity<>(aadClient.loginUserForAccessToken(cred), HttpStatus.OK);
 	}
 }

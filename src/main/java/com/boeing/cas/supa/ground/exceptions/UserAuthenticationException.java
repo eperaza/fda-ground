@@ -5,23 +5,19 @@ import java.util.Optional;
 import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 
-public class UserAccountRegistrationException extends Exception {
+public class UserAuthenticationException extends Exception {
 
 	private static final long serialVersionUID = 1L;
 
 	private ApiError error;
 
-	public UserAccountRegistrationException() {
+	public UserAuthenticationException() {
 		this(null);
 	}
 
-	public UserAccountRegistrationException(ApiError error) {
+	public UserAuthenticationException(ApiError error) {
 		super(resolveApiError(Optional.ofNullable(error)).getErrorDescription());
 		this.error = resolveApiError(Optional.ofNullable(error));
-	}
-
-	private static ApiError resolveApiError(Optional<ApiError> error) {
-		return error.orElse(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "User registration failure", RequestFailureReason.INTERNAL_SERVER_ERROR));
 	}
 
 	public ApiError getError() {
@@ -30,5 +26,9 @@ public class UserAccountRegistrationException extends Exception {
 
 	public void setError(ApiError error) {
 		this.error = error;
+	}
+	
+	private static ApiError resolveApiError(Optional<ApiError> error) {
+		return error.orElse(new ApiError("USER_AUTH_FAILURE", "User authentication failure", RequestFailureReason.UNAUTHORIZED));
 	}
 }

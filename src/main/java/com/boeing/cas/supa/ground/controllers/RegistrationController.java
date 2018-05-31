@@ -16,9 +16,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.boeing.cas.supa.ground.exceptions.UserAccountRegistrationException;
 import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
+import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.Credential;
-import com.boeing.cas.supa.ground.pojos.Error;
 import com.boeing.cas.supa.ground.pojos.UserAccountActivation;
 import com.boeing.cas.supa.ground.pojos.UserRegistration;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
@@ -33,7 +34,7 @@ public class RegistrationController {
 
 	@Autowired
 	private Map<String, String> appProps;
-	
+
 	@Autowired
 	private AzureADClientService aadClient;
 
@@ -43,12 +44,12 @@ public class RegistrationController {
 		if (cred != null && cred.isValid()) {
 
 			logger.debug("Received properly formed credentials");
-			Object ar = AzureADClientHelper.getAccessTokenFromUserCredentials(cred.getAzUsername(), cred.getAzPassword(), this.appProps.get("AzureADTenantAuthEndpoint"), this.appProps.get("AzureADAppClientID"));
-			
+			Object ar = aadClient.getAccessTokenFromUserCredentials(cred.getAzUsername(), cred.getAzPassword(), this.appProps.get("AzureADTenantAuthEndpoint"), this.appProps.get("AzureADAppClientID"));
+
 			if (ar == null) {
 				return new ResponseEntity<>("Invalid request with improperly formed credentials", HttpStatus.BAD_REQUEST);
 			}
-			
+
 			if (ar instanceof AuthenticationResult) {
 
 				AuthenticationResult authResult = (AuthenticationResult) ar;
@@ -59,14 +60,14 @@ public class RegistrationController {
 				String getPlistFromBlob = getPlistFromBlob("preferences", "ADW.plist");
 				String mobileConfigFromBlob = getPlistFromBlob("config", "supaConfigEFO.mobileconfig");
 				if (getPlistFromBlob != null && mobileConfigFromBlob != null) {
-					UserRegistration userReg = new UserRegistration(authResult, getPfxEncodedAsBase64, getPlistFromBlob, mobileConfigFromBlob);
+					UserRegistration userReg = new UserRegistration(authResult, getPfxEncodedAsBase64, null, null, getPlistFromBlob, mobileConfigFromBlob);
 					return new ResponseEntity<>(userReg, HttpStatus.OK);
 				}
 			}
 
 			if (ExceptionUtils.indexOfThrowable((Throwable) ar, AuthenticationException.class) >= 0) {
-				Error error = AzureADClientHelper.getLoginErrorFromString(((AuthenticationException) ar).getMessage());
-				return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+				ApiError apiError = AzureADClientHelper.getLoginErrorFromString(((AuthenticationException) ar).getMessage());
+				return new ResponseEntity<>(apiError, HttpStatus.UNAUTHORIZED);
 			}
 		}
 
@@ -75,11 +76,11 @@ public class RegistrationController {
 	}
 
 	@RequestMapping(path="/registeruser", method = { RequestMethod.POST })
-	public ResponseEntity<Object> registerUserAccount(@RequestBody UserAccountActivation userAccountActivation) {
+	public ResponseEntity<Object> registerUserAccount(@RequestBody UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {
 
 		Object result = aadClient.enableUserAndSetPassword(userAccountActivation);
 
-		if (result instanceof Error) {
+		if (result instanceof ApiError) {
 			return new ResponseEntity<>(result, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 

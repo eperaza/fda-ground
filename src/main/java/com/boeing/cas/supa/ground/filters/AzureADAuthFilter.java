@@ -33,7 +33,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import com.boeing.cas.supa.ground.pojos.Error;
+import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.utils.CertificateVerifierUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -79,7 +79,7 @@ public class AzureADAuthFilter implements Filter {
 		boolean allowedPath = ALLOWED_PATHS.contains(path);
 
 		int responseCode = 400;
-		Error responseException = null;
+		ApiError responseException = null;
 
 		if (allowedPath) {
 
@@ -89,7 +89,7 @@ public class AzureADAuthFilter implements Filter {
 			}
 
 			responseCode = 403;
-			responseException = new Error("certificate missing", "Must provide a valid client certificate");
+			responseException = new ApiError("certificate missing", "Must provide a valid client certificate");
 			sendResponse(responseCode, responseException, httpResponse);
 			return;
 		}
@@ -104,20 +104,20 @@ public class AzureADAuthFilter implements Filter {
             }
             else if (!validClientCert) {
             	responseCode = 403;
-                responseException = new Error("Invalid client certificate", "Must provide a valid client certificate");
+                responseException = new ApiError("Invalid client certificate", "Must provide a valid client certificate");
             }
             else {
             	responseCode = 401;
-                responseException = new Error("Authorization_Missing", "Must provide a valid authorization token");
+                responseException = new ApiError("Authorization_Missing", "Must provide a valid authorization token");
             }
         }
         catch (ParseException pe) {
             responseCode = 400;
-            responseException = new Error("JWT_ERROR", pe.getMessage());
+            responseException = new ApiError("JWT_ERROR", pe.getMessage());
         }
         catch (SecurityException se) {
         	responseCode = 401;
-        	responseException = new Error("MISSING_INVALID_CLIENT_AUTH", se.getMessage());
+        	responseException = new ApiError("MISSING_INVALID_CLIENT_AUTH", se.getMessage());
         }
         finally {
 
@@ -127,7 +127,7 @@ public class AzureADAuthFilter implements Filter {
         }
 	}
 
-	private void sendResponse(int responseCode, Error responseException, HttpServletResponse httpResponse) throws IOException {
+	private void sendResponse(int responseCode, ApiError responseException, HttpServletResponse httpResponse) throws IOException {
 		
 		httpResponse.setStatus(responseCode);
 		httpResponse.setContentType("application/json");

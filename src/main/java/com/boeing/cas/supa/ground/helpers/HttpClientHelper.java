@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import com.boeing.cas.supa.ground.pojos.Group;
 import com.boeing.cas.supa.ground.pojos.User;
+import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.HeaderMapRequestWrapper;
 import com.boeing.cas.supa.ground.utils.MicrosoftGraphUtil;
 import com.nimbusds.jwt.JWTParser;
@@ -48,9 +49,6 @@ import com.nimbusds.jwt.JWTParser;
 public class HttpClientHelper {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpClientHelper.class);
-
-    private static final String TENANT_NAME = "fdacustomertest.onmicrosoft.com";
-    private static final String AUTH_TOKEN_PREFIX = "Bearer ";
 
     // Hide default constructor
     private HttpClientHelper() {}
@@ -72,12 +70,12 @@ public class HttpClientHelper {
         return stringBuilder.toString();
     }
     
-    public static User getUserInfoFromHeader(HttpServletRequest httpRequest) {
+    public static User getUserInfoFromHeader(String tenantName, HttpServletRequest httpRequest) {
 
     	HeaderMapRequestWrapper header = new HeaderMapRequestWrapper(httpRequest);
 		String tokenName = header.getHeader("authorization");
 		String uniqueId = HttpClientHelper.getUniqueIdFromJWT(tokenName);
-		MicrosoftGraphUtil mgu = new MicrosoftGraphUtil(TENANT_NAME, tokenName.replaceFirst(AUTH_TOKEN_PREFIX, StringUtils.EMPTY));
+		MicrosoftGraphUtil mgu = new MicrosoftGraphUtil(tenantName, tokenName.replaceFirst(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY));
 		User user = mgu.getUsernamesFromGraph(uniqueId);
 		List<Group> group = mgu.getGroupFromGraph(uniqueId);
 		user.setGroups(group);
@@ -85,10 +83,10 @@ public class HttpClientHelper {
 		return user;
     }
 
-    public static User getUserInfoFromAuthToken(String tokenName) {
+    public static User getUserInfoFromAuthToken(String tenantName, String tokenName) {
 
     	String uniqueId = HttpClientHelper.getUniqueIdFromJWT(tokenName);
-		MicrosoftGraphUtil mgu = new MicrosoftGraphUtil(TENANT_NAME, tokenName.replaceFirst(AUTH_TOKEN_PREFIX, StringUtils.EMPTY));
+		MicrosoftGraphUtil mgu = new MicrosoftGraphUtil(tenantName, tokenName.replaceFirst(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY));
 		User user = mgu.getUsernamesFromGraph(uniqueId);
 		List<Group> group = mgu.getGroupFromGraph(uniqueId);
 		user.setGroups(group);
@@ -99,10 +97,10 @@ public class HttpClientHelper {
     private static String getUniqueIdFromJWT(String xAuth) {
 
     	String uniqueId = null;
-		if (xAuth.contains(AUTH_TOKEN_PREFIX.trim())) {
+		if (xAuth.contains(Constants.AUTH_HEADER_PREFIX.trim())) {
 
             try {
-                Map<String, Object> claimsMap = JWTParser.parse(xAuth.replaceFirst(AUTH_TOKEN_PREFIX, StringUtils.EMPTY)).getJWTClaimsSet().getClaims();
+                Map<String, Object> claimsMap = JWTParser.parse(xAuth.replaceFirst(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY)).getJWTClaimsSet().getClaims();
                 uniqueId = (String) claimsMap.get("oid");
             }
             catch (ParseException pe) {

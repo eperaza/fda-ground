@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
 import com.boeing.cas.supa.ground.helpers.HttpClientHelper;
-import com.boeing.cas.supa.ground.pojos.Error;
+import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.RefreshTokenInput;
 import com.boeing.cas.supa.ground.pojos.RefreshTokenOutput;
 
@@ -40,8 +40,8 @@ public class RefreshTokenController {
 			Object obj = this.getToken(refreshTokenInput.getRefreshToken());
 			if (obj != null) {
 
-				if (obj instanceof Error) {
-					return new ResponseEntity<>((Error) obj, HttpStatus.BAD_REQUEST);
+				if (obj instanceof ApiError) {
+					return new ResponseEntity<>((ApiError) obj, HttpStatus.BAD_REQUEST);
 				}
 
 				return new ResponseEntity<>((RefreshTokenOutput) obj, HttpStatus.OK);

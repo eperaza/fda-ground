@@ -19,6 +19,6 @@ public class Constants {
 	}
 
 	public static enum RequestFailureReason {
-		INTERNAL_SERVER_ERROR, BAD_REQUEST, NOT_FOUND, UNAUTHORIZED
+		INTERNAL_SERVER_ERROR, BAD_REQUEST, NOT_FOUND, UNAUTHORIZED, CONFLICT
 	}
 }

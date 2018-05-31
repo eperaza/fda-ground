@@ -2,16 +2,16 @@ package com.boeing.cas.supa.ground.pojos;
 
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 
-public class Error {
+public class ApiError {
 
 	private String errorLabel;
 	private String errorDescription;
 	private RequestFailureReason failureReason;
 	private long timestamp;
 
-	public Error() {}
+	public ApiError() {}
 
-	public Error(String error, String errorDescription) {
+	public ApiError(String error, String errorDescription) {
 
 		this.errorLabel = error;
 		this.errorDescription = errorDescription;
@@ -19,7 +19,7 @@ public class Error {
 		this.timestamp = System.currentTimeMillis() / 1_000L;
 	}
 
-	public Error(String error, String errorDescription, RequestFailureReason failureReason) {
+	public ApiError(String error, String errorDescription, RequestFailureReason failureReason) {
 
 		this.errorLabel = error;
 		this.errorDescription = errorDescription;

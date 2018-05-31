@@ -1,5 +1,7 @@
 package com.boeing.cas.supa.ground.pojos;
 
+import java.util.List;
+
 import com.microsoft.aad.adal4j.AuthenticationResult;
 
 public class UserRegistration extends AccessToken {
@@ -8,9 +10,10 @@ public class UserRegistration extends AccessToken {
 	protected String mobileConfig;
 
 	public UserRegistration(AuthenticationResult authenticationResult, String cert,
+			String airline, List<String> roles,
 			String preferences, String mobileConfig) {
 
-		super(authenticationResult, cert);
+		super(authenticationResult, cert, airline, roles);
 		this.preferences = preferences;
 		this.mobileConfig = mobileConfig;
 	}

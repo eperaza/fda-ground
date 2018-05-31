@@ -96,7 +96,7 @@ public class FileUploadController {
 					logger.info("Transfer to ADW complete: {}", xfr);
 				}
 				catch(Exception e) {
-					logger.error("Error in ADW XFER: {}", e.getMessage(), e);
+					logger.error("ApiError in ADW XFER: {}", e.getMessage(), e);
 				}
 
 				return xfr;
@@ -109,7 +109,7 @@ public class FileUploadController {
 			@Override
 			public Boolean call() throws Exception {
 
-				User user = HttpClientHelper.getUserInfoFromHeader(httpRequest);
+				User user = HttpClientHelper.getUserInfoFromHeader(properties.get("AzureADTenantName"), httpRequest);
 				Boolean upload = false;
 				try {
 
@@ -119,7 +119,7 @@ public class FileUploadController {
 					logger.info("Upload to Azure complete: {}", upload);
 				}
 				catch(Exception e) {
-					logger.error("Error in Azure upload: {}", e.getMessage(), e);
+					logger.error("ApiError in Azure upload: {}", e.getMessage(), e);
 				}
 
 				return upload;
@@ -137,7 +137,7 @@ public class FileUploadController {
 			azureBool = azureFuture.get();
 			adwBool = adwFuture.get();
 		} catch (InterruptedException | ExecutionException e) {
-			logger.error("Error in running executionservice: {}", e.getMessage(), e);
+			logger.error("ApiError in running executionservice: {}", e.getMessage(), e);
 		}
 		es.shutdown();
 
@@ -148,7 +148,7 @@ public class FileUploadController {
 		} catch (InterruptedException e) {
 
 			Thread.currentThread().interrupt();
-			logger.error("Error in shuttingdown executionservice: {}", e.getMessage(), e);
+			logger.error("ApiError in shuttingdown executionservice: {}", e.getMessage(), e);
 			es.shutdownNow();
 		}
 

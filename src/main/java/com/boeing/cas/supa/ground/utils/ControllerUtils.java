@@ -16,6 +16,8 @@ public class ControllerUtils {
 
 			case BAD_REQUEST:
 				return HttpStatus.BAD_REQUEST;
+			case CONFLICT:
+				return HttpStatus.CONFLICT;
 			case UNAUTHORIZED:
 				return HttpStatus.UNAUTHORIZED;
 			case NOT_FOUND:

@@ -44,9 +44,12 @@ import com.boeing.cas.supa.ground.dao.UserAccountRegistrationDao;
 import com.boeing.cas.supa.ground.exceptions.ElevatedPermissionException;
 import com.boeing.cas.supa.ground.exceptions.MobileConfigurationException;
 import com.boeing.cas.supa.ground.exceptions.UserAccountRegistrationException;
+import com.boeing.cas.supa.ground.exceptions.UserAuthenticationException;
 import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
 import com.boeing.cas.supa.ground.helpers.HttpClientHelper;
-import com.boeing.cas.supa.ground.pojos.Error;
+import com.boeing.cas.supa.ground.pojos.AccessToken;
+import com.boeing.cas.supa.ground.pojos.ApiError;
+import com.boeing.cas.supa.ground.pojos.Credential;
 import com.boeing.cas.supa.ground.pojos.Group;
 import com.boeing.cas.supa.ground.pojos.NewUser;
 import com.boeing.cas.supa.ground.pojos.User;
@@ -96,11 +99,41 @@ public class AzureADClientService {
 	@Autowired
 	private UserAccountRegistrationDao userAccountRegister;
 
+	public Object getAccessTokenFromUserCredentials(String username, String password, String authority, String clientId) {
+
+        AuthenticationResult result = null;
+        ExecutorService service = null;
+
+        try {
+
+        	service = Executors.newFixedThreadPool(1);
+        	AuthenticationContext context = new AuthenticationContext(authority, false, service);
+            Future<AuthenticationResult> future = context.acquireToken(azureadApiUri, clientId, username, password, null);
+            result = future.get();
+        } catch (MalformedURLException murle) {
+        	logger.error("MalformedURLException: {}", murle.getMessage(), murle);
+		} catch (InterruptedException ie) {
+        	logger.error("InterruptedException: {}", ie.getMessage(), ie);
+        	Thread.currentThread().interrupt();
+		} catch (ExecutionException ee) {
+			Throwable cause = ee.getCause();
+			if (cause != null) {
+	        	logger.error("ExecutionException cause: {}", cause.getMessage(), ee);
+			}
+		} catch (AuthenticationException ae) {
+        	logger.error("AuthenticationException: {}", ae.getMessage(), ae);
+		} finally {
+            if (service != null) { service.shutdown(); }
+        }
+
+        return result;
+	}
+
 	public Object getAccessTokenFromUserCredentials(String username, String password) {
 
 		AuthenticationResult result = null;
-
 		ExecutorService service = null;
+
 		try {
 
 			service = Executors.newFixedThreadPool(1);
@@ -169,25 +202,61 @@ public class AzureADClientService {
 				accessToken = getAccessTokenForApplication();
 			} catch (MalformedURLException | ExecutionException | InterruptedException e) {
 				logger.error("Application failed to obtain access token for Azure AD Graph API: {}", e.getMessage(), e);
-				return new Error("PERMISSIONS_FAILURE", e.getMessage());
+				return new ApiError("PERMISSIONS_FAILURE", e.getMessage());
 			}
 		}
 		else if (permissionType == PermissionType.IMPERSONATION) {
 
 			// Get access token based on delegated permission via impersonation with a Local Administrator of the tenant.
 			Object authResult = getAccessTokenFromUserCredentials(this.appProps.get("UserManagementAdminUsername"), this.appProps.get("UserManagementAdminPassword"));
-			if (authResult instanceof AuthenticationResult) {
+			if (authResult != null && authResult instanceof AuthenticationResult) {
 				accessToken = ((AuthenticationResult) authResult).getAccessToken();
 			} else {
 				logger.error("Failed to obtain access tokens via impersonation");
-				return new Error("PERMISSIONS_FAILURE", "Failed to impersonate admin user");
+				return new ApiError("PERMISSIONS_FAILURE", "Failed to impersonate admin user");
 			}
 		}
 		else {
-			return new Error("PERMISSIONS_FAILURE", "Missing or invalid permissions context");
+			return new ApiError("PERMISSIONS_FAILURE", "Missing or invalid permissions context");
 		}
 
 		return accessToken;
+	}
+
+	public AccessToken loginUserForAccessToken(Credential cred) throws UserAuthenticationException {
+
+		Object ar = getAccessTokenFromUserCredentials(cred.getAzUsername(), cred.getAzPassword());
+		if (ar != null && ar instanceof AuthenticationResult) {
+
+			AuthenticationResult result = (AuthenticationResult) ar;
+			// Get Airline and list of roles from authentication result which encapsulates the access token and user object ID
+			List<Group> userGroupMembership = getUserGroupMembershipFromGraph(result.getUserInfo().getUniqueId(), result.getAccessToken());
+			//  -> Extract airline group
+			List<Group> userAirlineGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("airline-")).collect(Collectors.toList());
+			//  -> Extract list of roles
+			List<Group> userRoleGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("role-")).collect(Collectors.toList());
+			String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
+			List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
+			// Article ref: //https://stackoverflow.com/questions/31971673/how-can-i-get-a-pem-base-64-from-a-pfx-in-java
+			String getPfxEncodedAsBase64 = this.appProps.get("client2base64");
+			return new AccessToken(result, getPfxEncodedAsBase64, groupName, roleNames);
+		} else if (ar != null && ExceptionUtils.indexOfThrowable((Throwable) ar, AuthenticationException.class) >= 0) {
+			
+			ApiError apiError = AzureADClientHelper.getLoginErrorFromString(((AuthenticationException) ar).getMessage());
+			apiError.setFailureReason(RequestFailureReason.UNAUTHORIZED);
+			logger.warn("Failed authentication: {}", apiError.getErrorDescription());
+			throw new UserAuthenticationException(apiError);
+		} else if (ar != null && ExceptionUtils.indexOfType((Throwable) ar, Exception.class) >= 0) {
+
+			ApiError apiError = AzureADClientHelper.getLoginErrorFromString(((Exception) ar).getMessage());
+			apiError.setFailureReason(RequestFailureReason.UNAUTHORIZED);
+			logger.warn("Failed authentication: {}", apiError.getErrorDescription());
+			throw new UserAuthenticationException(apiError);
+		} else {
+
+			logger.warn("Failed authentication: Unable to determine authentication failure error");
+			throw new UserAuthenticationException();
+		}
 	}
 
 	public String getGroupIdByName(String groupName, String applicationToken) {
@@ -236,18 +305,18 @@ public class AzureADClientService {
 		// Get GroupId of requested user role
 		String roleGroupId = getGroupIdByName(newUserPayload.getRoleGroupName(), accessTokenInRequest);
 		if (roleGroupId == null) {
-			return new Error("CREATE_USER_FAILURE", "Missing or invalid user role");
+			return new ApiError("CREATE_USER_FAILURE", "Missing or invalid user role");
 		}
 
 		// Get access token based on delegated permission via impersonation with a Local Administrator of the tenant.
 		String accessToken = null;
 		Object authResult = getElevatedPermissionsAccessToken(PermissionType.IMPERSONATION);
-		if (authResult instanceof Error) {
+		if (authResult instanceof ApiError) {
 			return authResult;
 		}
 		// access token could not be obtained either via delegated permissions or application permissions.
 		else if (authResult == null) {
-			return new Error("CREATE_USER_FAILURE", "Failed to acquire permissions");
+			return new ApiError("CREATE_USER_FAILURE", "Failed to acquire permissions");
 		}
 		else {
 			accessToken = String.valueOf(authResult);
@@ -335,26 +404,26 @@ public class AzureADClientService {
 				JsonNode messageNode = errorNode.path("message");
 				JsonNode valueNode = messageNode.path("value");
 
-				resultObj = new Error("USER_CREATE_FAILED", valueNode.asText());
+				resultObj = new ApiError("USER_CREATE_FAILED", valueNode.asText());
 			}
 		} catch (UserAccountRegistrationException uare) {
 			logger.error("Failed to register new user account: {}", uare.getMessage(), uare);
-			resultObj = new Error("USER_CREATE_FAILED", "FDAGNDSVCERR0001");
+			resultObj = new ApiError("USER_CREATE_FAILED", "FDAGNDSVCERR0001");
 		} catch (JsonProcessingException jpe) {
 			logger.error("JsonProcessingException: {}", jpe.getMessage(), jpe);
-			resultObj = new Error("USER_CREATE_FAILED", "FDAGNDSVCERR0002");
+			resultObj = new ApiError("USER_CREATE_FAILED", "FDAGNDSVCERR0002");
 		} catch (MalformedURLException murle) {
 			logger.error("MalformedURLException: {}", murle.getMessage(), murle);
-			resultObj = new Error("USER_CREATE_FAILED", "FDAGNDSVCERR0004");
+			resultObj = new ApiError("USER_CREATE_FAILED", "FDAGNDSVCERR0004");
 		} catch (ProtocolException pe) {
 			logger.error("ProtocolException: {}", pe.getMessage(), pe);
-			resultObj = new Error("USER_CREATE_FAILED", "FDAGNDSVCERR0008");
+			resultObj = new ApiError("USER_CREATE_FAILED", "FDAGNDSVCERR0008");
 		} catch (IOException ioe) {
 			logger.error("IOException: {}", ioe.getMessage(), ioe);
-			resultObj = new Error("USER_CREATE_FAILED", "FDAGNDSVCERR0016");
+			resultObj = new ApiError("USER_CREATE_FAILED", "FDAGNDSVCERR0016");
 		} catch (MailException me) {
 			logger.error("Failed to send email: {}", me.getMessage(), me);
-			resultObj = new Error("USER_CREATE_FAILED", "FDAGNDSVCERR0032");
+			resultObj = new ApiError("USER_CREATE_FAILED", "FDAGNDSVCERR0032");
 		} catch (Exception e) {
 
 			Throwable nestedException = null;
@@ -364,10 +433,10 @@ public class AzureADClientService {
 			else {
 				logger.error("Failed to complete user creation flow: {}", e.getMessage(), e);
 			}
-			resultObj = new Error("USER_CREATE_FAILED", "FDAGNDSVCERR0064");
+			resultObj = new ApiError("USER_CREATE_FAILED", "FDAGNDSVCERR0064");
 		} finally {
 
-			if (resultObj instanceof Error) {
+			if (resultObj instanceof ApiError) {
 				logger.error("FDAGndSvcLog> {}", ControllerUtils.sanitizeString(progressLog.toString()));
 			}
 		}
@@ -390,19 +459,19 @@ public class AzureADClientService {
 			List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("airline-")).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
 			List<Group> roleAirlineFocalGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).peek(g -> logger.info("Role Group: {}", g)).collect(Collectors.toList());
 			if (airlineGroups.size() != 1 || roleAirlineFocalGroups.size() != 1) {
-				return new Error("USERS_LIST_FAILED", "User membership is ambiguous", RequestFailureReason.UNAUTHORIZED);
+				return new ApiError("USERS_LIST_FAILED", "User membership is ambiguous", RequestFailureReason.UNAUTHORIZED);
 			}
 			progressLog.append("\nRequesting user belongs to single airline group and airline focal role group");
 
 			// Get access token based on delegated permission via impersonation with a Local Administrator of the tenant.
 			String accessToken = null;
 			Object authResult = getElevatedPermissionsAccessToken(PermissionType.IMPERSONATION);
-			if (authResult instanceof Error) {
+			if (authResult instanceof ApiError) {
 				return authResult;
 			}
 			// access token could not be obtained either via delegated permissions or application permissions.
 			else if (authResult == null) {
-				return new Error("USERS_LIST_FAILED", "Failed to acquire permissions", RequestFailureReason.UNAUTHORIZED);
+				return new ApiError("USERS_LIST_FAILED", "Failed to acquire permissions", RequestFailureReason.UNAUTHORIZED);
 			}
 			else {
 				accessToken = String.valueOf(authResult);
@@ -450,19 +519,19 @@ public class AzureADClientService {
 			}
 		} catch (JsonProcessingException jpe) {
 			logger.error("JsonProcessingException: {}", jpe.getMessage(), jpe);
-			resultObj = new Error("USERS_LIST_FAILED", "FDAGNDSVCERR0002");
+			resultObj = new ApiError("USERS_LIST_FAILED", "FDAGNDSVCERR0002");
 		} catch (MalformedURLException murle) {
 			logger.error("MalformedURLException: {}", murle.getMessage(), murle);
-			resultObj = new Error("USERS_LIST_FAILED", "FDAGNDSVCERR0004");
+			resultObj = new ApiError("USERS_LIST_FAILED", "FDAGNDSVCERR0004");
 		} catch (ProtocolException pe) {
 			logger.error("ProtocolException: {}", pe.getMessage(), pe);
-			resultObj = new Error("USERS_LIST_FAILED", "FDAGNDSVCERR0008");
+			resultObj = new ApiError("USERS_LIST_FAILED", "FDAGNDSVCERR0008");
 		} catch (IOException ioe) {
 			logger.error("IOException: {}", ioe.getMessage(), ioe);
-			resultObj = new Error("USERS_LIST_FAILED", "FDAGNDSVCERR0016");
+			resultObj = new ApiError("USERS_LIST_FAILED", "FDAGNDSVCERR0016");
 		} finally {
 			
-			if (resultObj instanceof Error) {
+			if (resultObj instanceof ApiError) {
 				logger.error("FDAGndSvcLog> {}", ControllerUtils.sanitizeString(progressLog.toString()));
 			}
 		}
@@ -483,54 +552,56 @@ public class AzureADClientService {
 			
 			// Ensure requesting user is not trying to delete self!
 			if (airlineFocalCurrentUser.getObjectId().equals(userId)) {
-				return new Error("USER_DELETE_FAILED", "Airline focal user cannot delete self", RequestFailureReason.BAD_REQUEST);
+				return new ApiError("USER_DELETE_FAILED", "Airline focal user cannot delete self", RequestFailureReason.BAD_REQUEST);
 			}
 
 			// Validate user privileges by checking group membership. Must belong to Role-AirlineFocal group and a single Airline group.
 			List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("airline-")).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
 			List<Group> roleAirlineFocalGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).peek(g -> logger.info("Role Group: {}", g)).collect(Collectors.toList());
 			if (airlineGroups.size() != 1 || roleAirlineFocalGroups.size() != 1) {
-				return new Error("USER_DELETE_FAILED", "User membership is ambiguous", RequestFailureReason.UNAUTHORIZED);
+				return new ApiError("USER_DELETE_FAILED", "User membership is ambiguous", RequestFailureReason.UNAUTHORIZED);
 			}
 			progressLog.append("\nRequesting user belongs to single airline group and airline focal role group");
 
 			// Get access token based on delegated permission via impersonation with a Local Administrator of the tenant.
 			String accessToken = null;
 			Object authResult = getElevatedPermissionsAccessToken(PermissionType.IMPERSONATION);
-			if (authResult instanceof Error) {
+			if (authResult instanceof ApiError) {
 				return authResult;
 			}
 			// access token could not be obtained either via delegated permissions or application permissions.
 			else if (authResult == null) {
-				return new Error("USER_DELETE_FAILED", "Failed to acquire permissions", RequestFailureReason.UNAUTHORIZED);
+				return new ApiError("USER_DELETE_FAILED", "Failed to acquire permissions", RequestFailureReason.UNAUTHORIZED);
 			}
 			else {
 				accessToken = String.valueOf(authResult);
 				progressLog.append("\nObtained impersonation access token");
 			}
 
-			// Ensure another airline focal user is not being deleted, by getting group membership
+			// Airline focal can delete a user, only if an user matching the user object ID exists
 			User deleteUser = getUserInfoFromGraph(userId, accessToken);
 			if (deleteUser == null) {
-				return new Error("USER_DELETE_FAILED", "Not allowed to delete user if not in same airline group", RequestFailureReason.NOT_FOUND);
+				return new ApiError("USER_DELETE_FAILED", "No user found with matching identifier", RequestFailureReason.NOT_FOUND);
 			}
 			List<Group> deleteUserGroups = getUserGroupMembershipFromGraph(deleteUser.getObjectId(), accessToken);
 			if (deleteUserGroups != null) {
 
 				List<Group> deleteUserAirlineGroups = deleteUserGroups.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("airline-")).collect(Collectors.toList());
 				List<Group> deleteUserRoleGroups = deleteUserGroups.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("role-")).collect(Collectors.toList());
+				// Ensure airline focal is not deleting user in another airline, by getting airline group membership
 				if (deleteUserAirlineGroups.size() != 1 || !deleteUserAirlineGroups.get(0).getObjectId().equals(airlineGroups.get(0).getObjectId())) {
-					return new Error("USER_DELETE_FAILED", "Not allowed to delete user if not in same airline group", RequestFailureReason.UNAUTHORIZED);
+					return new ApiError("USER_DELETE_FAILED", "Not allowed to delete user if not in same airline group", RequestFailureReason.UNAUTHORIZED);
 				}
+				// Ensure airline focal is not deleting another airline focal user is not being deleted, by getting role group membership
 				else if (deleteUserRoleGroups.stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).collect(Collectors.toList()).size() > 0) {
-					return new Error("USER_DELETE_FAILED", "Not allowed to delete another airline focal user", RequestFailureReason.UNAUTHORIZED);
+					return new ApiError("USER_DELETE_FAILED", "Not allowed to delete another airline focal user", RequestFailureReason.UNAUTHORIZED);
 				}
 				else {
 					// continue
 				}
 			}
 			else {
-				return new Error("USER_DELETE_FAILED", "Not allowed to delete user if not in same airline group", RequestFailureReason.UNAUTHORIZED);
+				return new ApiError("USER_DELETE_FAILED", "Not allowed to delete user if not in same airline group", RequestFailureReason.UNAUTHORIZED);
 			}
 			progressLog.append("\nUser to be deleted is in same airline group and is not another airline focal");
 
@@ -565,22 +636,22 @@ public class AzureADClientService {
 			progressLog.append("\nDeleted corresponding data in user account registration database");
 		} catch (UserAccountRegistrationException uare) {
 			logger.error("Failed to register new user account: {}", uare.getMessage());
-			resultObj = new Error("USER_DELETE_FAILED", "FDAGNDSVCERR0001");
+			resultObj = new ApiError("USER_DELETE_FAILED", "FDAGNDSVCERR0001");
 		} catch (JsonProcessingException jpe) {
 			logger.error("JsonProcessingException: {}", jpe.getMessage(), jpe);
-			resultObj = new Error("USER_DELETE_FAILED", "FDAGNDSVCERR0002");
+			resultObj = new ApiError("USER_DELETE_FAILED", "FDAGNDSVCERR0002");
 		} catch (MalformedURLException murle) {
 			logger.error("MalformedURLException: {}", murle.getMessage(), murle);
-			resultObj = new Error("USER_DELETE_FAILED", "FDAGNDSVCERR0004");
+			resultObj = new ApiError("USER_DELETE_FAILED", "FDAGNDSVCERR0004");
 		} catch (ProtocolException pe) {
 			logger.error("ProtocolException: {}", pe.getMessage(), pe);
-			resultObj = new Error("USER_DELETE_FAILED", "FDAGNDSVCERR0008");
+			resultObj = new ApiError("USER_DELETE_FAILED", "FDAGNDSVCERR0008");
 		} catch (IOException ioe) {
 			logger.error("IOException: {}", ioe.getMessage(), ioe);
-			resultObj = new Error("USER_DELETE_FAILED", "FDAGNDSVCERR0016");
+			resultObj = new ApiError("USER_DELETE_FAILED", "FDAGNDSVCERR0016");
 		} finally {
 			
-			if (resultObj instanceof Error) {
+			if (resultObj instanceof ApiError) {
 				logger.error("FDAGndSvcLog> {}", ControllerUtils.sanitizeString(progressLog.toString()));
 			}
 		}
@@ -588,7 +659,7 @@ public class AzureADClientService {
 		return resultObj;
 	}
 
-	public Object enableUserAndSetPassword(UserAccountActivation userAccountActivation) {
+	public Object enableUserAndSetPassword(UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {
 
 		Object resultObj = null;
 		StringBuilder progressLog = new StringBuilder("Activate user -");
@@ -600,7 +671,7 @@ public class AzureADClientService {
 			boolean isUserNotActivated = userAccountRegister.isUserAccountNotActivated(userAccountActivation.getRegistrationToken(), userAccountActivation.getUsername(), Constants.UserAccountState.PENDING_USER_ACTIVATION.toString());
 			if (!isUserNotActivated) {
 				logger.warn("User registration record/token not found");
-				throw new UserAccountRegistrationException("Invalid or expired user account activation token");
+				throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Invalid or expired user account activation token", RequestFailureReason.NOT_FOUND));
 			}
 			progressLog.append("\nUser account registration record/token found");
 
@@ -608,8 +679,8 @@ public class AzureADClientService {
 			// Get access token based on delegated permission via impersonation with a Local Administrator of the tenant.
 			String accessToken = null;
 			Object elevatedAuthResult = getElevatedPermissionsAccessToken(PermissionType.IMPERSONATION);
-			if (elevatedAuthResult instanceof Error) {
-				throw new ElevatedPermissionException(((Error) elevatedAuthResult).getErrorDescription());
+			if (elevatedAuthResult instanceof ApiError) {
+				throw new ElevatedPermissionException(((ApiError) elevatedAuthResult).getErrorDescription());
 			}
 			// access token could not be obtained either via delegated permissions or application permissions.
 			else if (elevatedAuthResult == null) {
@@ -644,7 +715,7 @@ public class AzureADClientService {
 				userObj = mapper.readValue(responseStr, User.class);
 				
 				if (Boolean.parseBoolean(userObj.getAccountEnabled())) {
-					throw new UserAccountRegistrationException("User account is already activated");
+					throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "User account is already activated", RequestFailureReason.CONFLICT));
 				}
 				progressLog.append("\nRetrieved user object from Azure AD Graph");
 			}
@@ -690,7 +761,7 @@ public class AzureADClientService {
 				JsonNode messageNode = errorNode.path("message");
 				JsonNode valueNode = messageNode.path("value");
 				logger.error("Failed to enable user and set password: {}", valueNode.asText());
-				throw new UserAccountRegistrationException("Failed to enable user and set password");
+				throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Failed to enable user and set password", RequestFailureReason.INTERNAL_SERVER_ERROR));
 			}
 
 			// Update UserAccountRegistrations database table to invalidate token (by updating account state)
@@ -699,17 +770,25 @@ public class AzureADClientService {
 
 			Object ar = getAccessTokenFromUserCredentials(userObj.getUserPrincipalName(), userAccountActivation.getPassword());
 			if (ar == null) {
-				throw new UserAccountRegistrationException("Failed to obtain OAuth2 tokens with user credentials");
+				throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Failed to obtain auth token for user credentials", RequestFailureReason.UNAUTHORIZED));
 			}
 			
 			if (ar instanceof AuthenticationResult) {
 
 				AuthenticationResult authResult = (AuthenticationResult) ar;
+				// Get Airline and list of roles from authentication result which encapsulates the access token and user object ID
+				List<Group> userGroupMembership = getUserGroupMembershipFromGraph(authResult.getUserInfo().getUniqueId(), authResult.getAccessToken());
+				//  -> Extract airline group
+				List<Group> userAirlineGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("airline-")).collect(Collectors.toList());
+				//  -> Extract list of roles
+				List<Group> userRoleGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("role-")).collect(Collectors.toList());
+				String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
+				List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
 				String getPfxEncodedAsBase64 = this.appProps.get("client2base64");
-				String getPlistFromBlob = getPlistFromBlob("preferences", "ADW.plist");
+				String getPlistFromBlob = getPlistFromBlob("preferences", "preferences.plist");
 				String mobileConfigFromBlob = getPlistFromBlob("config", "supaConfigEFO.mobileconfig");
 				if (getPlistFromBlob != null && mobileConfigFromBlob != null) {
-					UserRegistration userReg = new UserRegistration(authResult, getPfxEncodedAsBase64, getPlistFromBlob, mobileConfigFromBlob);
+					UserRegistration userReg = new UserRegistration(authResult, getPfxEncodedAsBase64, groupName, roleNames, getPlistFromBlob, mobileConfigFromBlob);
 					resultObj = userReg;
 				}
 				else {
@@ -721,37 +800,34 @@ public class AzureADClientService {
 				//resultObj = AzureADClientHelper.getLoginErrorFromString(((AuthenticationException) ar).getMessage());
 				throw new AuthenticationException(((AuthenticationException) ar).getMessage());
 			}
-		} catch (UserAccountRegistrationException uare) {
-			logger.error("Failed to activate user account: {}", uare.getMessage());
-			resultObj = new Error("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0001");
 		} catch (AuthenticationException ae) {
 			logger.error("Failed to activate user account: {}", ae.getMessage());
-			resultObj = new Error("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0002");
+			resultObj = new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0002");
 		} catch (MobileConfigurationException mce) {
 			logger.error("Failed to activate user account: {}", mce.getMessage());
-			resultObj = new Error("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0001");
+			resultObj = new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0001");
 		} catch (ElevatedPermissionException epe) {
 			logger.error("Failed to activate user account: {}", epe.getMessage());
-			resultObj = new Error("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0004");
+			resultObj = new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0004");
 		} catch (MalformedURLException murle) {
 			logger.error("MalformedURLException: {}", murle.getMessage(), murle);
-			resultObj = new Error("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0008");
+			resultObj = new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0008");
 		} catch (ProtocolException pe) {
 			logger.error("ProtocolException: {}", pe.getMessage(), pe);
-			resultObj = new Error("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0016");
+			resultObj = new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0016");
 		} catch (IOException ioe) {
 			logger.error("IOException: {}", ioe.getMessage(), ioe);
-			resultObj = new Error("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0032");
+			resultObj = new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0032");
 		} finally {
 			
-			if (resultObj instanceof Error) {
+			if (resultObj instanceof ApiError) {
 				logger.error("FDAGndSvcLog> {}", ControllerUtils.sanitizeString(progressLog.toString()));
 			}
 		}
 
 		return resultObj;
 	}
-	
+
 	public boolean addUserToGroup(String groupObjectId, String userObjectId, String applicationToken) {
 
 		boolean userAddedToGroup = false;
@@ -982,9 +1058,9 @@ public class AzureADClientService {
         return base64;
     }
 
-	public Error getLoginErrorFromString(String responseString) {
+	public ApiError getLoginErrorFromString(String responseString) {
 
-		Error errorObj = null;
+		ApiError errorObj = null;
 
 		try {
 
@@ -994,10 +1070,10 @@ public class AzureADClientService {
 			logger.error("error response: {}", responseString);
 			String errorDesc = map.get("error_description");
 			String errorString = errorDesc.split("\\r?\\n")[0];
-			errorObj = new Error(map.get("error"), errorString);
+			errorObj = new ApiError(map.get("error"), errorString);
 		} catch (IOException ioe) {
 			logger.error("Failed to extract login error from string: {}", ioe.getMessage(), ioe);
-			errorObj = new Error("Authentication failed", ioe.getMessage());
+			errorObj = new ApiError("Authentication failed", ioe.getMessage());
 		}
 
 		return errorObj;

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import com.boeing.cas.supa.ground.pojos.Error;
+import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.Group;
 import com.boeing.cas.supa.ground.pojos.NewUser;
 import com.boeing.cas.supa.ground.pojos.User;
@@ -31,7 +31,7 @@ public class AirlineFocalAdminController {
 	private final Logger logger = LoggerFactory.getLogger(AirlineFocalAdminController.class);
 
 	private static final List<String> ALLOWED_USER_ROLES = Arrays.asList(new String[] { "role-airlinepilot", "role-airlinemaintenance" });
-	
+
 	@Autowired
 	private AzureADClientService aadClient;
 
@@ -48,12 +48,12 @@ public class AirlineFocalAdminController {
 		List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("airline-")).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
 		List<Group> roleGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).peek(g -> logger.info("Role Group: {}", g)).collect(Collectors.toList());
 		if (airlineGroups.size() != 1 || roleGroups.size() != 1) {
-			return new ResponseEntity<>(new Error("MISSING_OR_INVALID_MEMBERSHIP", "User membership is ambiguous"), HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(new ApiError("MISSING_OR_INVALID_MEMBERSHIP", "User membership is ambiguous"), HttpStatus.UNAUTHORIZED);
 		}
 
 		// Validate role-based group requested for new user - must be either role-airlinepilot or role-airlinemaintenance
 		if (!ALLOWED_USER_ROLES.contains(newUserPayload.getRoleGroupName())) {
-			return new ResponseEntity<>(new Error("CREATE_USER_FAILURE", "Missing or invalid user role requested"), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(new ApiError("CREATE_USER_FAILURE", "Missing or invalid user role requested"), HttpStatus.BAD_REQUEST);
 		}
 
 		// Create user with the received payload/parameters defining the new account.
@@ -62,7 +62,7 @@ public class AirlineFocalAdminController {
 				accessTokenInRequest,
 				airlineGroups.get(0),
 				newUserPayload.getRoleGroupName());
-		if (result instanceof Error) {
+		if (result instanceof ApiError) {
 			return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
 		}
 
@@ -78,8 +78,8 @@ public class AirlineFocalAdminController {
 		// Create user with the received payload/parameters defining the new account.
 		Object result = aadClient.deleteUser(userId, accessTokenInRequest);
 
-		if (result instanceof Error) {
-			return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((Error) result).getFailureReason()));
+		if (result instanceof ApiError) {
+			return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
 		}
 
 		return new ResponseEntity<>(result, HttpStatus.NO_CONTENT);
@@ -94,8 +94,8 @@ public class AirlineFocalAdminController {
 		// Create user with the received payload/parameters defining the new account.
 		Object result = aadClient.getUsers(accessTokenInRequest);
 
-		if (result instanceof Error) {
-			return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((Error) result).getFailureReason()));
+		if (result instanceof ApiError) {
+			return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
 		}
 
 		return new ResponseEntity<>(result, HttpStatus.OK);
