@@ -10,15 +10,20 @@ import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.boeing.cas.supa.ground.exceptions.FlightRecordException;
 import com.boeing.cas.supa.ground.pojos.AzureStorageMessage;
 import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.pojos.UserCondensed;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.microsoft.azure.storage.AccessCondition;
 import com.microsoft.azure.storage.CloudStorageAccount;
+import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.blob.BlobRequestOptions;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
@@ -92,6 +97,59 @@ public class AzureStorageUtil {
         }
         catch (Exception e) {
         	logger.error("Exception encountered: {}", e.getMessage(), e);
+        }
+
+		return rval;
+	}
+
+	public boolean uploadFlightRecord(String containerName, String fileName, String sourceFilePath, User user) throws FlightRecordException {
+
+		boolean rval = false;
+
+		try {
+
+			CloudBlobClient serviceClient = this.storageAccount.createCloudBlobClient();
+            // NOTE: Container name must be lower case.
+            CloudBlobContainer container = serviceClient.getContainerReference(containerName);
+            container.createIfNotExists();
+            // Upload the file as a Blob.
+            CloudBlockBlob blob = container.getBlockBlobReference(fileName);
+            // NOTE: If the Blob exists currently we are overriding the existing blob.
+			// possibly never be an issue since most file names are uniquely identifiable.
+            File sourceFile = new File(sourceFilePath);
+            try (InputStream sourceStream = new FileInputStream(sourceFile)) {
+                AccessCondition accessCondition = AccessCondition.generateIfNotExistsCondition();
+                BlobRequestOptions options = null;
+                OperationContext context = new OperationContext();
+                blob.upload(sourceStream, sourceFile.length(), accessCondition, options, context);
+            }
+            // Once the Blob is uploaded, add message to an Azure storage queue.
+            CloudQueueClient queueClient = this.storageAccount.createCloudQueueClient();
+            CloudQueue queue = queueClient.getQueueReference("csvqueue");
+            AzureStorageMessage msg = new AzureStorageMessage();
+            msg.setContainerName(containerName);
+            msg.setFileName(fileName);
+            msg.setUploadedBy(new UserCondensed(user.getSurname(), user.getGivenName(), user.getDisplayName(), user.getOtherMails(), user.getGroups()));
+            msg.setUploadedOn(System.currentTimeMillis() / 1_000L);
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonMessage = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(msg);
+            // Create the queue if it does not exist.
+            queue.createIfNotExists();
+            CloudQueueMessage message = new CloudQueueMessage(jsonMessage);
+            queue.addMessage(message);
+            rval = true;
+        }
+        catch (FileNotFoundException fnfe) {
+        	logger.error("FileNotFoundException encountered: {}", fnfe.getMessage(), fnfe);
+        	throw new FlightRecordException(fnfe.getMessage());
+        }
+        catch (StorageException se) {
+        	logger.error("StorageException encountered: {}", se.getMessage(), se);
+        	throw new FlightRecordException(se.getMessage());
+        }
+        catch (Exception e) {
+        	logger.error("Exception encountered: {}", e.getMessage(), e);
+        	throw new FlightRecordException(ExceptionUtils.getRootCause(e).getMessage());
         }
 
 		return rval;

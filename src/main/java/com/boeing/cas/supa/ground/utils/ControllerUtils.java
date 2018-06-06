@@ -1,7 +1,15 @@
 package com.boeing.cas.supa.ground.utils;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.HtmlUtils;
 
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
@@ -37,6 +45,25 @@ public class ControllerUtils {
 			// Handle the problem
 		}
 		return data;
+	}
+
+	public static String saveUploadedFiles(List<MultipartFile> files) throws IOException {
+
+		Path tempDirPath = Files.createTempDirectory(StringUtils.EMPTY);
+		String uploadFolder = tempDirPath.toString();
+
+		for (MultipartFile file : files) {
+
+			if (file.isEmpty()) {
+				continue; // skip to next iteration
+			}
+
+			byte[] bytes = file.getBytes();
+			Path path = Paths.get(uploadFolder + File.separator + file.getOriginalFilename());
+			Files.write(path, bytes);
+		}
+
+		return uploadFolder;
 	}
 
 	public static String sanitizeString(String inputStr) {

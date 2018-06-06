@@ -1,0 +1,17 @@
+package com.boeing.cas.supa.ground.dao;
+
+import java.util.List;
+
+import com.boeing.cas.supa.ground.exceptions.FlightRecordException;
+import com.boeing.cas.supa.ground.pojos.FlightRecord;
+
+public interface FlightRecordDao {
+
+	public void insertFlightData(FlightRecord flightRecord) throws FlightRecordException;
+
+	public List<FlightRecord> getAllFlightRecords(String airline) throws FlightRecordException;
+
+	public FlightRecord getFlightRecord(String flightRecordName) throws FlightRecordException;
+
+	public void removeFlightRecord(String flightRecordName) throws FlightRecordException;
+}

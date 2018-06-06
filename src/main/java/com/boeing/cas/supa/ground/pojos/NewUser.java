@@ -91,12 +91,16 @@ public class NewUser {
 	@Override
 	public String toString() {
 
-		return new StringBuilder("NewUser [").append("userPrincipalName=").append(this.userPrincipalName).append(',')
-				.append("accountEnabled=").append(this.accountEnabled).append(',').append("givenName=")
-				.append(this.givenName).append(',').append("surname=").append(this.surname).append(',')
-				.append("displayName=").append(this.displayName).append(',').append("password=").append(this.password)
-				.append(',').append("forceChangePasswordNextLogin=").append(this.forceChangePasswordNextLogin)
-				.append(',').append("roleGroupName=").append(this.roleGroupName).append(',').append("otherMails=")
-				.append(StringUtils.join(this.otherMails, ",")).append(']').toString();
+		return new StringBuilder('[').append(this.getClass().getSimpleName()).append(']').append(':')
+				.append("userPrincipalName=").append(this.userPrincipalName).append(',')
+				.append("accountEnabled=").append(this.accountEnabled).append(',')
+				.append("givenName=").append(this.givenName).append(',')
+				.append("surname=").append(this.surname).append(',')
+				.append("displayName=").append(this.displayName).append(',')
+				.append("password=").append(this.password).append(',')
+				.append("forceChangePasswordNextLogin=").append(this.forceChangePasswordNextLogin).append(',')
+				.append("roleGroupName=").append(this.roleGroupName).append(',')
+				.append("otherMails=").append(StringUtils.join(this.otherMails, ",")).
+			toString();
 	}
 }

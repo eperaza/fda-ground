@@ -72,14 +72,14 @@ public class UserAccountRegistration {
 
 	@Override
 	public String toString() {
-		
+
 		return new StringBuilder('[').append(this.getClass().getSimpleName()).append(']').append(':')
-				.append(this.registrationToken).append(',')
-				.append(this.userObjectId).append(',')
-				.append(this.userPrincipalName).append(',')
-				.append(this.airline).append(',')
-				.append(this.workEmail).append(',')
-				.append(this.accountState)
+				.append("registrationToken=").append(this.registrationToken).append(',')
+				.append("userObjectId=").append(this.userObjectId).append(',')
+				.append("userPrincipalName=").append(this.userPrincipalName).append(',')
+				.append("airline=").append(this.airline).append(',')
+				.append("workEmail=").append(this.workEmail).append(',')
+				.append("accountState=").append(this.accountState)
 				.append(']')
 			.toString();
 	}

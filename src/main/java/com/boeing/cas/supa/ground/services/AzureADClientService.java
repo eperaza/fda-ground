@@ -232,9 +232,9 @@ public class AzureADClientService {
 			// Get Airline and list of roles from authentication result which encapsulates the access token and user object ID
 			List<Group> userGroupMembership = getUserGroupMembershipFromGraph(result.getUserInfo().getUniqueId(), result.getAccessToken());
 			//  -> Extract airline group
-			List<Group> userAirlineGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("airline-")).collect(Collectors.toList());
+			List<Group> userAirlineGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
 			//  -> Extract list of roles
-			List<Group> userRoleGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("role-")).collect(Collectors.toList());
+			List<Group> userRoleGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
 			String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
 			List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
 			// Article ref: //https://stackoverflow.com/questions/31971673/how-can-i-get-a-pem-base-64-from-a-pfx-in-java
@@ -456,7 +456,7 @@ public class AzureADClientService {
 			User airlineFocalCurrentUser = getUserInfoFromJwtAccessToken(accessTokenInRequest);
 
 			// Validate user privileges by checking group membership. Must belong to Role-AirlineFocal group and a single Airline group.
-			List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("airline-")).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
+			List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
 			List<Group> roleAirlineFocalGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).peek(g -> logger.info("Role Group: {}", g)).collect(Collectors.toList());
 			if (airlineGroups.size() != 1 || roleAirlineFocalGroups.size() != 1) {
 				return new ApiError("USERS_LIST_FAILED", "User membership is ambiguous", RequestFailureReason.UNAUTHORIZED);
@@ -556,7 +556,7 @@ public class AzureADClientService {
 			}
 
 			// Validate user privileges by checking group membership. Must belong to Role-AirlineFocal group and a single Airline group.
-			List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("airline-")).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
+			List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
 			List<Group> roleAirlineFocalGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).peek(g -> logger.info("Role Group: {}", g)).collect(Collectors.toList());
 			if (airlineGroups.size() != 1 || roleAirlineFocalGroups.size() != 1) {
 				return new ApiError("USER_DELETE_FAILED", "User membership is ambiguous", RequestFailureReason.UNAUTHORIZED);
@@ -586,8 +586,8 @@ public class AzureADClientService {
 			List<Group> deleteUserGroups = getUserGroupMembershipFromGraph(deleteUser.getObjectId(), accessToken);
 			if (deleteUserGroups != null) {
 
-				List<Group> deleteUserAirlineGroups = deleteUserGroups.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("airline-")).collect(Collectors.toList());
-				List<Group> deleteUserRoleGroups = deleteUserGroups.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("role-")).collect(Collectors.toList());
+				List<Group> deleteUserAirlineGroups = deleteUserGroups.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+				List<Group> deleteUserRoleGroups = deleteUserGroups.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
 				// Ensure airline focal is not deleting user in another airline, by getting airline group membership
 				if (deleteUserAirlineGroups.size() != 1 || !deleteUserAirlineGroups.get(0).getObjectId().equals(airlineGroups.get(0).getObjectId())) {
 					return new ApiError("USER_DELETE_FAILED", "Not allowed to delete user if not in same airline group", RequestFailureReason.UNAUTHORIZED);
@@ -779,9 +779,9 @@ public class AzureADClientService {
 				// Get Airline and list of roles from authentication result which encapsulates the access token and user object ID
 				List<Group> userGroupMembership = getUserGroupMembershipFromGraph(authResult.getUserInfo().getUniqueId(), authResult.getAccessToken());
 				//  -> Extract airline group
-				List<Group> userAirlineGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("airline-")).collect(Collectors.toList());
+				List<Group> userAirlineGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
 				//  -> Extract list of roles
-				List<Group> userRoleGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith("role-")).collect(Collectors.toList());
+				List<Group> userRoleGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
 				String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
 				List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
 				String getPfxEncodedAsBase64 = this.appProps.get("client2base64");

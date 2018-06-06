@@ -25,13 +25,12 @@ public class Group extends DirectoryObject {
 
     public String toString() {
 
-    	return new StringBuilder("Group [")
+		return new StringBuilder('[').append(this.getClass().getSimpleName()).append(']').append(':')
         		.append("objectId=").append(this.objectId).append(',')
         		.append("objectType=").append(this.objectType).append(',')
         		.append("displayName=").append(this.displayName).append(',')
         		.append("description=").append(this.description).append(',')
         		.append("mail=").append(this.mail)
-        		.append(']')
         		.toString();
     }
 }

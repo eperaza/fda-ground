@@ -16,9 +16,9 @@ import com.boeing.cas.supa.ground.pojos.UserAccountRegistration;
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 
 @Repository
-public class UserAccountRegistratioDaoImpl implements UserAccountRegistrationDao {
+public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDao {
 
-	private final Logger logger = LoggerFactory.getLogger(UserAccountRegistratioDaoImpl.class);
+	private final Logger logger = LoggerFactory.getLogger(UserAccountRegistrationDaoImpl.class);
 
 	private static final String USER_ACCOUNT_REGISTRATION_SQL = "INSERT INTO user_account_registrations (registration_token, user_object_id, user_principal_name, airline, work_email, account_state) VALUES (:registration_token, :user_object_id, :user_principal_name, :airline, :work_email, :account_state)";
 	private static final String USER_ACCOUNT_ACTIVATION_PRECHECK_SQL = "SELECT COUNT(1) FROM user_account_registrations WHERE registration_token = :registration_token AND user_principal_name = :user_principal_name AND account_state = :account_state";

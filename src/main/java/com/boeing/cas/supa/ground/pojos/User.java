@@ -269,7 +269,7 @@ public class User extends DirectoryObject {
     @Override
 	public String toString() {
 
-		return new StringBuilder("User [")
+		return new StringBuilder('[').append(this.getClass().getSimpleName()).append(']').append(':')
 				.append("objectId=").append(this.objectId).append(',')
 				.append("objectType=").append(this.objectType).append(',')
 				.append("displayName=").append(this.displayName).append(',')
@@ -297,7 +297,6 @@ public class User extends DirectoryObject {
 				.append("usageLocation=").append(this.usageLocation).append(',')
 				.append("userPrincipalName=").append(this.userPrincipalName).append(',')
 				.append("otherMails=").append(StringUtils.join(this.otherMails, ","))
-				.append(']')
 			.toString();
 	}
 }

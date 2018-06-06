@@ -35,9 +35,9 @@ import com.boeing.cas.supa.ground.pojos.UploadMessage;
 import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.utils.ADWTransferUtil;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
+import com.boeing.cas.supa.ground.utils.Constants;
 
 @RestController
-@RequestMapping("/uploadFile")
 public class FileUploadController {
 
 	private final Logger logger = LoggerFactory.getLogger(FileUploadController.class);
@@ -45,17 +45,14 @@ public class FileUploadController {
 	@Autowired
 	private Map<String, String> appProps;
 
-	private static final String SUCCESS_MESSAGE = "Success";
-	private static final String FAILURE_MESSAGE = "Fail";
-
-	@RequestMapping(method = { RequestMethod.POST })
+	@RequestMapping(path="/uploadFile", method = { RequestMethod.POST })
 	public ResponseEntity<Object> uploadFile(final @RequestParam("file") MultipartFile uploadfile, final HttpServletRequest httpRequest) {
 
 		this.logger.info("Upload File method invoked -  Single file upload!");
 
         if (uploadfile.isEmpty()) {
 
-        	UploadMessage fileUploadMessage = new UploadMessage(FAILURE_MESSAGE, FAILURE_MESSAGE, "Empty File");
+        	UploadMessage fileUploadMessage = new UploadMessage(Constants.FAILURE, Constants.FAILURE, "Empty File");
 			return new ResponseEntity<>(fileUploadMessage, HttpStatus.BAD_REQUEST);
 		}
 
@@ -66,7 +63,7 @@ public class FileUploadController {
         		throw new IOException("Failed to establish upload folder");
         	}
 		} catch (IOException e) {
-			UploadMessage fileUploadMessage = new UploadMessage(FAILURE_MESSAGE, FAILURE_MESSAGE, String.format("I/O Exception: %s", e.getMessage()));
+			UploadMessage fileUploadMessage = new UploadMessage(Constants.FAILURE, Constants.FAILURE, String.format("I/O Exception: %s", e.getMessage()));
 			return new ResponseEntity<>(fileUploadMessage, HttpStatus.BAD_REQUEST);
 		}
 
@@ -152,7 +149,7 @@ public class FileUploadController {
 			es.shutdownNow();
 		}
 
-		UploadMessage fileUploadMessage = new UploadMessage(adwBool ? SUCCESS_MESSAGE : FAILURE_MESSAGE , azureBool ? SUCCESS_MESSAGE : FAILURE_MESSAGE, "Uploaded File: " +uploadfile.getOriginalFilename());
+		UploadMessage fileUploadMessage = new UploadMessage(adwBool ? Constants.SUCCESS : Constants.FAILURE, azureBool ? Constants.SUCCESS : Constants.FAILURE, "Uploaded File: " +uploadfile.getOriginalFilename());
 		return new ResponseEntity<>(fileUploadMessage, HttpStatus.OK);
 	}
 
