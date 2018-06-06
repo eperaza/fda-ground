@@ -1,5 +1,7 @@
 package com.boeing.cas.supa.ground.pojos;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class Credential {
 
 	protected String azUsername;
@@ -29,6 +31,6 @@ public class Credential {
 	}
 
 	public boolean isValid() {
-		return this.getAzUsername() != null && this.getAzPassword() != null;
+		return StringUtils.isNotBlank(this.getAzUsername()) && StringUtils.isNotBlank(this.getAzPassword());
 	}
 }

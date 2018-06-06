@@ -68,7 +68,7 @@ public class ControllerUtils {
 
 	public static String sanitizeString(String inputStr) {
 
-		return !StringUtils.isEmpty(inputStr) ? HtmlUtils.htmlEscape(inputStr.toLowerCase().replaceAll("[\\r\\n]", "_"))
+		return !StringUtils.isEmpty(inputStr) ? HtmlUtils.htmlEscape(inputStr.replaceAll("[\\r\\n]", "_"))
 				: "";
 	}
 }

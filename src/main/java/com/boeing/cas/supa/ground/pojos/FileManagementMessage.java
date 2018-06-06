@@ -1,17 +1,17 @@
 package com.boeing.cas.supa.ground.pojos;
 
-public class UploadFlightRecordMessage {
+public class FileManagementMessage {
 
 	private boolean uploaded;
 	private String flightRecordName;
 	private boolean deletedOnAid;
 	private String message;
 
-	public UploadFlightRecordMessage(String flightRecordName) {
+	public FileManagementMessage(String flightRecordName) {
 		this.flightRecordName = flightRecordName;
 	}
 
-	public UploadFlightRecordMessage(boolean uploaded, String flightRecordName, boolean deletedOnAid, String message) {
+	public FileManagementMessage(boolean uploaded, String flightRecordName, boolean deletedOnAid, String message) {
 
 		this.uploaded = uploaded;
 		this.flightRecordName = flightRecordName;

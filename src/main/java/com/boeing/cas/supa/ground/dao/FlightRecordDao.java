@@ -13,5 +13,5 @@ public interface FlightRecordDao {
 
 	public FlightRecord getFlightRecord(String flightRecordName) throws FlightRecordException;
 
-	public void removeFlightRecord(String flightRecordName) throws FlightRecordException;
+	public void updateFlightRecordOnAidStatus(String flightRecordName) throws FlightRecordException;
 }

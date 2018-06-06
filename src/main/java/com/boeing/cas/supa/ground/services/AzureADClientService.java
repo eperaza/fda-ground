@@ -153,6 +153,9 @@ public class AzureADClientService {
 			}
 		} catch (AuthenticationException ae) {
 			logger.error("AuthenticationException: {}", ae.getMessage(), ae);
+		} catch (Exception e) {
+			logger.error("Unrecognized Exception: {}", e.getMessage(), e);
+			throw e;
 		} finally {
 			if (service != null) {
 				service.shutdown();

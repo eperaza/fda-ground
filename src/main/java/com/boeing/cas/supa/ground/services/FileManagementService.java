@@ -31,18 +31,19 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.boeing.cas.supa.ground.dao.FlightRecordDao;
 import com.boeing.cas.supa.ground.exceptions.FlightRecordException;
+import com.boeing.cas.supa.ground.pojos.FileManagementMessage;
 import com.boeing.cas.supa.ground.pojos.FlightRecord;
 import com.boeing.cas.supa.ground.pojos.Group;
-import com.boeing.cas.supa.ground.pojos.UploadFlightRecordMessage;
 import com.boeing.cas.supa.ground.pojos.User;
+import com.boeing.cas.supa.ground.utils.ADWTransferUtil;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
 
 @Service
-public class FileUploadService {
+public class FileManagementService {
 
-	private final Logger logger = LoggerFactory.getLogger(FileUploadService.class);
+	private final Logger logger = LoggerFactory.getLogger(FileManagementService.class);
 
 	@Autowired
 	private Map<String, String> appProps;
@@ -53,9 +54,9 @@ public class FileUploadService {
 	@Autowired
 	private FlightRecordDao flightRecordDao;
 
-	public UploadFlightRecordMessage uploadFlightRecord(final MultipartFile uploadFlightRecord, String authToken) throws FlightRecordException {
+	public FileManagementMessage uploadFlightRecord(final MultipartFile uploadFlightRecord, String authToken) throws FlightRecordException {
 
-		final UploadFlightRecordMessage flightRecordUploadResponse = new UploadFlightRecordMessage(uploadFlightRecord.getOriginalFilename());
+		final FileManagementMessage flightRecordUploadResponse = new FileManagementMessage(uploadFlightRecord.getOriginalFilename());
 
 		// Query database for an uploaded flight record matching the flight record name.
         String flightRecordName = uploadFlightRecord.getOriginalFilename();
@@ -136,36 +137,35 @@ public class FileUploadService {
 		List<Future<Boolean>> futures = new ArrayList<>();
 		final Map<String, String> properties = this.appProps;
 
-//		// ------- Adding file to ADW -------
-//		logger.debug("Adding file to ADW");
-//		Future<Boolean> adwFuture = es.submit(new Callable<Boolean>() {
-//
-//			@Override
-//			public Boolean call() throws Exception {
-//
-//				Boolean xfr = false;
-//				try {
-//
-//					logger.info("Starting ADW Transfer");
-//					String host = properties.get("adwHost");
-//					String usr = properties.get("adwUser");
-//					String pwd = properties.get("adwPwd");
-//					String path = properties.get("adwPath");
-//					ADWTransferUtil adw = new ADWTransferUtil(host, usr, pwd, path);
-//					logger.info(uploadPath.toFile().getAbsolutePath());
-//					xfr = adw.sendFile(uploadPath.toFile().getAbsolutePath());
-//					// Update ADW update status in flight record
-//					flightRecord.setUploadToAdw(xfr);
-//					logger.info("Transfer to ADW complete: {}", xfr);
-//				}
-//				catch(Exception e) {
-//					logger.error("ApiError in ADW XFER: {}", e.getMessage(), e);
-//				}
-//
-//				return xfr;
-//			} 
-//		});
-//		futures.add(adwFuture);
+		// ------- Adding file to ADW -------
+		logger.debug("Adding file to ADW");
+		Future<Boolean> adwFuture = es.submit(new Callable<Boolean>() {
+
+			@Override
+			public Boolean call() throws Exception {
+
+				Boolean xfr = false;
+				try {
+
+					logger.info("Starting ADW Transfer");
+					String host = properties.get("adwHost");
+					String usr = properties.get("adwUser");
+					String pwd = properties.get("adwPwd");
+					String path = properties.get("adwPath");
+					ADWTransferUtil adw = new ADWTransferUtil(host, usr, pwd, path);
+					xfr = adw.sendFile(uploadPath.toFile().getAbsolutePath());
+					// Update ADW update status in flight record
+					flightRecord.setUploadToAdw(xfr);
+					logger.info("Transfer to ADW complete: {}", xfr);
+				}
+				catch(Exception e) {
+					logger.error("ApiError in ADW XFER: {}", e.getMessage(), e);
+				}
+
+				return xfr;
+			} 
+		});
+		futures.add(adwFuture);
 
 		// ------- Adding file to Azure Storage and Message Queue -------
 		logger.debug("Adding file to Azure Storage and Message Queue");
@@ -196,7 +196,7 @@ public class FileUploadService {
 		boolean azureBool = false;
 		try {
 
-//			adwBool = adwFuture.get();
+			adwBool = adwFuture.get();
 			azureBool = azureFuture.get();
 		} catch (InterruptedException | ExecutionException e) {
 			logger.error("ApiError in running executionservice: {}", e.getMessage(), e);
@@ -214,26 +214,130 @@ public class FileUploadService {
 			es.shutdownNow();
 		}
 
+		// If ADW upload fails, logging a warning is sufficient (for now)
 		if (!adwBool) {
 			logger.warn("Failed to upload flight record {} to ADW", ControllerUtils.sanitizeString(flightRecordName));
 		}
 
+		// If Azure Storage upload fails, that is a crucial error that warrants an appropriate error response to the user
 		if (!azureBool) {
-			return flightRecordUploadResponse;
+			throw new FlightRecordException(flightRecordUploadResponse.getMessage());
 		}
 
-		// if azure upload is success, record upload into database
+		// Since Azure Storage upload is successful, the upload must be logged into the database
 		try {
 	        this.flightRecordDao.insertFlightData(flightRecord);
 			flightRecordUploadResponse.setUploaded(true);
 		} catch (FlightRecordException fre) {
 			logger.error("Failed to record flight record upload to FDA Ground! {}", fre.getMessage());
-			flightRecordUploadResponse.setMessage(fre.getMessage());
+			throw new FlightRecordException(String.format("Failed to log flight record upload to FDA Ground: %s", fre.getMessage()));
 		} catch (Exception e) {
 			logger.error("Failed to record flight record upload to FDA Ground! {}", ExceptionUtils.getRootCause(e).getMessage());
-			flightRecordUploadResponse.setMessage(ExceptionUtils.getRootCause(e).getMessage());
+			throw new FlightRecordException(String.format("Failed to log flight record upload to FDA Ground: %s", ExceptionUtils.getRootCause(e).getMessage()));
 		}
         
 		return flightRecordUploadResponse;
+	}
+
+	public FileManagementMessage updateFlightRecordOnAidStatus(String flightRecordName, String authToken) throws FlightRecordException {
+
+		// Ensure that the user is authorized to update the status, by comparing the user-airline
+		// with the airline token in the flight record name.
+		FileManagementMessage fileMgmtMessage = new FileManagementMessage(flightRecordName);
+
+		// Determine the airline from the user's membership.
+		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
+		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+		if (airlineGroups.size() != 1) {
+			throw new FlightRecordException("Failed to associate user with an airline");
+		}
+		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+		// Sample Flight Record name: FDA_ABCDEF_FDA101_KSEA_KORD_20180531_132001Z_004159
+		List<String> flightRecordNameTokens = Arrays.asList(flightRecordName.split("_"));
+        String _airline = null;
+		try {
+			_airline = flightRecordNameTokens.get(0);
+			if (!_airline.equalsIgnoreCase(airlineGroup)) {
+				throw new FlightRecordException(String.format("Flight record filename prefix %s is not associated with airline code %s", _airline, airlineGroup));
+			}
+		} catch (IndexOutOfBoundsException ioobe) {
+			throw new FlightRecordException("Failed to extract identifying tokens from flight record filename");
+		}
+
+		// Perform an update of the FlightRecordOnAid status of the corresponding flight record
+		this.flightRecordDao.updateFlightRecordOnAidStatus(flightRecordName);
+
+		// Retrieve the updated flight record
+		FlightRecord flightRecord = this.flightRecordDao.getFlightRecord(flightRecordName);
+		if (flightRecord == null) {
+			throw new FlightRecordException("Flight record not found, failed to update deleted-on-AID status");
+		} else if (!flightRecord.isDeletedOnAid()) {
+			logger.info("Unable to update deleted-on-AID status on flight record: {}", flightRecord.toString());
+			fileMgmtMessage.setUploaded(true);
+			fileMgmtMessage.setMessage("Failed to update flight record's deleted-on-AID status");
+		} else {
+			fileMgmtMessage.setUploaded(true);
+			fileMgmtMessage.setDeletedOnAid(true);
+		}
+		
+		return fileMgmtMessage;
+	}
+
+	public List<FileManagementMessage> listFlightRecords(String authToken) throws FlightRecordException {
+
+		List<FileManagementMessage> listOfFlightMgmtMessages = new ArrayList<>();
+
+		// Determine the airline from the user's membership.
+		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
+		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+		if (airlineGroups.size() != 1) {
+			throw new FlightRecordException("Failed to associate user with an airline");
+		}
+		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+
+		List<FlightRecord> listOfFlightRecords = this.flightRecordDao.getAllFlightRecords(airlineGroup);
+		if (listOfFlightRecords != null && listOfFlightRecords.size() > 0) {
+			
+			listOfFlightMgmtMessages = listOfFlightRecords
+					.parallelStream()
+					.map(fr -> new FileManagementMessage(true, fr.getFlightRecordName(), fr.isDeletedOnAid(), null))
+					.collect(Collectors.toList());
+		}
+
+		return listOfFlightMgmtMessages;
+	}
+	
+	public List<FileManagementMessage> getStatusOfFlightRecords(List<String>flightRecordNames, String authToken) throws FlightRecordException {
+		
+		List<FileManagementMessage> listOfFlightMgmtMessages = new ArrayList<>();
+
+		// Determine the airline from the user's membership.
+		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
+		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+		if (airlineGroups.size() != 1) {
+			throw new FlightRecordException("Failed to associate user with an airline");
+		}
+		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+
+		listOfFlightMgmtMessages = flightRecordNames.parallelStream()
+			.filter(StringUtils::isNotBlank)
+			.map(frn -> {
+				if (!frn.startsWith(airlineGroup.toUpperCase())) {
+					return new FileManagementMessage(false, frn, false, "Missing or invalid flight identifier");
+				}
+				try {
+					FlightRecord flightRecord = this.flightRecordDao.getFlightRecord(frn);
+					if (flightRecord == null) {
+						return new FileManagementMessage(false, frn, false, "Missing or invalid flight identifier");
+					} else {
+						return new FileManagementMessage(true, frn, flightRecord.isDeletedOnAid(), null);
+					}
+				} catch (FlightRecordException fre) {
+					return new FileManagementMessage(false, frn, false, fre.getMessage());
+				}
+			})
+			.collect(Collectors.toList());
+		
+		return listOfFlightMgmtMessages;
 	}
 }

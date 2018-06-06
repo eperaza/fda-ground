@@ -144,10 +144,4 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	protected ResponseEntity<Object> handleEntityNotFound(UserAccountRegistrationException uare) {
 		return buildResponseEntity(uare.getError());
 	}
-	
-	@ExceptionHandler(RuntimeException.class)
-	protected ResponseEntity<Object> handleRuntimeException(RuntimeException re, HttpHeaders headers,
-			HttpStatus statys, WebRequest request) {
-		return buildResponseEntity(new ApiError("global runtime exception handler", re.getLocalizedMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR));
-	}
 }
