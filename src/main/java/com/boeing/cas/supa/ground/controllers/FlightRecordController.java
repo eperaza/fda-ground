@@ -2,10 +2,11 @@ package com.boeing.cas.supa.ground.controllers;
 
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,25 +43,25 @@ public class FlightRecordController {
 		}
 	}
 
-	@RequestMapping(path = "/updateFlightRecordStatusOnAid", method = { RequestMethod.POST })
-	public ResponseEntity<Object> updateFlightRecordStatusOnAid(
-			@RequestParam("flightRecordName") String flightRecordName,
+	@RequestMapping(path = "/updateFlightRecordStatusOnAid", method = { RequestMethod.POST },
+			consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<Object> updateFlightRecordStatusOnAid(@RequestBody List<String> flightRecordNames,
 			@RequestHeader("Authorization") String authToken) {
 
 		try {
 
-			if (StringUtils.isBlank(flightRecordName)) {
+			if (CollectionUtils.isEmpty(flightRecordNames)) {
 				throw new FlightRecordException("Flight record is not specified");
 			}
 
-			FileManagementMessage fileMgmtMessage = this.fileManagementService.updateFlightRecordOnAidStatus(flightRecordName, authToken);
-			return new ResponseEntity<>(fileMgmtMessage, HttpStatus.OK);
+			List<FileManagementMessage> fileMgmtMessages = this.fileManagementService.updateFlightRecordOnAidStatus(flightRecordNames, authToken);
+			return new ResponseEntity<>(fileMgmtMessages, HttpStatus.OK);
 		} catch (FlightRecordException fre) {
-			return new ResponseEntity<>(new ApiError("FLIGHT_RECORD_UPDATE", fre.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<>(new ApiError("FLIGHT_RECORD_STATUS_UPDATE", fre.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
-	@RequestMapping(path = "/listFlightRecords", method = { RequestMethod.GET })
+	@RequestMapping(path = "/listFlightRecords", method = { RequestMethod.GET }, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> listFlightRecords(@RequestHeader("Authorization") String authToken) {
 
 		try {
@@ -71,7 +72,8 @@ public class FlightRecordController {
 		}
 	}
 
-	@RequestMapping(path = "/getStatusOfFlightRecords", method = { RequestMethod.POST })
+	@RequestMapping(path = "/getStatusOfFlightRecords", method = { RequestMethod.POST },
+			consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> getStatusOfFlightRecords(@RequestBody List<String> flightRecordNames,
 			@RequestHeader("Authorization") String authToken) {
 

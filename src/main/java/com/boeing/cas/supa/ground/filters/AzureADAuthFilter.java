@@ -71,11 +71,10 @@ public class AzureADAuthFilter implements Filter {
 			return;
 		}
 
-		logger.debug("Possibly modifying the response...");
-
 		HttpServletRequest httpRequest = (HttpServletRequest) request;
 		HttpServletResponse httpResponse = (HttpServletResponse) response;
 		String path = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length()).replaceAll("[/]+$", StringUtils.EMPTY);
+		logger.debug("AzureADAuthFilter intercepting request: {}", path);
 		boolean allowedPath = ALLOWED_PATHS.contains(path);
 
 		int responseCode = 400;
@@ -84,6 +83,7 @@ public class AzureADAuthFilter implements Filter {
 		if (allowedPath) {
 
 			if (this.isValidClientCertInReqHeader("client1", httpRequest)) {
+				logger.debug("Client1 cert is valid, moving request along");
 				chain.doFilter(request, response);
 				return;
 			}
@@ -96,17 +96,21 @@ public class AzureADAuthFilter implements Filter {
 
 		try {
 
+			logger.debug("Checking Client2 cert and OAuth2 token...");
 			boolean validClientCert = this.isValidClientCertInReqHeader("client2", httpRequest);
 			boolean validOAuthToken = this.isValidOAuthToken(httpRequest.getHeader("Authorization"));
 			if (validClientCert && validOAuthToken) {
+				logger.debug("Client2 cert and OAuth2 token are good!");
                 chain.doFilter(request, response);
                 return;
             }
             else if (!validClientCert) {
+				logger.error("Client2 cert failed!");
             	responseCode = 403;
                 responseException = new ApiError("Invalid client certificate", "Must provide a valid client certificate");
             }
             else {
+				logger.error("OAuth2 token failed!");
             	responseCode = 401;
                 responseException = new ApiError("Authorization_Missing", "Must provide a valid authorization token");
             }
@@ -128,7 +132,8 @@ public class AzureADAuthFilter implements Filter {
 	}
 
 	private void sendResponse(int responseCode, ApiError responseException, HttpServletResponse httpResponse) throws IOException {
-		
+
+		logger.debug("Sending response: ", responseException != null ? responseException.toString() : StringUtils.EMPTY);
 		httpResponse.setStatus(responseCode);
 		httpResponse.setContentType("application/json");
         ObjectMapper mapper = new ObjectMapper();
@@ -154,11 +159,11 @@ public class AzureADAuthFilter implements Filter {
 
 		if (ArrayUtils.isNotEmpty(certs)) {
 
-			logger.info("certs of length: {}", certs.length);
+			logger.debug("certs of length: {}", certs.length);
 			X509Certificate clientCert = certs[0];
 			logger.debug("cert properties: {}", clientCert.toString());
-			logger.info("cert subject: {}", clientCert.getSubjectDN().getName());
-			logger.info("cert issuer: {}", clientCert.getIssuerDN().getName());
+			logger.debug("cert subject: {}", clientCert.getSubjectDN().getName());
+			logger.debug("cert issuer: {}", clientCert.getIssuerDN().getName());
 			isValid = certVerify.isValidClientCertificate(clientCert, certHolder);
 		}
 
@@ -182,7 +187,7 @@ public class AzureADAuthFilter implements Filter {
 								.collect(Collectors.toSet());
 			logger.debug("aud Claims: {}", set.toString());
 			if (!set.contains(this.azureadApiUri)) {
-				logger.info("Aud does not exist");
+				logger.error("Aud does not exist");
 				throw new SecurityException("Not a valid Authorization token: Aud does not exist");
 			}
 		}
@@ -199,7 +204,7 @@ public class AzureADAuthFilter implements Filter {
             logger.error("Expired token");
             throw new SecurityException("Not a valid Authorization token: expired token");
         }
-        logger.debug("everything passed...");
+        logger.debug("All checks on the OAuth2 token passed");
 
         return true;
 	}

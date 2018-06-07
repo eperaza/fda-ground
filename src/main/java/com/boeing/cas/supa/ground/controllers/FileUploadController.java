@@ -48,7 +48,7 @@ public class FileUploadController {
 	@RequestMapping(path="/uploadFile", method = { RequestMethod.POST })
 	public ResponseEntity<Object> uploadFile(final @RequestParam("file") MultipartFile uploadfile, final HttpServletRequest httpRequest) {
 
-		this.logger.info("Upload File method invoked -  Single file upload!");
+		logger.debug("Upload File method invoked -  Single file upload!");
 
         if (uploadfile.isEmpty()) {
 
@@ -68,6 +68,7 @@ public class FileUploadController {
 		}
 
 		final Path uploadFolderPath = Paths.get(uploadFolder + File.separator + uploadfile.getOriginalFilename());
+		logger.debug("File uploaded to {}", uploadFolderPath.toFile().getAbsolutePath());
 		
 		// ------- Adding file to ADW -------
 		logger.debug("Adding file to ADW");
@@ -82,15 +83,14 @@ public class FileUploadController {
 				Boolean xfr = false;
 				try {
 
-					logger.info("Starting ADW Transfer");
+					logger.debug("Starting ADW Transfer");
 					String host = properties.get("adwHost");
 					String usr = properties.get("adwUser");
 					String pwd = properties.get("adwPwd");
 					String path = properties.get("adwPath");
 					ADWTransferUtil adw = new ADWTransferUtil(host, usr, pwd, path);
-					logger.info(uploadFolderPath.toFile().getAbsolutePath());
 					xfr = adw.sendFile(uploadFolderPath.toFile().getAbsolutePath());
-					logger.info("Transfer to ADW complete: {}", xfr);
+					logger.debug("Transfer to ADW complete: {}", xfr);
 				}
 				catch(Exception e) {
 					logger.error("ApiError in ADW XFER: {}", e.getMessage(), e);
@@ -110,10 +110,10 @@ public class FileUploadController {
 				Boolean upload = false;
 				try {
 
-					logger.info("Starting Azure upload");
+					logger.debug("Starting Azure upload");
 					AzureStorageUtil asu = new AzureStorageUtil(properties.get("StorageAccountName"), properties.get("StorageKey"));
 					upload = asu.uploadFile(uploadFolderPath.toFile().getAbsolutePath(), uploadfile.getOriginalFilename(), user);
-					logger.info("Upload to Azure complete: {}", upload);
+					logger.debug("Upload to Azure complete: {}", upload);
 				}
 				catch(Exception e) {
 					logger.error("ApiError in Azure upload: {}", e.getMessage(), e);
@@ -131,6 +131,7 @@ public class FileUploadController {
 
 		try {
 
+			logger.debug("Getting results for Azure and ADW uploads");
 			azureBool = azureFuture.get();
 			adwBool = adwFuture.get();
 		} catch (InterruptedException | ExecutionException e) {

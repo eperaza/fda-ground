@@ -239,11 +239,11 @@ public class FileManagementService {
 		return flightRecordUploadResponse;
 	}
 
-	public FileManagementMessage updateFlightRecordOnAidStatus(String flightRecordName, String authToken) throws FlightRecordException {
+	public List<FileManagementMessage> updateFlightRecordOnAidStatus(List<String> flightRecordNames, String authToken) throws FlightRecordException {
 
 		// Ensure that the user is authorized to update the status, by comparing the user-airline
 		// with the airline token in the flight record name.
-		FileManagementMessage fileMgmtMessage = new FileManagementMessage(flightRecordName);
+		List<FileManagementMessage> fileMgmtMessages = new ArrayList<>();
 
 		// Determine the airline from the user's membership.
 		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
@@ -252,35 +252,63 @@ public class FileManagementService {
 			throw new FlightRecordException("Failed to associate user with an airline");
 		}
 		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
-		// Sample Flight Record name: FDA_ABCDEF_FDA101_KSEA_KORD_20180531_132001Z_004159
-		List<String> flightRecordNameTokens = Arrays.asList(flightRecordName.split("_"));
-        String _airline = null;
-		try {
-			_airline = flightRecordNameTokens.get(0);
-			if (!_airline.equalsIgnoreCase(airlineGroup)) {
-				throw new FlightRecordException(String.format("Flight record filename prefix %s is not associated with airline code %s", _airline, airlineGroup));
-			}
-		} catch (IndexOutOfBoundsException ioobe) {
-			throw new FlightRecordException("Failed to extract identifying tokens from flight record filename");
-		}
 
-		// Perform an update of the FlightRecordOnAid status of the corresponding flight record
-		this.flightRecordDao.updateFlightRecordOnAidStatus(flightRecordName);
+		fileMgmtMessages = flightRecordNames.parallelStream()
+			.map(frn -> new FileManagementMessage(frn))
+			.map(fmm -> {
+				List<String> flightRecordNameTokens = Arrays.asList(fmm.getFlightRecordName().split("_"));
+				String _airline = null;
+				try {					
+					_airline = flightRecordNameTokens.get(0);
+					if (!_airline.equalsIgnoreCase(airlineGroup)) {
+						throw new FlightRecordException(String.format("Flight record filename prefix %s is not associated with airline code %s", _airline, airlineGroup));
+					}
+				} catch (IndexOutOfBoundsException ioobe) {
+					fmm.setMessage("Failed to extract identifying tokens from flight record filename");
+				} catch (FlightRecordException fre) {
+					fmm.setMessage(fre.getMessage());
+				} catch (Exception e) {
+					fmm.setMessage(e.getMessage());
+				}
+				return fmm;
+			})
+			.map(fmm -> {
+				if (fmm.getMessage() == null) {
+					try {
+						this.flightRecordDao.updateFlightRecordOnAidStatus(fmm.getFlightRecordName());
+					} catch (Exception e) {
+						fmm.setMessage(ExceptionUtils.getRootCause(e).getMessage());
+					}
+				}
+				return fmm;
+			})
+			.map(fmm -> {
+				if (fmm.getMessage() == null) {
+					// Retrieve the updated flight record
+					try {
+						
+						FlightRecord flightRecord = this.flightRecordDao.getFlightRecord(fmm.getFlightRecordName());
+						if (flightRecord == null) {
+							throw new FlightRecordException("Flight record not found");
+						} else if (!flightRecord.isDeletedOnAid()) {
+							logger.error("Unable to update deleted-on-AID status on flight record: {}", flightRecord.toString());
+							fmm.setUploaded(true);
+							fmm.setMessage("Failed to update flight record's deleted-on-AID status");
+						} else {
+							fmm.setUploaded(true);
+							fmm.setDeletedOnAid(true);
+						}
+					} catch (Exception e) {
+						logger.error("Unable to retrieve or update deleted-on-AID status on flight record: {}", fmm.getFlightRecordName(), e.getMessage());
+						fmm.setMessage(e.getMessage());
+					}
+				}
 
-		// Retrieve the updated flight record
-		FlightRecord flightRecord = this.flightRecordDao.getFlightRecord(flightRecordName);
-		if (flightRecord == null) {
-			throw new FlightRecordException("Flight record not found, failed to update deleted-on-AID status");
-		} else if (!flightRecord.isDeletedOnAid()) {
-			logger.info("Unable to update deleted-on-AID status on flight record: {}", flightRecord.toString());
-			fileMgmtMessage.setUploaded(true);
-			fileMgmtMessage.setMessage("Failed to update flight record's deleted-on-AID status");
-		} else {
-			fileMgmtMessage.setUploaded(true);
-			fileMgmtMessage.setDeletedOnAid(true);
-		}
-		
-		return fileMgmtMessage;
+				return fmm;
+			})
+			.collect(Collectors.toList());
+
+		return fileMgmtMessages;
 	}
 
 	public List<FileManagementMessage> listFlightRecords(String authToken) throws FlightRecordException {
@@ -334,6 +362,8 @@ public class FileManagementService {
 					}
 				} catch (FlightRecordException fre) {
 					return new FileManagementMessage(false, frn, false, fre.getMessage());
+				} catch (Exception e) {
+					return new FileManagementMessage(false, frn, false, e.getMessage());
 				}
 			})
 			.collect(Collectors.toList());

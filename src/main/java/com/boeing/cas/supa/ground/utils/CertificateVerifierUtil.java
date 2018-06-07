@@ -73,16 +73,28 @@ public class CertificateVerifierUtil {
             Map<String, String> x509ServerCertIssuerDn = this.getMap(x509ServerCert.getIssuerDN().getName());
             String x509ServerCertThumbPrint = this.getThumbprint(x509ServerCert);
             x509ClientCert.checkValidity(new Date());
+            logger.debug("client cert subject DN: {}", x509ClientCert.getSubjectDN().getName());
+            logger.debug("server cert subject DN: {}", x509ServerCert.getSubjectDN().getName());
+            logger.debug("client cert issuer DN: {}", x509ClientCert.getIssuerDN().getName());
+            logger.debug("server cert issuer DN: {}", x509ServerCert.getIssuerDN().getName());
             if (!x509ClientCertSubjectDn.get("CN").equals(x509ServerCertSubjectDn.get("CN"))) {
+                logger.info("client cert subject (CN) = {}", x509ClientCertSubjectDn.get("CN"));
+                logger.info("server cert subject (CN) = {}", x509ServerCertSubjectDn.get("CN"));
                 throw new SecurityException("Subject name invalid");
             }
             if (!x509ClientCertIssuerDn.get("CN").equals(x509ServerCertIssuerDn.get("CN"))) {
+                logger.info("client cert issuer (CN) = {}", x509ClientCertIssuerDn.get("CN"));
+                logger.info("server cert issuer (CN) = {}", x509ServerCertIssuerDn.get("CN"));
                 throw new SecurityException("Issuer name (CN) invalid");
             }
             if (!x509ClientCertIssuerDn.get("O").equals(x509ServerCertIssuerDn.get("O"))) {
+                logger.info("client cert issuer (O) = {}", x509ClientCertIssuerDn.get("O"));
+                logger.info("server cert issuer (O) = {}", x509ServerCertIssuerDn.get("O"));
                 throw new SecurityException("Issuer name (0) invalid");
             }
             if (!x509ServerCertThumbPrint.equalsIgnoreCase(x509ClientCertThumbPrint)) {
+                logger.info("client cert thumbprint = {}", x509ClientCertThumbPrint);
+                logger.info("server cert thumbprint = {}", x509ServerCertThumbPrint);
                 throw new SecurityException("Thumbprint mismatch");
             }
             return true;
