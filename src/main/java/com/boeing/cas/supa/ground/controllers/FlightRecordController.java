@@ -2,6 +2,8 @@ package com.boeing.cas.supa.ground.controllers;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,6 +25,8 @@ import com.boeing.cas.supa.ground.services.FileManagementService;
 @RestController
 public class FlightRecordController {
 
+	private final Logger logger = LoggerFactory.getLogger(FlightRecordController.class);
+
 	@Autowired
 	private FileManagementService fileManagementService;
 
@@ -33,12 +37,14 @@ public class FlightRecordController {
 		try {
 
 			if (uploadFlightRecord.isEmpty()) {
+				logger.warn("The flight record payload is empty");
 				throw new FlightRecordException("No file submitted");
 			}
 
 			FileManagementMessage flightRecordUploadResponse = this.fileManagementService.uploadFlightRecord(uploadFlightRecord, authToken);
 			return new ResponseEntity<>(flightRecordUploadResponse, HttpStatus.OK);
 		} catch (FlightRecordException fre) {
+			logger.error("Upload flight record failed: {}", fre.getMessage());
 			return new ResponseEntity<>(new ApiError("FLIGHT_RECORD_UPLOAD", fre.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}

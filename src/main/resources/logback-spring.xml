@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration>
+<configuration>
+  <property name="LOG_PATH" value="logs" />
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+  <appender name="SAVE-TO-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_PATH}/mobileapi-aad.log</file>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+        <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
+    </encoder>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+        <fileNamePattern>${LOG_PATH}/archived/mobileapi-aad_%d{dd-MM-yyyy}_%i.log</fileNamePattern>
+        <maxFileSize>50MB</maxFileSize>
+        <maxHistory>14</maxHistory>
+        <totalSizeCap>3GB</totalSizeCap>
+    </rollingPolicy>
+  </appender>
+
+  <springProfile name="workspace,localhost">
+    <root level="warn">
+      <appender-ref ref="STDOUT" />
+      <appender-ref ref="SAVE-TO-FILE" />
+    </root>
+    <logger level="debug" additivity="false" name="com.boeing">
+      <appender-ref ref="STDOUT" />
+      <appender-ref ref="SAVE-TO-FILE" />
+    </logger>
+  </springProfile>
+
+  <springProfile name="default,dev,test">
+    <root level="info">
+      <appender-ref ref="SAVE-TO-FILE" />
+    </root>
+    <logger level="debug" additivity="false" name="com.boeing">
+      <appender-ref ref="SAVE-TO-FILE" />
+    </logger>
+  </springProfile>
+
+  <springProfile name="prod">
+    <root level="info">
+      <appender-ref ref="SAVE-TO-FILE" />
+    </root>
+    <logger level="warn" additivity="false" name="com.boeing">
+      <appender-ref ref="SAVE-TO-FILE" />
+    </logger>
+  </springProfile>
+
+</configuration>

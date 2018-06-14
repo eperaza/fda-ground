@@ -56,6 +56,7 @@ public class FileManagementService {
 
 	public FileManagementMessage uploadFlightRecord(final MultipartFile uploadFlightRecord, String authToken) throws FlightRecordException {
 
+		logger.debug("Upload flight record request received for processing");
 		final FileManagementMessage flightRecordUploadResponse = new FileManagementMessage(uploadFlightRecord.getOriginalFilename());
 
 		// Query database for an uploaded flight record matching the flight record name.
