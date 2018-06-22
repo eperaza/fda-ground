@@ -30,7 +30,7 @@ public class AirlineFocalAdminController {
 
 	private final Logger logger = LoggerFactory.getLogger(AirlineFocalAdminController.class);
 
-	private static final List<String> ALLOWED_USER_ROLES = Arrays.asList(new String[] { "role-airlinepilot", "role-airlinemaintenance" });
+	private static final List<String> ALLOWED_USER_ROLES = Arrays.asList(new String[] { "role-airlinefocal", "role-airlinepilot", "role-airlinemaintenance" });
 
 	@Autowired
 	private AzureADClientService aadClient;
@@ -51,7 +51,7 @@ public class AirlineFocalAdminController {
 			return new ResponseEntity<>(new ApiError("MISSING_OR_INVALID_MEMBERSHIP", "User membership is ambiguous"), HttpStatus.UNAUTHORIZED);
 		}
 
-		// Validate role-based group requested for new user - must be either role-airlinepilot or role-airlinemaintenance
+		// Validate role-based group requested for new user - must be role-airlinefocal, role-airlinepilot or role-airlinemaintenance
 		if (!ALLOWED_USER_ROLES.contains(newUserPayload.getRoleGroupName())) {
 			return new ResponseEntity<>(new ApiError("CREATE_USER_FAILURE", "Missing or invalid user role requested"), HttpStatus.BAD_REQUEST);
 		}
@@ -75,7 +75,7 @@ public class AirlineFocalAdminController {
 		// Extract the access token from the authorization request header
 		String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
 
-		// Create user with the received payload/parameters defining the new account.
+		// Delete user based on supplied user obect ID.
 		Object result = aadClient.deleteUser(userId, accessTokenInRequest);
 
 		if (result instanceof ApiError) {

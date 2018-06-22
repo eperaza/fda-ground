@@ -559,8 +559,8 @@ public class AzureADClientService {
 			}
 
 			// Validate user privileges by checking group membership. Must belong to Role-AirlineFocal group and a single Airline group.
-			List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
-			List<Group> roleAirlineFocalGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).peek(g -> logger.info("Role Group: {}", g)).collect(Collectors.toList());
+			List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).peek(g -> logger.debug("Airline Group: {}", g)).collect(Collectors.toList());
+			List<Group> roleAirlineFocalGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).peek(g -> logger.debug("Role Group: {}", g)).collect(Collectors.toList());
 			if (airlineGroups.size() != 1 || roleAirlineFocalGroups.size() != 1) {
 				return new ApiError("USER_DELETE_FAILED", "User membership is ambiguous", RequestFailureReason.UNAUTHORIZED);
 			}
@@ -572,7 +572,7 @@ public class AzureADClientService {
 			if (authResult instanceof ApiError) {
 				return authResult;
 			}
-			// access token could not be obtained either via delegated permissions or application permissions.
+			// The access token could not be obtained either via delegated permissions or application permissions.
 			else if (authResult == null) {
 				return new ApiError("USER_DELETE_FAILED", "Failed to acquire permissions", RequestFailureReason.UNAUTHORIZED);
 			}
@@ -590,14 +590,9 @@ public class AzureADClientService {
 			if (deleteUserGroups != null) {
 
 				List<Group> deleteUserAirlineGroups = deleteUserGroups.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
-				List<Group> deleteUserRoleGroups = deleteUserGroups.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
 				// Ensure airline focal is not deleting user in another airline, by getting airline group membership
 				if (deleteUserAirlineGroups.size() != 1 || !deleteUserAirlineGroups.get(0).getObjectId().equals(airlineGroups.get(0).getObjectId())) {
 					return new ApiError("USER_DELETE_FAILED", "Not allowed to delete user if not in same airline group", RequestFailureReason.UNAUTHORIZED);
-				}
-				// Ensure airline focal is not deleting another airline focal user is not being deleted, by getting role group membership
-				else if (deleteUserRoleGroups.stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).collect(Collectors.toList()).size() > 0) {
-					return new ApiError("USER_DELETE_FAILED", "Not allowed to delete another airline focal user", RequestFailureReason.UNAUTHORIZED);
 				}
 				else {
 					// continue
@@ -1036,7 +1031,12 @@ public class AzureADClientService {
 		StringBuilder emailMessageBody = new StringBuilder();
 		emailMessageBody.append("Dear ").append(newlyCreatedUser.getDisplayName()).append(',');
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-		emailMessageBody.append("Please click on this link from your mobile device to complete your FDA user account activation:");
+		emailMessageBody.append(
+				String.format("Please click on this link from your mobile device to complete your FDA [%s] user account activation:",
+					newlyCreatedUser.getGroups().stream()
+						.filter(group -> group.getDisplayName().startsWith("role-"))
+						.map(group -> group.getDisplayName().replace("role-", StringUtils.EMPTY).toUpperCase())
+						.collect(Collectors.joining(","))));
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
 		emailMessageBody.append("<a href=\"iavfdaapplication://register?").append(base64EncodedPayload).append("\">").append("FD Advisor Account Activation").append("</a>");
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
