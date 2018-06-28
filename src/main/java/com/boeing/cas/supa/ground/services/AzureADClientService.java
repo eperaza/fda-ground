@@ -775,7 +775,9 @@ public class AzureADClientService {
 
 				AuthenticationResult authResult = (AuthenticationResult) ar;
 				// Get Airline and list of roles from authentication result which encapsulates the access token and user object ID
-				List<Group> userGroupMembership = getUserGroupMembershipFromGraph(authResult.getUserInfo().getUniqueId(), authResult.getAccessToken());
+				// Note: Use impersonated user's (with elevated permissions) access token to get the user group membership since
+				//       the user account was just now enabled and the AAD directory replicas may still be synchronizing with the change.
+				List<Group> userGroupMembership = getUserGroupMembershipFromGraph(authResult.getUserInfo().getUniqueId(), accessToken);
 				//  -> Extract airline group
 				List<Group> userAirlineGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
 				//  -> Extract list of roles
@@ -783,8 +785,9 @@ public class AzureADClientService {
 				String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
 				List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
 				String getPfxEncodedAsBase64 = this.appProps.get("client2base64");
-				String getPlistFromBlob = getPlistFromBlob("preferences", "preferences.plist");
-				String mobileConfigFromBlob = getPlistFromBlob("config", "supaConfigEFO.mobileconfig");
+				String airline = groupName != null ? groupName.replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY) : null;
+				String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline).append(".plist").toString()) : null;
+				String mobileConfigFromBlob = airline != null ? getPlistFromBlob("config", new StringBuilder(airline).append(".mobileconfig").toString()) : null;
 				if (getPlistFromBlob != null && mobileConfigFromBlob != null) {
 					UserRegistration userReg = new UserRegistration(authResult, getPfxEncodedAsBase64, groupName, roleNames, getPlistFromBlob, mobileConfigFromBlob);
 					resultObj = userReg;
@@ -920,7 +923,10 @@ public class AzureADClientService {
 	public List<Group> getUserGroupMembershipFromGraph(String uniqueId, String accessToken) {
 
 		logger.debug("Getting group object list info from graph");
+		logger.debug("uniqueId: {}", ControllerUtils.sanitizeString(uniqueId));
+		logger.debug("accessToken:\n-------\n{}\n-------", ControllerUtils.sanitizeString(accessToken));
 		List<Group> groupList = new ArrayList<>();
+		HttpURLConnection conn = null;
 		try {
 
 			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
@@ -928,7 +934,7 @@ public class AzureADClientService {
 					.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
 							.append(azureadApiVersion).toString())
 					.toString());
-			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			conn = (HttpURLConnection) url.openConnection();
 			// Set the appropriate header fields in the request header.
 			conn.setRequestProperty("api-version", azureadApiVersion);
 			conn.setRequestProperty("Authorization", accessToken);

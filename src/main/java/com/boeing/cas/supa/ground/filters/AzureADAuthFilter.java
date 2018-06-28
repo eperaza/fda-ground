@@ -36,6 +36,7 @@ import org.springframework.stereotype.Component;
 import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.utils.CertificateVerifierUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
+import com.boeing.cas.supa.ground.utils.ControllerUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWTParser;
 
@@ -74,7 +75,7 @@ public class AzureADAuthFilter implements Filter {
 		HttpServletRequest httpRequest = (HttpServletRequest) request;
 		HttpServletResponse httpResponse = (HttpServletResponse) response;
 		String path = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length()).replaceAll("[/]+$", StringUtils.EMPTY);
-		logger.debug("AzureADAuthFilter intercepting request: {}", path);
+		logger.debug("AzureADAuthFilter intercepting request: {}", ControllerUtils.sanitizeString(path));
 		boolean allowedPath = ALLOWED_PATHS.contains(path);
 
 		int responseCode = 400;
