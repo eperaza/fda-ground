@@ -56,7 +56,7 @@ public class RegistrationController {
 				// Get user from HttpClientHelper.getUserInfoFromAuthToken(authResult.getAccessTokenType() + " " + authResult.getAccessToken())
 				// To get user groups from Token: List<Group> groups = user.getGroups() and then iterate through user's groups
 				// Article ref: https://stackoverflow.com/questions/31971673/how-can-i-get-a-pem-base-64-from-a-pfx-in-java
-				String getPfxEncodedAsBase64 = this.appProps.get("client2base64");
+				String getPfxEncodedAsBase64 = this.appProps.get("fdadvisor2base64");
 				String getPlistFromBlob = getPlistFromBlob("preferences", "ADW.plist");
 				String mobileConfigFromBlob = getPlistFromBlob("config", "supaConfigEFO.mobileconfig");
 				if (getPlistFromBlob != null && mobileConfigFromBlob != null) {

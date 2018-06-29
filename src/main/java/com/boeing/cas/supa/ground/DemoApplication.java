@@ -64,6 +64,7 @@ public class DemoApplication {
 		appSecrets.put("AzureADAppClientID", keyVaultRetriever.getSecretByKey("AzureADAppClientID"));
 		appSecrets.put("client1base64", keyVaultRetriever.getSecretByKey("client1base64"));
 		appSecrets.put("client2base64", keyVaultRetriever.getSecretByKey("client2base64"));
+		appSecrets.put("fdadvisor2base64", keyVaultRetriever.getSecretByKey("fdadvisor2base64"));
 		appSecrets.put("MailServerAuthPassword", keyVaultRetriever.getSecretByKey("MailServerAuthPassword"));
 		appSecrets.put("MailServerAuthUsername", keyVaultRetriever.getSecretByKey("MailServerAuthUsername"));
 		appSecrets.put("MailServerHost", keyVaultRetriever.getSecretByKey("MailServerHost"));
@@ -89,6 +90,7 @@ public class DemoApplication {
 
 		appCertificates.put("client1", keyVaultRetriever.getCertificateByCertName("client1"));
 		appCertificates.put("client2", keyVaultRetriever.getCertificateByCertName("client2"));
+		appCertificates.put("fdadvisor2", keyVaultRetriever.getCertificateByCertName("fdadvisor2"));
 
 		return appCertificates;
 	}

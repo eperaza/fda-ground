@@ -35,6 +35,7 @@ public class CertificateVerifierUtil {
 	
 	private X509Certificate getCertFromHeader(String certHeader) {
 
+		logger.debug("Get certificate from header: {}", certHeader);
 		X509Certificate cert = null;
 		if (StringUtils.isNotBlank(certHeader)) {
 

@@ -83,8 +83,8 @@ public class AzureADAuthFilter implements Filter {
 
 		if (allowedPath) {
 
-			if (this.isValidClientCertInReqHeader("client1", httpRequest)) {
-				logger.debug("Client1 cert is valid, moving request along");
+			if (this.isValidClientCertInReqHeader("fdadvisor2", httpRequest)) {
+				logger.debug("fdadvisor2 cert is valid, moving request along");
 				chain.doFilter(request, response);
 				return;
 			}
@@ -97,16 +97,16 @@ public class AzureADAuthFilter implements Filter {
 
 		try {
 
-			logger.debug("Checking Client2 cert and OAuth2 token...");
-			boolean validClientCert = this.isValidClientCertInReqHeader("client2", httpRequest);
+			logger.debug("Checking fdadvisor2 cert and OAuth2 token...");
+			boolean validClientCert = this.isValidClientCertInReqHeader("fdadvisor2", httpRequest);
 			boolean validOAuthToken = this.isValidOAuthToken(httpRequest.getHeader("Authorization"));
 			if (validClientCert && validOAuthToken) {
-				logger.debug("Client2 cert and OAuth2 token are good!");
+				logger.debug("fdadvisor2 cert and OAuth2 token are good!");
                 chain.doFilter(request, response);
                 return;
             }
             else if (!validClientCert) {
-				logger.error("Client2 cert failed!");
+				logger.error("fdadvisor2 cert failed!");
             	responseCode = 403;
                 responseException = new ApiError("Invalid client certificate", "Must provide a valid client certificate");
             }
@@ -118,10 +118,12 @@ public class AzureADAuthFilter implements Filter {
         }
         catch (ParseException pe) {
             responseCode = 400;
+            logger.error("Parse exception while verifying cert and/or OAuth2 token: {}", pe.getMessage(), pe);
             responseException = new ApiError("JWT_ERROR", pe.getMessage());
         }
         catch (SecurityException se) {
         	responseCode = 401;
+            logger.error("Security exception while verifying cert and/or OAuth2 token: {}", se.getMessage(), se);
         	responseException = new ApiError("MISSING_INVALID_CLIENT_AUTH", se.getMessage());
         }
         finally {
@@ -134,7 +136,11 @@ public class AzureADAuthFilter implements Filter {
 
 	private void sendResponse(int responseCode, ApiError responseException, HttpServletResponse httpResponse) throws IOException {
 
-		logger.debug("Sending response: ", responseException != null ? responseException.toString() : StringUtils.EMPTY);
+		if (responseException != null) {
+			logger.error("ApiError://Label: {}, Description: {}", responseException.getErrorLabel(), responseException.getErrorDescription());
+		} else {
+			logger.debug("Sending response with response code {}", responseCode);
+		}
 		httpResponse.setStatus(responseCode);
 		httpResponse.setContentType("application/json");
         ObjectMapper mapper = new ObjectMapper();
@@ -146,6 +152,7 @@ public class AzureADAuthFilter implements Filter {
 	private boolean isValidClientCertInReqHeader(String certHolder, HttpServletRequest httpRequest) {
 
     	String certHeader = httpRequest.getHeader("X-ARR-ClientCert");
+    	logger.debug("certificate header in request: {}", certHeader);
         if (StringUtils.isNotBlank(certHeader)) {
             return this.certVerify.isValidClientCertificate(certHeader, certHolder);
         }
@@ -155,6 +162,7 @@ public class AzureADAuthFilter implements Filter {
 
 	private boolean isValidClientCertInReqAttribute(String certHolder, HttpServletRequest httpRequest) {
 
+    	logger.debug("certificate in request as attribute: {}", certHolder);
 		X509Certificate[] certs = (X509Certificate[]) httpRequest.getAttribute("javax.servlet.request.X509Certificate");
 		boolean isValid = false;
 
