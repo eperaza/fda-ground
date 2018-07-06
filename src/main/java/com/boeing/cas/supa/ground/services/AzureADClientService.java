@@ -241,8 +241,7 @@ public class AzureADClientService {
 			String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
 			List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
 			// Article ref: //https://stackoverflow.com/questions/31971673/how-can-i-get-a-pem-base-64-from-a-pfx-in-java
-			String getPfxEncodedAsBase64 = this.appProps.get("fdadvisor2base64");
-			return new AccessToken(result, getPfxEncodedAsBase64, groupName, roleNames);
+			return new AccessToken(result, groupName, roleNames);
 		} else if (ar != null && ExceptionUtils.indexOfThrowable((Throwable) ar, AuthenticationException.class) >= 0) {
 			
 			ApiError apiError = AzureADClientHelper.getLoginErrorFromString(((AuthenticationException) ar).getMessage());
@@ -669,7 +668,10 @@ public class AzureADClientService {
 			boolean isUserNotActivated = userAccountRegister.isUserAccountNotActivated(userAccountActivation.getRegistrationToken(), userAccountActivation.getUsername(), Constants.UserAccountState.PENDING_USER_ACTIVATION.toString());
 			if (!isUserNotActivated) {
 				logger.warn("User registration record/token not found");
+				// If user does not exist, or user account is disabled, throw exception.
 				throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Invalid or expired user account activation token", RequestFailureReason.NOT_FOUND));
+				// Else, user is trying to register again, perhaps on an other device, so proceed
+				// without needing to update the database, and just return the preferences, config and user role.
 			}
 			progressLog.append("\nUser account registration record/token found");
 
@@ -784,12 +786,11 @@ public class AzureADClientService {
 				List<Group> userRoleGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
 				String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
 				List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
-				String getPfxEncodedAsBase64 = this.appProps.get("fdadvisor2base64");
 				String airline = groupName != null ? groupName.replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY) : null;
 				String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline).append(".plist").toString()) : null;
 				String mobileConfigFromBlob = airline != null ? getPlistFromBlob("config", new StringBuilder(airline).append(".mobileconfig").toString()) : null;
 				if (getPlistFromBlob != null && mobileConfigFromBlob != null) {
-					UserRegistration userReg = new UserRegistration(authResult, getPfxEncodedAsBase64, groupName, roleNames, getPlistFromBlob, mobileConfigFromBlob);
+					UserRegistration userReg = new UserRegistration(authResult, groupName, roleNames, getPlistFromBlob, mobileConfigFromBlob);
 					resultObj = userReg;
 				}
 				else {
@@ -1033,7 +1034,9 @@ public class AzureADClientService {
 	
 	private String composeNewUserAccountActivationEmail(User newlyCreatedUser, String registrationToken) {
 
-		String base64EncodedPayload = Base64.getEncoder().encodeToString(new StringBuilder(newlyCreatedUser.getUserPrincipalName()).append(' ').append(registrationToken).toString().getBytes());
+		String base64EncodedPayload = Base64.getEncoder().encodeToString(
+				new StringBuilder(newlyCreatedUser.getUserPrincipalName()).append(' ').append(registrationToken)
+						.append(' ').append(this.appProps.get("fdadvisor2base64")).toString().getBytes());
 		StringBuilder emailMessageBody = new StringBuilder();
 		emailMessageBody.append("Dear ").append(newlyCreatedUser.getDisplayName()).append(',');
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);

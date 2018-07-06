@@ -9,11 +9,10 @@ public class UserRegistration extends AccessToken {
 	protected String preferences;
 	protected String mobileConfig;
 
-	public UserRegistration(AuthenticationResult authenticationResult, String cert,
-			String airline, List<String> roles,
+	public UserRegistration(AuthenticationResult authenticationResult, String airline, List<String> roles,
 			String preferences, String mobileConfig) {
 
-		super(authenticationResult, cert, airline, roles);
+		super(authenticationResult, airline, roles);
 		this.preferences = preferences;
 		this.mobileConfig = mobileConfig;
 	}
