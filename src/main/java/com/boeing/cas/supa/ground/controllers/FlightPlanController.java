@@ -45,7 +45,7 @@ public class FlightPlanController {
 			if (flightId.isPresent() || departureAirport.isPresent() || arrivalAirport.isPresent()) {
 				pfUrl.append('?');
 
-				if (flightId.isPresent() && pfUrl.toString().charAt(pfUrl.length()-1) != '?') {
+				if (flightId.isPresent() && pfUrl.toString().charAt(pfUrl.length() - 1) != '?') {
 					pfUrl.append('&').append("flightId=").append(flightId.get());
 				} else if (flightId.isPresent()) {
 					pfUrl.append("flightId=").append(flightId.get());
@@ -53,7 +53,7 @@ public class FlightPlanController {
 					// parameter not passed
 				}
 
-				if (departureAirport.isPresent() && pfUrl.toString().charAt(pfUrl.length()-1) != '?') {
+				if (departureAirport.isPresent() && pfUrl.toString().charAt(pfUrl.length() - 1) != '?') {
 					pfUrl.append('&').append("departureAirport=").append(departureAirport.get());
 				} else if (departureAirport.isPresent()) {
 					pfUrl.append("departureAirport=").append(departureAirport.get());
@@ -61,7 +61,7 @@ public class FlightPlanController {
 					// parameter not passed
 				}
 
-				if (arrivalAirport.isPresent() && pfUrl.toString().charAt(pfUrl.length()-1) != '?') {
+				if (arrivalAirport.isPresent() && pfUrl.toString().charAt(pfUrl.length() - 1) != '?') {
 					pfUrl.append('&').append("arrivalAirport=").append(arrivalAirport.get());
 				} else if (arrivalAirport.isPresent()) {
 					pfUrl.append("arrivalAirport=").append(arrivalAirport.get());
@@ -69,29 +69,30 @@ public class FlightPlanController {
 					// parameter not passed
 				}
 			}
-            URL url = new URL(pfUrl.toString());
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-            logger.debug("Opened secure HTTPS connection");
-            connection.setSSLSocketFactory(sslSocketFactory);
-            connection.setUseCaches(false);
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("Accept", "application/json");
-            StringBuilder stringBuilder = new StringBuilder();
-            int responseCode = connection.getResponseCode();
-            logger.debug("HTTP response code = {}", responseCode);
-            try (BufferedReader reader = responseCode == HttpStatus.OK.value()
-                    ? new BufferedReader(new InputStreamReader(connection.getInputStream()))
-                    : new BufferedReader(new InputStreamReader(connection.getErrorStream()))) {
-                String line = null;
-                while ((line = reader.readLine()) != null) {
-                    stringBuilder.append(line);
-                }
-            }
+			URL url = new URL(pfUrl.toString());
+			HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+			logger.debug("Opened secure HTTPS connection");
+			connection.setSSLSocketFactory(sslSocketFactory);
+			connection.setUseCaches(false);
+			connection.setRequestMethod("GET");
+			connection.setRequestProperty("Accept", "application/json");
+			StringBuilder stringBuilder = new StringBuilder();
+			int responseCode = connection.getResponseCode();
+			logger.debug("HTTP response code = {}", responseCode);
+			try (BufferedReader reader = responseCode == HttpStatus.OK.value()
+					? new BufferedReader(new InputStreamReader(connection.getInputStream()))
+					: new BufferedReader(new InputStreamReader(connection.getErrorStream()))) {
+				String line = null;
+				while ((line = reader.readLine()) != null) {
+					stringBuilder.append(line);
+				}
+			}
 
 			return new ResponseEntity<>(stringBuilder.toString(), HttpStatus.OK);
 		} catch (Exception ex) {
 			logger.error("Request flight plan failed: {}", ex.getMessage(), ex);
-			return new ResponseEntity<>(new ApiError("FLIGHT_PLAN_REQUEST", ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<>(new ApiError("FLIGHT_PLAN_REQUEST", ex.getMessage()),
+					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 }
