@@ -2,6 +2,7 @@ package com.boeing.cas.supa.ground.utils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.security.KeyPair;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -11,7 +12,9 @@ import org.slf4j.LoggerFactory;
 
 import com.microsoft.azure.keyvault.KeyVaultClient;
 import com.microsoft.azure.keyvault.models.CertificateBundle;
+import com.microsoft.azure.keyvault.models.KeyBundle;
 import com.microsoft.azure.keyvault.models.SecretBundle;
+import com.microsoft.azure.keyvault.webkey.JsonWebKey;
 
 public class KeyVaultRetriever {
 
@@ -37,8 +40,24 @@ public class KeyVaultRetriever {
 
 		return secretValue;
 	}
-	
-	public X509Certificate getCertificateByCertName(String certName) {
+
+	public JsonWebKey getPrivateKeyByKeyName(String keyName) {
+
+		KeyBundle kb = this.kvc.getKey(this.keyVaultUri, keyName);
+		JsonWebKey key = null;
+		if (kb != null) {
+
+			key = kb.key();
+			logger.info("JsonWebKey entry has private key: {}", key.hasPrivateKey());
+			KeyPair kp = key.toRSA(key.hasPrivateKey());
+			logger.info("private key: {}", kp.getPrivate());
+			logger.info("public key: {}", kp.getPublic());
+		}
+
+		return key;
+	}
+
+    public X509Certificate getCertificateByCertName(String certName) {
 
 		CertificateBundle cb = this.kvc.getCertificate(this.keyVaultUri, certName);
 		X509Certificate x509Certificate = null;

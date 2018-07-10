@@ -1,12 +1,28 @@
 package com.boeing.cas.supa.ground;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
 import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 
@@ -21,6 +37,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
 import org.springframework.boot.autoconfigure.web.ErrorMvcAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -69,6 +86,10 @@ public class DemoApplication {
 		appSecrets.put("MailServerAuthUsername", keyVaultRetriever.getSecretByKey("MailServerAuthUsername"));
 		appSecrets.put("MailServerHost", keyVaultRetriever.getSecretByKey("MailServerHost"));
 		appSecrets.put("MailServerPort", keyVaultRetriever.getSecretByKey("MailServerPort"));
+		appSecrets.put("RouteSyncClientCert", keyVaultRetriever.getSecretByKey("RouteSyncClientCert"));
+		appSecrets.put("RouteSyncClientCertPassword", keyVaultRetriever.getSecretByKey("RouteSyncClientCertPassword"));
+		appSecrets.put("RouteSyncServerCert", keyVaultRetriever.getSecretByKey("RouteSyncServerCert"));
+		appSecrets.put("RouteSyncServerTrustStoreAlias", keyVaultRetriever.getSecretByKey("RouteSyncServerTrustStoreAlias"));
 		appSecrets.put("SQLDatabasePassword", keyVaultRetriever.getSecretByKey("SQLDatabasePassword"));
 		appSecrets.put("SQLDatabaseUrl", keyVaultRetriever.getSecretByKey("SQLDatabaseUrl"));
 		appSecrets.put("SQLDatabaseUsername", keyVaultRetriever.getSecretByKey("SQLDatabaseUsername"));
@@ -93,6 +114,42 @@ public class DemoApplication {
 		appCertificates.put("fdadvisor2", keyVaultRetriever.getCertificateByCertName("fdadvisor2"));
 
 		return appCertificates;
+	}
+
+    @Bean
+    public SSLSocketFactory getSSLSocketFactory(Map<String,String> appSecrets) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, UnrecoverableKeyException, KeyManagementException {
+
+    	SSLSocketFactory sslSocketFactory = null;
+    	KeyStore ks = KeyStore.getInstance("PKCS12");
+    	File clientCertFile = new ClassPathResource(appSecrets.get("RouteSyncClientCert")).getFile();
+    	File serverCertFile = new ClassPathResource(appSecrets.get("RouteSyncServerCert")).getFile();
+    	logger.debug("loaded client cert PFX file");
+    	try (FileInputStream fis = new FileInputStream(clientCertFile)) {
+
+    		ks.load(fis, appSecrets.get("RouteSyncClientCertPassword").toCharArray());
+    		logger.debug("loaded PFX into keystore");
+    		KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+    		kmf.init(ks, appSecrets.get("RouteSyncClientCertPassword").toCharArray());
+
+    		try (InputStream is = new FileInputStream(serverCertFile)) {
+
+        		CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        		X509Certificate caCert = (X509Certificate) cf.generateCertificate(is);
+        		logger.info("subject = {}, issuer = {}", caCert.getSubjectDN(), caCert.getIssuerDN());
+        		ks.setCertificateEntry(appSecrets.get("RouteSyncServerTrustStoreAlias"), caCert);
+    		}
+
+    		TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init(ks);
+    		SSLContext sc = SSLContext.getInstance("TLSv1.2");
+            sc.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
+    		logger.debug("initialized SSLContext");
+    		sslSocketFactory = sc.getSocketFactory();
+    	} catch (Exception ex) {
+    		logger.error("Error creatomg SSLSocketFactory: {}", ex.getMessage(), ex);
+    	}
+    	
+    	return sslSocketFactory;
 	}
 
 	@Bean
