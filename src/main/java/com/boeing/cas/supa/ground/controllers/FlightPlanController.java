@@ -33,7 +33,7 @@ public class FlightPlanController {
 	@Autowired
 	private SSLSocketFactory sslSocketFactory;
 
-	@GetMapping(path = "/perfect_flights", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@GetMapping(path = "/flight_objects", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> getAllFlightPlans(@RequestParam("flightId") Optional<String> flightId,
 			@RequestParam("departureAirport") Optional<String> departureAirport,
 			@RequestParam("arrivalAirport") Optional<String> arrivalAirport,
@@ -71,7 +71,6 @@ public class FlightPlanController {
 			}
 			URL url = new URL(pfUrl.toString());
 			HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-			logger.debug("Opened secure HTTPS connection");
 			connection.setSSLSocketFactory(sslSocketFactory);
 			connection.setUseCaches(false);
 			connection.setRequestMethod("GET");
@@ -79,7 +78,7 @@ public class FlightPlanController {
 			StringBuilder stringBuilder = new StringBuilder();
 			int responseCode = connection.getResponseCode();
 			logger.debug("HTTP response code = {}", responseCode);
-			try (BufferedReader reader = responseCode == HttpStatus.OK.value()
+			try (BufferedReader reader = (responseCode == HttpStatus.OK.value())
 					? new BufferedReader(new InputStreamReader(connection.getInputStream()))
 					: new BufferedReader(new InputStreamReader(connection.getErrorStream()))) {
 				String line = null;
