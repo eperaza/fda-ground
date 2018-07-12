@@ -77,7 +77,7 @@ public class RegistrationController {
 	@RequestMapping(path="/registeruser", method = { RequestMethod.POST })
 	public ResponseEntity<Object> registerUserAccount(@RequestBody UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {
 
-		Object result = aadClient.enableUserAndSetPassword(userAccountActivation);
+		Object result = aadClient.enableRepeatableUserRegistration(userAccountActivation);
 
 		if (result instanceof ApiError) {
 			return new ResponseEntity<>(result, HttpStatus.INTERNAL_SERVER_ERROR);

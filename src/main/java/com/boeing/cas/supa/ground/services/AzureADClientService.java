@@ -656,6 +656,261 @@ public class AzureADClientService {
 		return resultObj;
 	}
 
+	public Object enableRepeatableUserRegistration(UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {
+
+		Object resultObj = null;
+		StringBuilder progressLog = new StringBuilder("Activate user -");
+		
+		HttpsURLConnection connGetUser = null, connEnableUser = null;
+		try {
+
+			// Get access token based on delegated permission via impersonation with a Local Administrator of the tenant.
+			String adminAccessToken = null;
+			Object elevatedAuthResult = getElevatedPermissionsAccessToken(PermissionType.IMPERSONATION);
+			if (elevatedAuthResult instanceof ApiError) {
+				throw new ElevatedPermissionException(((ApiError) elevatedAuthResult).getErrorDescription());
+			}
+			// access token could not be obtained either via delegated permissions or application permissions.
+			else if (elevatedAuthResult == null) {
+				throw new ElevatedPermissionException("Failed to acquire permissions");
+			}
+			else {
+				adminAccessToken = String.valueOf(elevatedAuthResult);
+				progressLog.append("\nObtained impersonation access token");
+			}
+
+			// - Check database for registration token. If found, proceed to update user account and database
+			//   and return registration response to caller.
+			// - Registration token not found => try to authenticate user with supplied credentials. If
+			//   authentication is successful, return registration response to caller.
+			// - Authentication failed => find user account and determine status of account.
+			//     * If account is active, indicate to caller than credentials of an existing account are invalid.
+			//     * If account is disabled, indicate to caller than registration token is not found
+
+			// Check if token exists and corresponds to PENDING_USER_ACTIVATION in the database
+			boolean isUserNotActivated = userAccountRegister.isUserAccountNotActivated(userAccountActivation.getRegistrationToken(), userAccountActivation.getUsername(), Constants.UserAccountState.PENDING_USER_ACTIVATION.toString());
+			if (!isUserNotActivated) {
+
+				logger.warn("User registration record/token not found");
+				Object ar = getAccessTokenFromUserCredentials(userAccountActivation.getUsername(), userAccountActivation.getPassword());
+				if (ar != null && ar instanceof AuthenticationResult) {
+
+					AuthenticationResult authResult = (AuthenticationResult) ar;
+					List<Group> userGroupMembership = getUserGroupMembershipFromGraph(authResult.getUserInfo().getUniqueId(), adminAccessToken);
+					//  -> Extract airline group
+					List<Group> userAirlineGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+					//  -> Extract list of roles
+					List<Group> userRoleGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
+					String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
+					List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
+					String airline = groupName != null ? groupName.replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY) : null;
+					String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline).append(".plist").toString()) : null;
+					String mobileConfigFromBlob = airline != null ? getPlistFromBlob("config", new StringBuilder(airline).append(".mobileconfig").toString()) : null;
+					if (getPlistFromBlob != null && mobileConfigFromBlob != null) {
+						UserRegistration userReg = new UserRegistration(authResult, groupName, roleNames, getPlistFromBlob, mobileConfigFromBlob);
+						resultObj = userReg;
+					}
+					else {
+						throw new MobileConfigurationException("Failed to retrieve plist and/or mobile configuration");
+					}
+				} else {
+
+					URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
+							.append("/users/").append(userAccountActivation.getUsername())
+							.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
+									.append(azureadApiVersion).toString())
+							.toString());
+
+					connGetUser = (HttpsURLConnection) url.openConnection();
+					// Set the appropriate header fields in the request header.
+					connGetUser.setRequestMethod(RequestMethod.GET.toString());
+					connGetUser.setRequestProperty("api-version", azureadApiVersion);
+					connGetUser.setRequestProperty("Authorization", adminAccessToken);
+					connGetUser.setRequestProperty("Content-Type", "application/json");
+					connGetUser.setUseCaches(false);
+					connGetUser.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
+
+					String responseStr = HttpClientHelper.getResponseStringFromConn(connGetUser, connGetUser.getResponseCode() == HttpStatus.OK.value());
+					User userObj = null;
+					int responseCode = connGetUser.getResponseCode();
+					if (responseCode == 200) {
+
+						ObjectMapper mapper = new ObjectMapper()
+								.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+								.setSerializationInclusion(Include.NON_NULL);
+						userObj = mapper.readValue(responseStr, User.class);
+
+						progressLog.append("\nRetrieved user object from Azure AD Graph");
+
+						if (Boolean.parseBoolean(userObj.getAccountEnabled())) {
+							throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Invalid credentials provided to registered user account", RequestFailureReason.UNAUTHORIZED));
+						} else {
+							throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Invalid or expired user account activation token", RequestFailureReason.UNAUTHORIZED));
+						} 
+					} else if (responseCode == 404) {
+						
+						JsonNode errorNode = new ObjectMapper()
+								.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+								.setSerializationInclusion(Include.NON_NULL).readTree(responseStr).path("odata.error");
+						JsonNode messageNode = errorNode.path("message");
+						JsonNode valueNode = messageNode.path("value");
+						logger.warn("Failed to register/authenticate user: {}", valueNode.asText());
+						throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "User account not found", RequestFailureReason.NOT_FOUND));
+					} else {
+
+						JsonNode errorNode = new ObjectMapper()
+								.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+								.setSerializationInclusion(Include.NON_NULL).readTree(responseStr).path("odata.error");
+						JsonNode messageNode = errorNode.path("message");
+						JsonNode valueNode = messageNode.path("value");
+						logger.warn("Error retrieving user: {}", valueNode.asText());
+						throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Failed to associate user with registration request", RequestFailureReason.INTERNAL_SERVER_ERROR));
+					}
+				}
+			} else { // User registration record is found
+
+				progressLog.append("\nUser account registration record/token found");
+				
+				URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
+						.append("/users/").append(userAccountActivation.getUsername())
+						.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
+								.append(azureadApiVersion).toString())
+						.toString());
+
+				connGetUser = (HttpsURLConnection) url.openConnection();
+				// Set the appropriate header fields in the request header.
+				connGetUser.setRequestMethod(RequestMethod.GET.toString());
+				connGetUser.setRequestProperty("api-version", azureadApiVersion);
+				connGetUser.setRequestProperty("Authorization", adminAccessToken);
+				connGetUser.setRequestProperty("Content-Type", "application/json");
+				connGetUser.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
+
+				String responseStr = HttpClientHelper.getResponseStringFromConn(connGetUser, connGetUser.getResponseCode() == HttpStatus.OK.value());
+				User userObj = null;
+				if (connGetUser.getResponseCode() == 200) {
+
+					ObjectMapper mapper = new ObjectMapper()
+							.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+							.setSerializationInclusion(Include.NON_NULL);
+					userObj = mapper.readValue(responseStr, User.class);
+					
+					if (Boolean.parseBoolean(userObj.getAccountEnabled())) {
+						throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "User account is already activated", RequestFailureReason.CONFLICT));
+					}
+					progressLog.append("\nRetrieved user object from Azure AD Graph");
+				}
+
+				// Send PATCH request via impersonation to Azure AD Graph, to enable account and set password
+				// Build a payload for enabling user account and setting the password
+				ObjectMapper mapper = new ObjectMapper();
+				ObjectNode rootNode = mapper.createObjectNode();
+				rootNode.put("accountEnabled", true);
+				ObjectNode pwdProfileNode = mapper.createObjectNode();
+				pwdProfileNode.put("password", userAccountActivation.getPassword());
+				pwdProfileNode.put("forceChangePasswordNextLogin", false);
+				rootNode.set("passwordProfile", pwdProfileNode);
+
+				url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
+						.append("/users/").append(userAccountActivation.getUsername())
+						.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
+								.append(azureadApiVersion).toString())
+						.toString());
+
+				connEnableUser = (HttpsURLConnection) url.openConnection();
+				// Set the appropriate header fields in the request header.
+				connEnableUser.setRequestMethod(RequestMethod.POST.toString());
+				connEnableUser.setRequestProperty("X-HTTP-Method-Override", RequestMethod.PATCH.toString());
+				connEnableUser.setRequestProperty("api-version", azureadApiVersion);
+				connEnableUser.setRequestProperty("Authorization", adminAccessToken);
+				connEnableUser.setRequestProperty("Content-Type", "application/json");
+				connEnableUser.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
+				connEnableUser.setDoOutput(true);
+				try (DataOutputStream dos = new DataOutputStream(connEnableUser.getOutputStream())) {
+					dos.writeBytes(mapper.writeValueAsString(rootNode));
+					dos.flush();
+				}
+				
+				responseStr = HttpClientHelper.getResponseStringFromConn(connEnableUser, connEnableUser.getResponseCode() == HttpStatus.NO_CONTENT.value());
+				JsonNode errorNode = StringUtils.isBlank(responseStr) ? null : mapper.readTree(responseStr).path("odata.error");
+				if (connEnableUser.getResponseCode() == HttpStatus.NO_CONTENT.value() && errorNode == null) {
+					logger.debug("Enabled user and set password");
+					progressLog.append("\nEnabled user and set password");
+				}
+				else {
+
+					JsonNode messageNode = errorNode.path("message");
+					JsonNode valueNode = messageNode.path("value");
+					logger.error("Failed to enable user and set password: {}", valueNode.asText());
+					throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Failed to enable user and set password", RequestFailureReason.INTERNAL_SERVER_ERROR));
+				}
+
+				// Update UserAccountRegistrations database table to invalidate token (by updating account state)
+				userAccountRegister.enableNewUserAccount(userAccountActivation.getRegistrationToken(), userObj.getUserPrincipalName(), Constants.UserAccountState.PENDING_USER_ACTIVATION.toString(), Constants.UserAccountState.USER_ACTIVATED.toString());
+				progressLog.append("\nActivated new user account in database");
+
+				Object ar = getAccessTokenFromUserCredentials(userObj.getUserPrincipalName(), userAccountActivation.getPassword());
+				if (ar == null) {
+					throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Failed to obtain auth token for user credentials", RequestFailureReason.UNAUTHORIZED));
+				}
+				
+				if (ar instanceof AuthenticationResult) {
+
+					AuthenticationResult authResult = (AuthenticationResult) ar;
+					// Get Airline and list of roles from authentication result which encapsulates the access token and user object ID
+					// Note: Use impersonated user's (with elevated permissions) access token to get the user group membership since
+					//       the user account was just now enabled and the AAD directory replicas may still be synchronizing with the change.
+					List<Group> userGroupMembership = getUserGroupMembershipFromGraph(authResult.getUserInfo().getUniqueId(), adminAccessToken);
+					//  -> Extract airline group
+					List<Group> userAirlineGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+					//  -> Extract list of roles
+					List<Group> userRoleGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
+					String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
+					List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
+					String airline = groupName != null ? groupName.replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY) : null;
+					String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline).append(".plist").toString()) : null;
+					String mobileConfigFromBlob = airline != null ? getPlistFromBlob("config", new StringBuilder(airline).append(".mobileconfig").toString()) : null;
+					if (getPlistFromBlob != null && mobileConfigFromBlob != null) {
+						UserRegistration userReg = new UserRegistration(authResult, groupName, roleNames, getPlistFromBlob, mobileConfigFromBlob);
+						resultObj = userReg;
+					}
+					else {
+						throw new MobileConfigurationException("Failed to retrieve plist and/or mobile configuration");
+					}
+				}
+
+				if (resultObj == null && ExceptionUtils.indexOfThrowable((Throwable) ar, AuthenticationException.class) >= 0) {
+					//resultObj = AzureADClientHelper.getLoginErrorFromString(((AuthenticationException) ar).getMessage());
+					throw new AuthenticationException(((AuthenticationException) ar).getMessage());
+				}
+			}
+		} catch (AuthenticationException ae) {
+			logger.error("Failed to activate user account: {}", ae.getMessage());
+			resultObj = new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0002");
+		} catch (MobileConfigurationException mce) {
+			logger.error("Failed to activate user account: {}", mce.getMessage());
+			resultObj = new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0001");
+		} catch (ElevatedPermissionException epe) {
+			logger.error("Failed to activate user account: {}", epe.getMessage());
+			resultObj = new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0004");
+		} catch (MalformedURLException murle) {
+			logger.error("MalformedURLException: {}", murle.getMessage(), murle);
+			resultObj = new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0008");
+		} catch (ProtocolException pe) {
+			logger.error("ProtocolException: {}", pe.getMessage(), pe);
+			resultObj = new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0016");
+		} catch (IOException ioe) {
+			logger.error("IOException: {}", ioe.getMessage(), ioe);
+			resultObj = new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0032");
+		} finally {
+			
+			if (resultObj instanceof ApiError) {
+				logger.error("FDAGndSvcLog> {}", ControllerUtils.sanitizeString(progressLog.toString()));
+			}
+		}
+
+		return resultObj;
+	}
+	
 	public Object enableUserAndSetPassword(UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {
 
 		Object resultObj = null;
