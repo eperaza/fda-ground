@@ -1,97 +1,58 @@
 package com.boeing.cas.supa.ground.controllers;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.Optional;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSocketFactory;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.boeing.cas.supa.ground.pojos.ApiError;
+import com.boeing.cas.supa.ground.services.FlightPlanService;
+import com.boeing.cas.supa.ground.utils.ControllerUtils;
 
 @RestController
 public class FlightPlanController {
-
-	private final Logger logger = LoggerFactory.getLogger(FlightPlanController.class);
 
 	@Value("${api.routesync.perfectflights}")
 	private String perfectFlightsUri;
 
 	@Autowired
-	private SSLSocketFactory sslSocketFactory;
+	private FlightPlanService flightPlanService;
 
 	@GetMapping(path = "/flight_objects", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Object> getAllFlightPlans(@RequestParam("flightId") Optional<String> flightId,
+	public ResponseEntity<Object> getAllFlightPlans(
+			@RequestParam("flightId") Optional<String> flightId,
 			@RequestParam("departureAirport") Optional<String> departureAirport,
 			@RequestParam("arrivalAirport") Optional<String> arrivalAirport,
 			@RequestHeader("Authorization") String authToken) {
 
-		try {
-
-			StringBuilder pfUrl = new StringBuilder(perfectFlightsUri);
-			if (flightId.isPresent() || departureAirport.isPresent() || arrivalAirport.isPresent()) {
-				pfUrl.append('?');
-
-				if (flightId.isPresent() && pfUrl.toString().charAt(pfUrl.length() - 1) != '?') {
-					pfUrl.append('&').append("flightId=").append(flightId.get());
-				} else if (flightId.isPresent()) {
-					pfUrl.append("flightId=").append(flightId.get());
-				} else {
-					// parameter not passed
-				}
-
-				if (departureAirport.isPresent() && pfUrl.toString().charAt(pfUrl.length() - 1) != '?') {
-					pfUrl.append('&').append("departureAirport=").append(departureAirport.get());
-				} else if (departureAirport.isPresent()) {
-					pfUrl.append("departureAirport=").append(departureAirport.get());
-				} else {
-					// parameter not passed
-				}
-
-				if (arrivalAirport.isPresent() && pfUrl.toString().charAt(pfUrl.length() - 1) != '?') {
-					pfUrl.append('&').append("arrivalAirport=").append(arrivalAirport.get());
-				} else if (arrivalAirport.isPresent()) {
-					pfUrl.append("arrivalAirport=").append(arrivalAirport.get());
-				} else {
-					// parameter not passed
-				}
-			}
-			URL url = new URL(pfUrl.toString());
-			HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-			connection.setSSLSocketFactory(sslSocketFactory);
-			connection.setUseCaches(false);
-			connection.setRequestMethod("GET");
-			connection.setRequestProperty("Accept", "application/json");
-			StringBuilder stringBuilder = new StringBuilder();
-			int responseCode = connection.getResponseCode();
-			logger.debug("HTTP response code = {}", responseCode);
-			try (BufferedReader reader = (responseCode == HttpStatus.OK.value())
-					? new BufferedReader(new InputStreamReader(connection.getInputStream()))
-					: new BufferedReader(new InputStreamReader(connection.getErrorStream()))) {
-				String line = null;
-				while ((line = reader.readLine()) != null) {
-					stringBuilder.append(line);
-				}
-			}
-
-			return new ResponseEntity<>(stringBuilder.toString(), HttpStatus.OK);
-		} catch (Exception ex) {
-			logger.error("Request flight plan failed: {}", ex.getMessage(), ex);
-			return new ResponseEntity<>(new ApiError("FLIGHT_PLAN_REQUEST", ex.getMessage()),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+		Object allFlightPlansResponse = this.flightPlanService.getAllFlightPlans(flightId, departureAirport, arrivalAirport, authToken);
+		if (allFlightPlansResponse instanceof ApiError) {
+			ApiError errorResponse = (ApiError) allFlightPlansResponse;
+			return new ResponseEntity<>(errorResponse, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(errorResponse.getFailureReason()));
 		}
+
+		return new ResponseEntity<>(allFlightPlansResponse, HttpStatus.OK);
+	}
+
+	@GetMapping(path = "/flight_objects/{id}/show", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<Object> getFlightPlanByFlightId(
+			@PathVariable("id") String id,
+			@RequestHeader("Authorization") String authToken) {
+
+		Object flightPlanResponse = this.flightPlanService.getFlightPlanById(id, authToken);
+		if (flightPlanResponse instanceof ApiError) {
+			ApiError errorResponse = (ApiError) flightPlanResponse;
+			return new ResponseEntity<>(errorResponse, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(errorResponse.getFailureReason()));
+		}
+
+		return new ResponseEntity<>(flightPlanResponse, HttpStatus.OK);
 	}
 }
