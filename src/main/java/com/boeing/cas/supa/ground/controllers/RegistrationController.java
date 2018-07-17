@@ -24,6 +24,7 @@ import com.boeing.cas.supa.ground.pojos.UserAccountActivation;
 import com.boeing.cas.supa.ground.pojos.UserRegistration;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
+import com.boeing.cas.supa.ground.utils.ControllerUtils;
 import com.microsoft.aad.adal4j.AuthenticationException;
 import com.microsoft.aad.adal4j.AuthenticationResult;
 
@@ -77,9 +78,13 @@ public class RegistrationController {
 	@RequestMapping(path="/registeruser", method = { RequestMethod.POST })
 	public ResponseEntity<Object> registerUserAccount(@RequestBody UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {
 
+		logger.debug("Received registration request from user: {}", ControllerUtils.sanitizeString(userAccountActivation.getUsername()));
 		Object result = aadClient.enableRepeatableUserRegistration(userAccountActivation);
 
 		if (result instanceof ApiError) {
+			
+			ApiError error = (ApiError) result;
+			logger.error(error.getErrorLabel(), error.getErrorDescription());
 			return new ResponseEntity<>(result, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
