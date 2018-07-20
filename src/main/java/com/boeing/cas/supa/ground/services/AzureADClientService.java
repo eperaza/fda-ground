@@ -131,7 +131,7 @@ public class AzureADClientService {
 
 	public Object getAccessTokenFromUserCredentials(String username, String password) {
 
-		AuthenticationResult result = null;
+		Object result = null;
 		ExecutorService service = null;
 
 		try {
@@ -150,9 +150,13 @@ public class AzureADClientService {
 			Throwable cause = ee.getCause();
 			if (cause != null) {
 				logger.error("ExecutionException cause: {}", cause.getMessage(), ee);
+				if (cause instanceof AuthenticationException) {
+					result = new AuthenticationException(cause.getMessage());
+				}
 			}
 		} catch (AuthenticationException ae) {
 			logger.error("AuthenticationException: {}", ae.getMessage(), ae);
+			result = new AuthenticationException(ae.getMessage());
 		} catch (Exception e) {
 			logger.error("Unrecognized Exception: {}", e.getMessage(), e);
 			throw e;
@@ -243,8 +247,14 @@ public class AzureADClientService {
 			// Article ref: //https://stackoverflow.com/questions/31971673/how-can-i-get-a-pem-base-64-from-a-pfx-in-java
 			return new AccessToken(result, groupName, roleNames);
 		} else if (ar != null && ExceptionUtils.indexOfThrowable((Throwable) ar, AuthenticationException.class) >= 0) {
-			
+
 			ApiError apiError = AzureADClientHelper.getLoginErrorFromString(((AuthenticationException) ar).getMessage());
+			if (apiError.getErrorDescription().matches(".*AADSTS50034.*")
+				|| apiError.getErrorDescription().matches(".*AADSTS70002.*")) {
+
+				apiError.setErrorLabel("USER_AUTH_FAILURE");
+				apiError.setErrorDescription("Invalid username or password");
+			}
 			apiError.setFailureReason(RequestFailureReason.UNAUTHORIZED);
 			logger.warn("Failed authentication: {}", apiError.getErrorDescription());
 			throw new UserAuthenticationException(apiError);
@@ -256,8 +266,9 @@ public class AzureADClientService {
 			throw new UserAuthenticationException(apiError);
 		} else {
 
+			// The code should not reach this block
 			logger.warn("Failed authentication: Unable to determine authentication failure error");
-			throw new UserAuthenticationException();
+			throw new UserAuthenticationException(new ApiError("USER_AUTH_FAILURE", "Unable to determine authentication failure reason", RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 	}
 
@@ -711,7 +722,7 @@ public class AzureADClientService {
 						resultObj = userReg;
 					}
 					else {
-						throw new MobileConfigurationException("Failed to retrieve plist and/or mobile configuration");
+						throw new MobileConfigurationException("Unable to retrieve mobile configuration and/or preferences");
 					}
 				} else {
 
@@ -743,9 +754,9 @@ public class AzureADClientService {
 						progressLog.append("\nRetrieved user object from Azure AD Graph");
 
 						if (Boolean.parseBoolean(userObj.getAccountEnabled())) {
-							throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Invalid credentials provided to registered user account", RequestFailureReason.UNAUTHORIZED));
+							throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Invalid username or password", RequestFailureReason.UNAUTHORIZED));
 						} else {
-							throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Invalid or expired user account activation token", RequestFailureReason.UNAUTHORIZED));
+							throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Invalid or expired user registration token", RequestFailureReason.UNAUTHORIZED));
 						} 
 					} else if (responseCode == 404) {
 						
@@ -755,7 +766,7 @@ public class AzureADClientService {
 						JsonNode messageNode = errorNode.path("message");
 						JsonNode valueNode = messageNode.path("value");
 						logger.warn("Failed to register/authenticate user: {}", valueNode.asText());
-						throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "User account not found", RequestFailureReason.NOT_FOUND));
+						throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Invalid username or password", RequestFailureReason.UNAUTHORIZED));
 					} else {
 
 						JsonNode errorNode = new ObjectMapper()
@@ -874,7 +885,7 @@ public class AzureADClientService {
 						resultObj = userReg;
 					}
 					else {
-						throw new MobileConfigurationException("Failed to retrieve plist and/or mobile configuration");
+						throw new MobileConfigurationException("Unable to retrieve mobile configuration and/or preferences");
 					}
 				}
 
@@ -888,7 +899,7 @@ public class AzureADClientService {
 			resultObj = new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0002");
 		} catch (MobileConfigurationException mce) {
 			logger.error("Failed to activate user account: {}", mce.getMessage());
-			resultObj = new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0001");
+			resultObj = new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", mce.getMessage());
 		} catch (ElevatedPermissionException epe) {
 			logger.error("Failed to activate user account: {}", epe.getMessage());
 			resultObj = new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0004");
@@ -1316,6 +1327,8 @@ public class AzureADClientService {
             AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
             try (ByteArrayOutputStream outputStream = asu.downloadFile(containerName, fileName)) {
                 base64 = Base64.getEncoder().encodeToString(outputStream.toString().getBytes());
+            } catch (NullPointerException npe) {
+            	logger.error("Failed to retrieve Plist [{}]: {}", fileName, npe.getMessage(), npe);
             }
         }
         catch (IOException ioe) {
