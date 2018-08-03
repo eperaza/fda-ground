@@ -13,6 +13,7 @@ public class NewUser {
 	private String displayName;
 	private String password;
 	private boolean forceChangePasswordNextLogin;
+	private String airlineGroupName;
 	private String roleGroupName;
 	private List<String> otherMails;
 
@@ -72,6 +73,14 @@ public class NewUser {
 		this.forceChangePasswordNextLogin = forceChangePasswordNextLogin;
 	}
 
+	public String getAirlineGroupName() {
+		return airlineGroupName;
+	}
+
+	public void setAirlineGroupName(String airlineGroupName) {
+		this.airlineGroupName = airlineGroupName;
+	}
+
 	public String getRoleGroupName() {
 		return roleGroupName;
 	}
@@ -99,6 +108,7 @@ public class NewUser {
 				.append("displayName=").append(this.displayName).append(',')
 				.append("password=").append(this.password).append(',')
 				.append("forceChangePasswordNextLogin=").append(this.forceChangePasswordNextLogin).append(',')
+				.append("airlineGroupName=").append(this.airlineGroupName).append(',')
 				.append("roleGroupName=").append(this.roleGroupName).append(',')
 				.append("otherMails=").append(StringUtils.join(this.otherMails, ",")).
 			toString();

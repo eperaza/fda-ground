@@ -2,6 +2,8 @@ package com.boeing.cas.supa.ground.utils;
 
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.util.Arrays;
+import java.util.List;
 
 public class Constants {
 
@@ -20,6 +22,8 @@ public class Constants {
 	public static final String AAD_GROUP_AIRLINE_PREFIX = "airline-";
 
 	public static final String AAD_GROUP_USER_ROLE_PREFIX = "role-";
+
+	public static final List<String> ALLOWED_USER_ROLES = Arrays.asList(new String[] { "role-airlinefocal", "role-airlinepilot", "role-airlinemaintenance" });
 
 	public static final DateTimeFormatter FlightRecordDateTimeFormatterForParse = DateTimeFormatter.ofPattern("uuuuMMdd_HHmmssX");
 
@@ -50,4 +54,6 @@ public class Constants {
 	public static enum RequestFailureReason {
 		INTERNAL_SERVER_ERROR, BAD_REQUEST, NOT_FOUND, UNAUTHORIZED, CONFLICT
 	}
+
+	public static String PATTERN_EMAIL_REGEX = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])";
 }

@@ -37,6 +37,9 @@ public class User extends DirectoryObject {
 
 	// The roles holds a list of role entity(s) this user belongs to.
 	private List<Group> roles = new ArrayList<>();
+	
+	// The directory roles this user is assigned with.
+	private List<DirectoryRole> directoryRoles = new ArrayList<>();
 
 	public String getObjectId() {
 		return this.objectId;
@@ -260,6 +263,14 @@ public class User extends DirectoryObject {
 
 	public void setRoles(List<Group> roles) {
 		this.roles = roles;
+	}
+
+	public List<DirectoryRole> getDirectoryRoles() {
+		return this.directoryRoles;
+	}
+
+	public void setDirectoryRoles(List<DirectoryRole> directoryRoles) {
+		this.directoryRoles = directoryRoles;
 	}
 
 	public List<String> getOtherMails() {

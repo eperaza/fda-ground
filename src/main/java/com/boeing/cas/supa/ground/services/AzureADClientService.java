@@ -38,9 +38,11 @@ import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.boeing.cas.supa.ground.dao.UserAccountRegistrationDao;
+import com.boeing.cas.supa.ground.exceptions.ApiErrorException;
 import com.boeing.cas.supa.ground.exceptions.ElevatedPermissionException;
 import com.boeing.cas.supa.ground.exceptions.MobileConfigurationException;
 import com.boeing.cas.supa.ground.exceptions.UserAccountRegistrationException;
@@ -50,17 +52,22 @@ import com.boeing.cas.supa.ground.helpers.HttpClientHelper;
 import com.boeing.cas.supa.ground.pojos.AccessToken;
 import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.Credential;
+import com.boeing.cas.supa.ground.pojos.DirectoryObject;
+import com.boeing.cas.supa.ground.pojos.DirectoryRole;
 import com.boeing.cas.supa.ground.pojos.Group;
 import com.boeing.cas.supa.ground.pojos.NewUser;
 import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.pojos.UserAccountActivation;
 import com.boeing.cas.supa.ground.pojos.UserAccountRegistration;
+import com.boeing.cas.supa.ground.pojos.UserMembership;
 import com.boeing.cas.supa.ground.pojos.UserRegistration;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.Constants.PermissionType;
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
+import com.boeing.cas.supa.ground.utils.PasswordPolicyEnforcer;
+import com.boeing.cas.supa.ground.utils.UsernamePolicyEnforcer;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -237,11 +244,11 @@ public class AzureADClientService {
 
 			AuthenticationResult result = (AuthenticationResult) ar;
 			// Get Airline and list of roles from authentication result which encapsulates the access token and user object ID
-			List<Group> userGroupMembership = getUserGroupMembershipFromGraph(result.getUserInfo().getUniqueId(), result.getAccessToken());
+			UserMembership userMembership = getUserMembershipFromGraph(result.getUserInfo().getUniqueId(), result.getAccessToken());
 			//  -> Extract airline group
-			List<Group> userAirlineGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+			List<Group> userAirlineGroups = userMembership.getUserGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
 			//  -> Extract list of roles
-			List<Group> userRoleGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
+			List<Group> userRoleGroups = userMembership.getUserGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
 			String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
 			List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
 			// Article ref: //https://stackoverflow.com/questions/31971673/how-can-i-get-a-pem-base-64-from-a-pfx-in-java
@@ -254,6 +261,10 @@ public class AzureADClientService {
 
 				apiError.setErrorLabel("USER_AUTH_FAILURE");
 				apiError.setErrorDescription("Invalid username or password");
+			} else if (apiError.getErrorDescription().matches(".*AADSTS50055.*")) {
+				
+				apiError.setErrorLabel("USER_AUTH_FAILURE");
+				apiError.setErrorDescription("User password is expired, force change password");
 			}
 			apiError.setFailureReason(RequestFailureReason.UNAUTHORIZED);
 			logger.warn("Failed authentication: {}", apiError.getErrorDescription());
@@ -272,9 +283,9 @@ public class AzureADClientService {
 		}
 	}
 
-	public String getGroupIdByName(String groupName, String applicationToken) {
+	public Group getGroupByName(String groupName, String applicationToken) {
 
-		String groupId = null;
+		Group group = null;
 
 		try {
 
@@ -297,9 +308,10 @@ public class AzureADClientService {
 			if (conn.getResponseCode() == HttpStatus.OK.value()) {
 
 				ObjectMapper mapper = new ObjectMapper();
+				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 				JsonNode valuesNode = mapper.readTree(responseStr).path("value");
 				if (valuesNode.isArray()) {
-					groupId = valuesNode.get(0).path("objectId").asText();
+					group = mapper.treeToValue(valuesNode.get(0), Group.class);
 				}
 			}
 		}
@@ -307,7 +319,7 @@ public class AzureADClientService {
 			logger.error("Failed to query groups: {}", e.getMessage(), e);
 		}
 		
-		return groupId;
+		return group;
 	}
 
 	public Object createUser(NewUser newUserPayload, String accessTokenInRequest, Group airlineGroup, String roleGroupName) {
@@ -315,14 +327,76 @@ public class AzureADClientService {
 		Object resultObj = null;
 		StringBuilder progressLog = new StringBuilder("Create user -");
 
+		// Validate the user name
+		if (StringUtils.isBlank(newUserPayload.getUserPrincipalName()) || !UsernamePolicyEnforcer.validate(newUserPayload.getUserPrincipalName())) {
+			logger.error("Missing or invalid username specified in user creation request: {}", ControllerUtils.sanitizeString(newUserPayload.getUserPrincipalName()));
+			return new ApiError("CREATE_USER_FAILURE", UsernamePolicyEnforcer.ERROR_USERNAME_FAILED_DESCRIPTION, RequestFailureReason.BAD_REQUEST);
+		}
+		// Validate the password
+		else if (StringUtils.isBlank(newUserPayload.getPassword()) || !PasswordPolicyEnforcer.validate(newUserPayload.getPassword())) {
+			logger.error("Missing or invalid password specified in user creation request: {}", ControllerUtils.sanitizeString(newUserPayload.getPassword()));
+			return new ApiError("CREATE_USER_FAILURE", PasswordPolicyEnforcer.ERROR_PASSWORD_FAILED_DESCRIPTION, RequestFailureReason.BAD_REQUEST);
+		}
+		// Validate the first name
+		else if (StringUtils.isBlank(newUserPayload.getGivenName())) {
+			logger.error("Missing or invalid first name specified in user creation request: {}", ControllerUtils.sanitizeString(newUserPayload.getGivenName()));
+			return new ApiError("CREATE_USER_FAILURE", "Missing or invalid first name", RequestFailureReason.BAD_REQUEST);
+		}
+		// Validate the last name
+		else if (StringUtils.isBlank(newUserPayload.getSurname())) {
+			logger.error("Missing or invalid last name specified in user creation request: {}", ControllerUtils.sanitizeString(newUserPayload.getSurname()));
+			return new ApiError("CREATE_USER_FAILURE", "Missing or invalid last name", RequestFailureReason.BAD_REQUEST);
+		}
+		// Validate the email address
+		else if (CollectionUtils.isEmpty(newUserPayload.getOtherMails()) || newUserPayload.getOtherMails().stream().anyMatch(e -> StringUtils.isBlank(e) || !e.matches(Constants.PATTERN_EMAIL_REGEX))) {
+			logger.error("Missing or invalid work email: {}",
+					CollectionUtils.isEmpty(newUserPayload.getOtherMails())
+						? StringUtils.EMPTY
+						: ControllerUtils.sanitizeString(StringUtils.join(newUserPayload.getOtherMails().toArray())));
+			return new ApiError("CREATE_USER_FAILURE", "Missing or invalid work email", RequestFailureReason.BAD_REQUEST);
+		}
+		// Validate the user role specified
+		else if (StringUtils.isBlank(newUserPayload.getRoleGroupName()) || !Constants.ALLOWED_USER_ROLES.contains(newUserPayload.getRoleGroupName())) {
+			logger.error("Missing or invalid user role specified in user creation request: {}", ControllerUtils.sanitizeString(newUserPayload.getRoleGroupName()));
+			return new ApiError("CREATE_USER_FAILURE", "Missing or invalid user role", RequestFailureReason.BAD_REQUEST);
+		}
+		// validate airline group specifier, either in the new user request payload or in the airline group argument
+		else if (airlineGroup == null && StringUtils.isBlank(newUserPayload.getAirlineGroupName())) {
+			logger.error("Missing or invalid airline group specified in user creation request: {}", ControllerUtils.sanitizeString(newUserPayload.getAirlineGroupName()));
+			return new ApiError("CREATE_USER_FAILURE", "Missing or invalid airline", RequestFailureReason.BAD_REQUEST);
+		}
+		else {
+			// continue with deeper validations...
+		}
+
 		// Get GroupId of requested user role
-		String roleGroupId = getGroupIdByName(newUserPayload.getRoleGroupName(), accessTokenInRequest);
-		if (roleGroupId == null) {
+		Group roleGroup = getGroupByName(newUserPayload.getRoleGroupName(), accessTokenInRequest);
+		if (roleGroup == null) {
+			logger.error("Failed to retrieve user role group: {}", ControllerUtils.sanitizeString(newUserPayload.getRoleGroupName()));
 			return new ApiError("CREATE_USER_FAILURE", "Missing or invalid user role");
+		}
+		
+		// Get Group object corresponding to requested airline group
+		if (airlineGroup == null) {
+
+			User requestorUser = getUserInfoFromJwtAccessToken(accessTokenInRequest);
+			if (requestorUser.getDirectoryRoles() != null) {
+				List<DirectoryRole> directoryRoles = requestorUser.getDirectoryRoles().stream().filter(g -> g.getDisplayName().toLowerCase().equals("user account administrator")).collect(Collectors.toList());
+				if (directoryRoles.size() == 0) {
+					logger.error("Insufficient privileges to create user: not a user account administrator");
+					return new ApiError("CREATE_USER_FAILURE", "Insufficient privileges to create user", RequestFailureReason.UNAUTHORIZED);
+				}
+				// Get GroupId of requested airline group
+				airlineGroup = getGroupByName(newUserPayload.getAirlineGroupName(), accessTokenInRequest);
+				if (airlineGroup == null) {
+					logger.error("Insufficient privileges to create user: failed to retrieve airline group");
+					return new ApiError("CREATE_USER_FAILURE", "Missing or invalid airline", RequestFailureReason.BAD_REQUEST);
+				}
+			}
 		}
 
 		// Get access token based on delegated permission via impersonation with a Local Administrator of the tenant.
-		String accessToken = null;
+		String adminAccessToken = null;
 		Object authResult = getElevatedPermissionsAccessToken(PermissionType.IMPERSONATION);
 		if (authResult instanceof ApiError) {
 			return authResult;
@@ -332,11 +406,39 @@ public class AzureADClientService {
 			return new ApiError("CREATE_USER_FAILURE", "Failed to acquire permissions");
 		}
 		else {
-			accessToken = String.valueOf(authResult);
+			adminAccessToken = String.valueOf(authResult);
 			progressLog.append("\nObtained impersonation access token");
 		}
 
-		// Proceed with request 
+		// Validate user name  provided by the admin; if invalid, return appropriate error key/description
+		User userObj = null;
+		try {
+
+			userObj = getUserFromGraph(
+					new StringBuilder(newUserPayload.getUserPrincipalName()).append('@').append(this.appProps.get("AzureADTenantName")).toString(),
+					adminAccessToken,
+					progressLog,
+					"CREATE_USER_ERROR");
+			if (userObj != null) {
+				logger.warn("User already exists: {}", ControllerUtils.sanitizeString(newUserPayload.getUserPrincipalName()));
+				return new ApiError("CREATE_USER_ERROR", "Username already exists in directory. Please use an altered form of the username, such as appending number(s), to avoid name conflicts.", RequestFailureReason.CONFLICT);
+			} else {
+				// proceed with creation of user account
+			}
+		} catch (ApiErrorException aee) {
+
+			if (aee.getApiError().getFailureReason().equals(RequestFailureReason.NOT_FOUND)) {
+				// this is good, user does not exist, so can proceed with user creation
+			} else {
+				logger.warn("User could not be retrieved from graph: {}", ControllerUtils.sanitizeString(aee.getApiError().getErrorDescription()));
+				return aee.getApiError();
+			}
+		} catch (IOException ioe) {
+			logger.warn("User could not be retrieved from graph: {}", ControllerUtils.sanitizeString(ioe.getMessage()), ioe);
+			return new ApiError("CREATE_USER_ERROR", "Failed to retrieve user from graph", RequestFailureReason.INTERNAL_SERVER_ERROR);
+		}
+
+		// Proceed with request to create the new user account
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = convertNewUserObjectToJsonPayload(mapper, newUserPayload);
 		try {
@@ -351,7 +453,7 @@ public class AzureADClientService {
 			// Set the appropriate header fields in the request header.
 			conn.setRequestMethod("POST");
 			conn.setRequestProperty("api-version", azureadApiVersion);
-			conn.setRequestProperty("Authorization", accessToken);
+			conn.setRequestProperty("Authorization", adminAccessToken);
 			conn.setRequestProperty("Content-Type", "application/json");
 			conn.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
 			conn.setDoOutput(true);
@@ -373,15 +475,15 @@ public class AzureADClientService {
 				User newlyCreatedUser = (User) resultObj;
 				logger.info("Created new user: {}", newlyCreatedUser.getUserPrincipalName());
 				// Assign user to airline-related group and role-related group
-				boolean addedUserToAirlineGroup = addUserToGroup(airlineGroup.getObjectId(), newlyCreatedUser.getObjectId(), accessToken);
+				boolean addedUserToAirlineGroup = addUserToGroup(airlineGroup.getObjectId(), newlyCreatedUser.getObjectId(), adminAccessToken);
 				progressLog.append("\nAdded user to airline group");
-				boolean addedUserToRoleGroup = addUserToGroup(roleGroupId, newlyCreatedUser.getObjectId(), accessToken);
+				boolean addedUserToRoleGroup = addUserToGroup(roleGroup.getObjectId(), newlyCreatedUser.getObjectId(), adminAccessToken);
 				progressLog.append("\nAdded user to primary user role");
 
 				// Get the updated user membership and update the User object sent back in the response.
-				List<Group> groups = getUserGroupMembershipFromGraph(newlyCreatedUser.getObjectId(), accessToken);
+				UserMembership userMembership = getUserMembershipFromGraph(newlyCreatedUser.getObjectId(), adminAccessToken);
 				progressLog.append("\nObtained groups which user is a member of");
-				newlyCreatedUser.setGroups(groups);
+				newlyCreatedUser.setGroups(userMembership.getUserGroups());
 
 				if (!addedUserToAirlineGroup || !addedUserToRoleGroup) {
 					logger.error("Failed to add user to airline group and/or role group");
@@ -552,7 +654,7 @@ public class AzureADClientService {
 		return resultObj;
 	}
 	
-	public Object deleteUser(String userId, String accessTokenInRequest) {
+	public Object deleteUser(String userId, String accessTokenInRequest, boolean isSuperAdmin) {
 
 		Object resultObj = null;
 		StringBuilder progressLog = new StringBuilder("Delete user -");
@@ -565,19 +667,33 @@ public class AzureADClientService {
 			
 			// Ensure requesting user is not trying to delete self!
 			if (airlineFocalCurrentUser.getObjectId().equals(userId)) {
-				return new ApiError("USER_DELETE_FAILED", "Airline focal user cannot delete self", RequestFailureReason.BAD_REQUEST);
+				return new ApiError("USER_DELETE_FAILED", "User cannot delete self", RequestFailureReason.BAD_REQUEST);
 			}
 
-			// Validate user privileges by checking group membership. Must belong to Role-AirlineFocal group and a single Airline group.
-			List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).peek(g -> logger.debug("Airline Group: {}", g)).collect(Collectors.toList());
-			List<Group> roleAirlineFocalGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).peek(g -> logger.debug("Role Group: {}", g)).collect(Collectors.toList());
-			if (airlineGroups.size() != 1 || roleAirlineFocalGroups.size() != 1) {
-				return new ApiError("USER_DELETE_FAILED", "User membership is ambiguous", RequestFailureReason.UNAUTHORIZED);
+			// Validate user privileges by checking group membership. User must either:
+			// - perform operation in superadmin mode and have User Account Administrator directory role
+			// -or-
+			// - belong to Role-AirlineFocal group and a single Airline group
+			if (isSuperAdmin
+				&& (CollectionUtils.isEmpty(airlineFocalCurrentUser.getDirectoryRoles())
+					|| !airlineFocalCurrentUser.getDirectoryRoles().stream().anyMatch(g -> g.getDisplayName().toLowerCase().equals("user account administrator")))) {
+				return new ApiError("USER_DELETE_FAILED", "User has insufficient privileges", RequestFailureReason.UNAUTHORIZED);
 			}
-			progressLog.append("\nRequesting user belongs to single airline group and airline focal role group");
+
+			List<Group> airlineGroups = null,
+					    roleAirlineFocalGroups = null;
+			if (!isSuperAdmin) {
+				
+				airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).peek(g -> logger.debug("Airline Group: {}", g)).collect(Collectors.toList());
+				roleAirlineFocalGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).peek(g -> logger.debug("Role Group: {}", g)).collect(Collectors.toList());
+				if (airlineGroups.size() != 1 || roleAirlineFocalGroups.size() != 1) {
+					return new ApiError("USER_DELETE_FAILED", "User membership is ambiguous", RequestFailureReason.UNAUTHORIZED);
+				}
+				progressLog.append("\nRequesting user belongs to single airline group and airline focal role group");
+			}
 
 			// Get access token based on delegated permission via impersonation with a Local Administrator of the tenant.
-			String accessToken = null;
+			String adminAccessToken = null;
 			Object authResult = getElevatedPermissionsAccessToken(PermissionType.IMPERSONATION);
 			if (authResult instanceof ApiError) {
 				return authResult;
@@ -587,21 +703,24 @@ public class AzureADClientService {
 				return new ApiError("USER_DELETE_FAILED", "Failed to acquire permissions", RequestFailureReason.UNAUTHORIZED);
 			}
 			else {
-				accessToken = String.valueOf(authResult);
+				adminAccessToken = String.valueOf(authResult);
 				progressLog.append("\nObtained impersonation access token");
 			}
 
 			// Airline focal can delete a user, only if an user matching the user object ID exists
-			User deleteUser = getUserInfoFromGraph(userId, accessToken);
+			User deleteUser = getUserInfoFromGraph(userId, adminAccessToken);
 			if (deleteUser == null) {
 				return new ApiError("USER_DELETE_FAILED", "No user found with matching identifier", RequestFailureReason.NOT_FOUND);
 			}
-			List<Group> deleteUserGroups = getUserGroupMembershipFromGraph(deleteUser.getObjectId(), accessToken);
+			UserMembership userMembership = getUserMembershipFromGraph(deleteUser.getObjectId(), adminAccessToken);
+			List<Group> deleteUserGroups = userMembership.getUserGroups();
 			if (deleteUserGroups != null) {
 
 				List<Group> deleteUserAirlineGroups = deleteUserGroups.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
 				// Ensure airline focal is not deleting user in another airline, by getting airline group membership
-				if (deleteUserAirlineGroups.size() != 1 || !deleteUserAirlineGroups.get(0).getObjectId().equals(airlineGroups.get(0).getObjectId())) {
+				// If operation is performed in SuperAdmin mode, skip this check.
+				if (!isSuperAdmin
+					&& (deleteUserAirlineGroups.size() != 1 || !deleteUserAirlineGroups.get(0).getObjectId().equals(airlineGroups.get(0).getObjectId()))) {
 					return new ApiError("USER_DELETE_FAILED", "Not allowed to delete user if not in same airline group", RequestFailureReason.UNAUTHORIZED);
 				}
 				else {
@@ -611,7 +730,8 @@ public class AzureADClientService {
 			else {
 				return new ApiError("USER_DELETE_FAILED", "Not allowed to delete user if not in same airline group", RequestFailureReason.UNAUTHORIZED);
 			}
-			progressLog.append("\nUser to be deleted is in same airline group and is not another airline focal");
+
+			progressLog.append(isSuperAdmin ? "\nUser to be deleted by a SuperAdmin" : "User to be deleted is in same airline group");
 
 			// All checks passed. The user can be deleted by invoking the Azure AD Graph API.
 			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
@@ -624,7 +744,7 @@ public class AzureADClientService {
 			// Set the appropriate header fields in the request header.
 			connDeleteUser.setRequestMethod(RequestMethod.DELETE.toString());
 			connDeleteUser.setRequestProperty("api-version", azureadApiVersion);
-			connDeleteUser.setRequestProperty("Authorization", accessToken);
+			connDeleteUser.setRequestProperty("Authorization", adminAccessToken);
 			connDeleteUser.setRequestProperty("Content-Type", "application/json");
 			connDeleteUser.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
 			
@@ -669,6 +789,13 @@ public class AzureADClientService {
 
 	public Object enableRepeatableUserRegistration(UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {
 
+		logger.debug("Invoking user registration (possibly repeated user registration");
+		
+		// Validate the password provided by the admin; if invalid, return appropriate error key/description
+		if (!PasswordPolicyEnforcer.validate(userAccountActivation.getPassword())) {
+			return new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", PasswordPolicyEnforcer.ERROR_PASSWORD_FAILED_DESCRIPTION, RequestFailureReason.BAD_REQUEST);
+		}
+
 		Object resultObj = null;
 		StringBuilder progressLog = new StringBuilder("Activate user -");
 		
@@ -707,11 +834,11 @@ public class AzureADClientService {
 				if (ar != null && ar instanceof AuthenticationResult) {
 
 					AuthenticationResult authResult = (AuthenticationResult) ar;
-					List<Group> userGroupMembership = getUserGroupMembershipFromGraph(authResult.getUserInfo().getUniqueId(), adminAccessToken);
+					UserMembership userMembership = getUserMembershipFromGraph(authResult.getUserInfo().getUniqueId(), adminAccessToken);
 					//  -> Extract airline group
-					List<Group> userAirlineGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+					List<Group> userAirlineGroups = userMembership.getUserGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
 					//  -> Extract list of roles
-					List<Group> userRoleGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
+					List<Group> userRoleGroups = userMembership.getUserGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
 					String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
 					List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
 					String airline = groupName != null ? groupName.replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY) : null;
@@ -781,7 +908,7 @@ public class AzureADClientService {
 			} else { // User registration record is found
 
 				progressLog.append("\nUser account registration record/token found");
-				
+
 				URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
 						.append("/users/").append(userAccountActivation.getUsername())
 						.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
@@ -870,11 +997,11 @@ public class AzureADClientService {
 					// Get Airline and list of roles from authentication result which encapsulates the access token and user object ID
 					// Note: Use impersonated user's (with elevated permissions) access token to get the user group membership since
 					//       the user account was just now enabled and the AAD directory replicas may still be synchronizing with the change.
-					List<Group> userGroupMembership = getUserGroupMembershipFromGraph(authResult.getUserInfo().getUniqueId(), adminAccessToken);
+					UserMembership userMembership = getUserMembershipFromGraph(authResult.getUserInfo().getUniqueId(), adminAccessToken);
 					//  -> Extract airline group
-					List<Group> userAirlineGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+					List<Group> userAirlineGroups = userMembership.getUserGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
 					//  -> Extract list of roles
-					List<Group> userRoleGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
+					List<Group> userRoleGroups = userMembership.getUserGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
 					String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
 					List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
 					String airline = groupName != null ? groupName.replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY) : null;
@@ -1045,11 +1172,11 @@ public class AzureADClientService {
 				// Get Airline and list of roles from authentication result which encapsulates the access token and user object ID
 				// Note: Use impersonated user's (with elevated permissions) access token to get the user group membership since
 				//       the user account was just now enabled and the AAD directory replicas may still be synchronizing with the change.
-				List<Group> userGroupMembership = getUserGroupMembershipFromGraph(authResult.getUserInfo().getUniqueId(), accessToken);
+				UserMembership userMembership = getUserMembershipFromGraph(authResult.getUserInfo().getUniqueId(), accessToken);
 				//  -> Extract airline group
-				List<Group> userAirlineGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+				List<Group> userAirlineGroups = userMembership.getUserGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
 				//  -> Extract list of roles
-				List<Group> userRoleGroups = userGroupMembership.stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
+				List<Group> userRoleGroups = userMembership.getUserGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
 				String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
 				List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
 				String airline = groupName != null ? groupName.replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY) : null;
@@ -1094,6 +1221,62 @@ public class AzureADClientService {
 		}
 
 		return resultObj;
+	}
+
+	private User getUserFromGraph(String username, String adminAccessToken, StringBuilder progressLog, String contextKey)
+		throws MalformedURLException, IOException, ApiErrorException {
+
+		HttpsURLConnection connGetUser = null;
+
+		User userObj = null;
+		
+		URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
+				.append("/users/").append(username)
+				.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
+						.append(azureadApiVersion).toString())
+				.toString());
+
+		connGetUser = (HttpsURLConnection) url.openConnection();
+		// Set the appropriate header fields in the request header.
+		connGetUser.setRequestMethod(RequestMethod.GET.toString());
+		connGetUser.setRequestProperty("api-version", azureadApiVersion);
+		connGetUser.setRequestProperty("Authorization", adminAccessToken);
+		connGetUser.setRequestProperty("Content-Type", "application/json");
+		connGetUser.setUseCaches(false);
+		connGetUser.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
+
+		String responseStr = HttpClientHelper.getResponseStringFromConn(connGetUser, connGetUser.getResponseCode() == HttpStatus.OK.value());
+		int responseCode = connGetUser.getResponseCode();
+		if (responseCode == 200) {
+
+			ObjectMapper mapper = new ObjectMapper()
+					.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+					.setSerializationInclusion(Include.NON_NULL);
+			userObj = mapper.readValue(responseStr, User.class);
+			progressLog.append("\nRetrieved user object from Azure AD Graph");
+		} else if (responseCode == 404) {
+			
+			JsonNode errorNode = new ObjectMapper()
+					.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+					.setSerializationInclusion(Include.NON_NULL).readTree(responseStr).path("odata.error");
+			JsonNode messageNode = errorNode.path("message");
+			JsonNode valueNode = messageNode.path("value");
+			logger.warn("Failed to retrieve user (404): {}", valueNode.asText());
+			progressLog.append("\nFailed to retrieve user (404) from Azure AD Graph");
+			throw new ApiErrorException(contextKey, new ApiError(contextKey, "User not found", RequestFailureReason.NOT_FOUND));
+		} else {
+
+			JsonNode errorNode = new ObjectMapper()
+					.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+					.setSerializationInclusion(Include.NON_NULL).readTree(responseStr).path("odata.error");
+			JsonNode messageNode = errorNode.path("message");
+			JsonNode valueNode = messageNode.path("value");
+			logger.warn("Failed to retrieve user ({}): {}", responseCode, valueNode.asText());
+			progressLog.append("\nFailed to retrieve user (404) from Azure AD Graph");
+			throw new ApiErrorException(contextKey, new ApiError(contextKey, "Failed to retrieve user", ControllerUtils.translateHttpErrorCodeToRequestFailureReason(responseCode)));
+		}
+		
+		return userObj;
 	}
 
 	public boolean addUserToGroup(String groupObjectId, String userObjectId, String applicationToken) {
@@ -1143,9 +1326,10 @@ public class AzureADClientService {
 		
 		String uniqueId = AzureADClientHelper.getUniqueIdFromJWT(accessToken);
 		User user = getUserInfoFromGraph(uniqueId, accessToken);
-		List<Group> group = getUserGroupMembershipFromGraph(uniqueId, accessToken);
-		user.setGroups(group);
-		
+		UserMembership userMembership = getUserMembershipFromGraph(uniqueId, accessToken);
+		user.setGroups(userMembership.getUserGroups());
+		user.setDirectoryRoles(userMembership.getUserRoles());
+
 		return user;
 	}
 
@@ -1187,12 +1371,12 @@ public class AzureADClientService {
 		return userObj;
 	}
 
-	public List<Group> getUserGroupMembershipFromGraph(String uniqueId, String accessToken) {
+	public UserMembership getUserMembershipFromGraph(String uniqueId, String accessToken) {
 
 		logger.debug("Getting group object list info from graph");
 		logger.debug("uniqueId: {}", ControllerUtils.sanitizeString(uniqueId));
 		logger.debug("accessToken:\n-------\n{}\n-------", ControllerUtils.sanitizeString(accessToken));
-		List<Group> groupList = new ArrayList<>();
+		UserMembership userMembership = null;
 		HttpURLConnection conn = null;
 		try {
 
@@ -1209,7 +1393,9 @@ public class AzureADClientService {
 			String responseStr = HttpClientHelper.getResponseStringFromConn(conn, true);
 			int responseCode = conn.getResponseCode();
 			if (responseCode == 200) {
-				groupList = extractUserGroupMembershipFromResponse(responseStr);
+				List<Group> groups = extractUserGroupMembershipFromResponse(responseStr);
+				List<DirectoryRole> roles = extractDirectoryRoleMembershipFromResponse(responseStr, true);
+				userMembership = new UserMembership(groups, roles);
 			}
 		} catch (MalformedURLException e) {
 			logger.error("MalformedURLException while retrieving groups from graph: {}", e.getMessage(), e);
@@ -1217,7 +1403,7 @@ public class AzureADClientService {
 			logger.error("I/O Exception while retrieving groups from graph: {}", e.getMessage(), e);
 		}
 
-		return groupList;
+		return userMembership;
 	}
 
 	public String getUserInfoFromMSGraph(String accessToken) throws IOException {
@@ -1260,8 +1446,13 @@ public class AzureADClientService {
 			if (arrNode.isArray()) {
 
 				for (JsonNode objNode : arrNode) {
-					Group group = mapper.treeToValue(objNode, Group.class);
-					groupList.add(group);
+
+					DirectoryObject dirObj = mapper.treeToValue(objNode, DirectoryObject.class);
+					Group group = null;
+					if (dirObj.getObjectType().equals("Group")) {
+						group = mapper.treeToValue(objNode, Group.class);
+						groupList.add(group);
+					}
 				}
 			}
 		} catch (IOException e) {
@@ -1269,6 +1460,38 @@ public class AzureADClientService {
 		}
 
 		return groupList;
+	}
+
+	private List<DirectoryRole> extractDirectoryRoleMembershipFromResponse(String responseStr, boolean filterSystemRole) {
+
+		List<DirectoryRole> roleList = new ArrayList<>();
+		try {
+
+			ObjectMapper mapper = new ObjectMapper();
+			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			JsonNode arrNode = mapper.readTree(responseStr).get("value");
+			if (arrNode.isArray()) {
+
+				for (JsonNode objNode : arrNode) {
+
+					DirectoryObject dirObj = mapper.treeToValue(objNode, DirectoryObject.class);
+					DirectoryRole role = null;
+					if (dirObj.getObjectType().equals("Role")) {
+						role = mapper.treeToValue(objNode, DirectoryRole.class);
+						if (!role.isRoleDisabled()
+							&& ((filterSystemRole && role.isIsSystem())
+								|| (!filterSystemRole && !role.isIsSystem()))) {
+
+							roleList.add(role);
+						}
+					}
+				}
+			}
+		} catch (IOException e) {
+			logger.error("I/O Exception while reading groups from list: {}", e.getMessage(), e);
+		}
+
+		return roleList;
 	}
 
 	public ObjectNode convertNewUserObjectToJsonPayload(ObjectMapper mapper, NewUser newUserPayload) {
@@ -1307,7 +1530,11 @@ public class AzureADClientService {
 		emailMessageBody.append("Dear ").append(newlyCreatedUser.getDisplayName()).append(',');
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
 		emailMessageBody.append(
-				String.format("Please click on this link from your mobile device to complete your FDA [%s] user account activation:",
+				String.format("Please click on this link from your mobile device to complete your %s [%s] user account activation:",
+						newlyCreatedUser.getGroups().stream()
+						.filter(group -> group.getDisplayName().startsWith("airline-"))
+						.map(group -> group.getDisplayName().replace("airline-", StringUtils.EMPTY).toUpperCase())
+						.collect(Collectors.joining(",")),
 					newlyCreatedUser.getGroups().stream()
 						.filter(group -> group.getDisplayName().startsWith("role-"))
 						.map(group -> group.getDisplayName().replace("role-", StringUtils.EMPTY).toUpperCase())

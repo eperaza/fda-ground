@@ -36,6 +36,24 @@ public class ControllerUtils {
 		return HttpStatus.INTERNAL_SERVER_ERROR;
 	}
 
+	public static RequestFailureReason translateHttpErrorCodeToRequestFailureReason(int responseCode) {
+
+		switch (responseCode) {
+
+			case 400:
+				return RequestFailureReason.BAD_REQUEST;
+			case 409:
+				return RequestFailureReason.CONFLICT;
+			case 401:
+				return RequestFailureReason.UNAUTHORIZED;
+			case 404:
+				return RequestFailureReason.NOT_FOUND;
+			default:
+		}
+
+		return RequestFailureReason.INTERNAL_SERVER_ERROR;
+	}
+
 	public static <T> T fromJSON(final TypeReference<T> type, final String jsonPacket) {
 		T data = null;
 

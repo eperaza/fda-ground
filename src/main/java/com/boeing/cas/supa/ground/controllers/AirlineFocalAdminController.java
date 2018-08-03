@@ -76,7 +76,7 @@ public class AirlineFocalAdminController {
 		String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
 
 		// Delete user based on supplied user obect ID.
-		Object result = aadClient.deleteUser(userId, accessTokenInRequest);
+		Object result = aadClient.deleteUser(userId, accessTokenInRequest, false);
 
 		if (result instanceof ApiError) {
 			return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));

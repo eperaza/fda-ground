@@ -9,7 +9,7 @@ public class UserAccountActivation {
 	public UserAccountActivation() {}
 	
 	public UserAccountActivation(String registrationToken, String username, String password) {
-		super();
+
 		this.registrationToken = registrationToken;
 		this.username = username;
 		this.password = password;
