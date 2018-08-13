@@ -13,6 +13,8 @@ public class Constants {
 
 	public static final String AUTH_HEADER_PREFIX = "Bearer ";
 
+	public static final String CHECKSUM_PREFIX_SHA1 = ".sha1";
+
 	public static final String HTML_LINE_BREAK = "<br />";
 
 	public static final String SUCCESS = "Success";
