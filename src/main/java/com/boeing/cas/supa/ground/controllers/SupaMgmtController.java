@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.boeing.cas.supa.ground.exceptions.SupaReleaseException;
@@ -37,12 +38,17 @@ public class SupaMgmtController {
 	private SupaReleaseManagementService supaReleaseMgmtService;
 
 	@RequestMapping(path="/list", method = { RequestMethod.GET }, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Object> listSupaReleases(@RequestHeader("Authorization") String authToken) {
+	public ResponseEntity<Object> listSupaReleases(@RequestHeader("Authorization") String authToken, @RequestParam short versions) {
+
+		CacheControl cacheControl = CacheControl.maxAge(0, TimeUnit.SECONDS);
 
 		try {
-			List<SupaRelease> supaReleases = this.supaReleaseMgmtService.listSupaReleases(authToken);
+			List<SupaRelease> supaReleases = this.supaReleaseMgmtService.listSupaReleases(authToken, versions);
 			logger.debug("{} release(s)", CollectionUtils.isEmpty(supaReleases) ? 0 : supaReleases.size());
-			return new ResponseEntity<>(supaReleases, HttpStatus.OK);
+			return ResponseEntity.ok()
+					.cacheControl(cacheControl)
+					.contentType(MediaType.APPLICATION_JSON_UTF8)
+					.body(supaReleases);
 		} catch (SupaReleaseException sre) {
 			logger.error("Failed to retrieve list of SUPA releases: {}", sre.getMessage(), sre);
 			return new ResponseEntity<>(new ApiError("SUPA_RELEASE_LIST", sre.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -73,32 +79,6 @@ public class SupaMgmtController {
 
 			logger.error("Failed to retrieve specified SUPA release [{}]: {}", ControllerUtils.sanitizeString(releaseVersion), sre.getMessage(), sre);
 			return new ResponseEntity<>(new ApiError("SUPA_RELEASE_DOWNLOAD", sre.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	@GetMapping(value = "/getReleaseChecksum/{version:.+}")
-	public ResponseEntity<Object> getReleaseChecksum(@RequestHeader("Authorization") String authToken,
-			@PathVariable("version") String releaseVersion,
-			HttpServletResponse response) {
-
-		CacheControl cacheControl = CacheControl.maxAge(0, TimeUnit.SECONDS);
-
-		SupaRelease supaRelease = null;
-		try {
-			supaRelease = supaReleaseMgmtService.getSupaReleaseChecksum(authToken, releaseVersion);
-			if (supaRelease != null && supaRelease.getFile() != null && supaRelease.getFile().length > 0) {
-				return ResponseEntity.ok()
-						.cacheControl(cacheControl)
-		                .contentType(MediaType.TEXT_PLAIN)
-		                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + supaRelease.getPath() + ".sha1\"")
-		                .body(supaRelease.getFile());
-			}
-
-			// Throw exception if this point is reached
-			throw new SupaReleaseException("Missing or invalid SUPA release checksum");
-		} catch (SupaReleaseException sre) {
-			logger.error("Failed to retrieve specified SUPA release checksum [{}]: {}", ControllerUtils.sanitizeString(releaseVersion), sre.getMessage(), sre);
-			return new ResponseEntity<>(new ApiError("SUPA_RELEASE_CHECKSUM_DOWNLOAD", sre.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 }

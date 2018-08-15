@@ -7,7 +7,7 @@ public class SupaRelease {
 	private String path;
 	private String airline;
 	private byte[] file;
-	
+
 	public SupaRelease(String release, String partNumber, String path) {
 		this(release, partNumber, path, null);
 	}
@@ -17,6 +17,10 @@ public class SupaRelease {
 		this.partNumber = partNumber;
 		this.path = path;
 		this.airline = airline;
+	}
+
+	public SupaRelease(SupaRelease original) {
+		this(original.getRelease(), original.getPartNumber(), original.getPath(), original.getAirline());
 	}
 
 	public String getRelease() {
