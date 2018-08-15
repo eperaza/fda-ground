@@ -65,6 +65,7 @@ public class SupaReleaseManagementService {
 		List<SupaRelease> listOfSupaReleases = SUPA_RELEASES
 					.parallelStream()
 					.filter(sr -> !StringUtils.isBlank(sr.getAirline()) && sr.getAirline().toLowerCase().equals(airlineGroup))
+					.map(sr -> { sr.setFile(null); return sr; })
 					.collect(Collectors.toList());
 
 		return listOfSupaReleases;
