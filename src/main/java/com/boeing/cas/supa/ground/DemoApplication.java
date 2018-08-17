@@ -76,12 +76,14 @@ public class DemoApplication {
 		appSecrets.put("adwPwd", keyVaultRetriever.getSecretByKey("adwPwd"));
 		appSecrets.put("adwUser", keyVaultRetriever.getSecretByKey("adwUser"));
 		appSecrets.put("AzureADTenantName", keyVaultRetriever.getSecretByKey("AzureADTenantName"));
+		appSecrets.put("AzureADCustomTenantName", keyVaultRetriever.getSecretByKey("AzureADCustomTenantName"));
 		appSecrets.put("AzureADTenantID", keyVaultRetriever.getSecretByKey("AzureADTenantID"));
 		appSecrets.put("AzureADTenantAuthEndpoint", keyVaultRetriever.getSecretByKey("AzureADTenantAuthEndpoint"));
 		appSecrets.put("AzureADAppClientID", keyVaultRetriever.getSecretByKey("AzureADAppClientID"));
-		appSecrets.put("client1base64", keyVaultRetriever.getSecretByKey("client1base64"));
-		appSecrets.put("client2base64", keyVaultRetriever.getSecretByKey("client2base64"));
-		appSecrets.put("fdadvisor2base64", keyVaultRetriever.getSecretByKey("fdadvisor2base64"));
+		appSecrets.put("FDAdvisorClientCertName", keyVaultRetriever.getSecretByKey("FDAdvisorClientCertName"));
+		appSecrets.put("FDAdvisorClientCertBundlePassword", keyVaultRetriever.getSecretByKey("FDAdvisorClientCertBundlePassword"));
+		String fdaClientCertBase64 = new StringBuilder(appSecrets.get("FDAdvisorClientCertName")).append("base64").toString();
+		appSecrets.put(fdaClientCertBase64, keyVaultRetriever.getSecretByKey(fdaClientCertBase64));
 		appSecrets.put("MailServerAuthPassword", keyVaultRetriever.getSecretByKey("MailServerAuthPassword"));
 		appSecrets.put("MailServerAuthUsername", keyVaultRetriever.getSecretByKey("MailServerAuthUsername"));
 		appSecrets.put("MailServerHost", keyVaultRetriever.getSecretByKey("MailServerHost"));
@@ -90,6 +92,7 @@ public class DemoApplication {
 		appSecrets.put("RouteSyncClientCertPassword", keyVaultRetriever.getSecretByKey("RouteSyncClientCertPassword"));
 		appSecrets.put("RouteSyncServerCert", keyVaultRetriever.getSecretByKey("RouteSyncServerCert"));
 		appSecrets.put("RouteSyncServerTrustStoreAlias", keyVaultRetriever.getSecretByKey("RouteSyncServerTrustStoreAlias"));
+		appSecrets.put("RouteSyncFOMUrl", keyVaultRetriever.getSecretByKey("RouteSyncFOMUrl"));
 		appSecrets.put("SQLDatabasePassword", keyVaultRetriever.getSecretByKey("SQLDatabasePassword"));
 		appSecrets.put("SQLDatabaseUrl", keyVaultRetriever.getSecretByKey("SQLDatabaseUrl"));
 		appSecrets.put("SQLDatabaseUsername", keyVaultRetriever.getSecretByKey("SQLDatabaseUsername"));
@@ -109,9 +112,8 @@ public class DemoApplication {
 
 		Map<String, X509Certificate> appCertificates = new ConcurrentHashMap<String, X509Certificate>();
 
-		appCertificates.put("client1", keyVaultRetriever.getCertificateByCertName("client1"));
-		appCertificates.put("client2", keyVaultRetriever.getCertificateByCertName("client2"));
-		appCertificates.put("fdadvisor2", keyVaultRetriever.getCertificateByCertName("fdadvisor2"));
+		String fdaClientCertName = keyVaultRetriever.getSecretByKey("FDAdvisorClientCertName");
+		appCertificates.put(fdaClientCertName, keyVaultRetriever.getCertificateByCertName(fdaClientCertName));
 
 		return appCertificates;
 	}

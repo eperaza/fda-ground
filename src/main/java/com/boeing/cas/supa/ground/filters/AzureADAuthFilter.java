@@ -48,7 +48,7 @@ public class AzureADAuthFilter implements Filter {
 
 	@Value("${api.azuread.uri}")
 	private String azureadApiUri;
-
+	
 	@Autowired
 	private Map<String, String> appProps;
 
@@ -83,8 +83,8 @@ public class AzureADAuthFilter implements Filter {
 
 		if (allowedPath) {
 
-			if (this.isValidClientCertInReqHeader("fdadvisor2", httpRequest)) {
-				logger.debug("fdadvisor2 cert is valid, moving request along");
+			if (this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCertName"), httpRequest)) {
+				logger.debug("{} cert is valid, moving request along", appProps.get("FDAdvisorClientCertName"));
 				chain.doFilter(request, response);
 				return;
 			}
@@ -97,16 +97,16 @@ public class AzureADAuthFilter implements Filter {
 
 		try {
 
-			logger.debug("Checking fdadvisor2 cert and OAuth2 token...");
-			boolean validClientCert = this.isValidClientCertInReqHeader("fdadvisor2", httpRequest);
+			logger.debug("Checking {} cert and OAuth2 token...", appProps.get("FDAdvisorClientCertName"));
+			boolean validClientCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCertName"), httpRequest);
 			boolean validOAuthToken = this.isValidOAuthToken(httpRequest.getHeader("Authorization"));
 			if (validClientCert && validOAuthToken) {
-				logger.debug("fdadvisor2 cert and OAuth2 token are good!");
+				logger.debug("{} cert and OAuth2 token are good!", appProps.get("FDAdvisorClientCertName"));
                 chain.doFilter(request, response);
                 return;
             }
             else if (!validClientCert) {
-				logger.error("fdadvisor2 cert failed!");
+				logger.error("{} cert failed!", appProps.get("FDAdvisorClientCertName"));
             	responseCode = 403;
                 responseException = new ApiError("Invalid client certificate", "Must provide a valid client certificate");
             }

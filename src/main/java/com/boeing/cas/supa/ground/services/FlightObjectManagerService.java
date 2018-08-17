@@ -3,6 +3,7 @@ package com.boeing.cas.supa.ground.services;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -11,7 +12,6 @@ import javax.net.ssl.SSLSocketFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -25,9 +25,9 @@ public class FlightObjectManagerService {
 
 	private static final String FLIGHT_OBJECTS_PATH = "/perfect_flights";
 	private static final String OPERATIONAL_FLIGHT_PLANS_PATH = "/flight_plans";
-	
-	@Value("${api.routesync.fom}")
-	private String flightObjectManagerUri;
+
+	@Autowired
+	private Map<String, String> appProps;
 
 	@Autowired
 	private SSLSocketFactory sslSocketFactory;
@@ -39,7 +39,7 @@ public class FlightObjectManagerService {
 
 		try {
 
-			StringBuilder fomUrl = new StringBuilder(flightObjectManagerUri).append(FLIGHT_OBJECTS_PATH);
+			StringBuilder fomUrl = new StringBuilder(appProps.get("RouteSyncFOMUrl")).append(FLIGHT_OBJECTS_PATH);
 			if (flightId.isPresent() || departureAirport.isPresent() || arrivalAirport.isPresent()) {
 				fomUrl.append('?');
 
@@ -101,7 +101,7 @@ public class FlightObjectManagerService {
 
 		try {
 
-			StringBuilder fomUrl = new StringBuilder(flightObjectManagerUri).append(FLIGHT_OBJECTS_PATH);
+			StringBuilder fomUrl = new StringBuilder(appProps.get("RouteSyncFOMUrl")).append(FLIGHT_OBJECTS_PATH);
 			fomUrl.append('/').append(id).append("/show");
 
 			URL url = new URL(fomUrl.toString());
@@ -137,7 +137,7 @@ public class FlightObjectManagerService {
 
 		try {
 
-			StringBuilder fomUrl = new StringBuilder(flightObjectManagerUri).append(OPERATIONAL_FLIGHT_PLANS_PATH);
+			StringBuilder fomUrl = new StringBuilder(appProps.get("RouteSyncFOMUrl")).append(OPERATIONAL_FLIGHT_PLANS_PATH);
 			fomUrl.append('/').append(flightPlanId).append("/show");
 
 			URL url = new URL(fomUrl.toString());

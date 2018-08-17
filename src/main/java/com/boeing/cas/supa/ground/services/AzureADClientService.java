@@ -415,7 +415,7 @@ public class AzureADClientService {
 		try {
 
 			userObj = getUserFromGraph(
-					new StringBuilder(newUserPayload.getUserPrincipalName()).append('@').append(this.appProps.get("AzureADTenantName")).toString(),
+					new StringBuilder(newUserPayload.getUserPrincipalName()).append('@').append(this.appProps.get("AzureADCustomTenantName")).toString(),
 					adminAccessToken,
 					progressLog,
 					"CREATE_USER_ERROR");
@@ -504,8 +504,8 @@ public class AzureADClientService {
 				// New user account registration is successful. Now send email to user (use otherMail address)
 				MimeMessage message = emailSender.createMimeMessage();
 				MimeMessageHelper helper = new MimeMessageHelper(message);
-				helper.setFrom(new StringBuilder("support@").append(this.appProps.get("AzureADTenantName")).toString());
-				helper.setReplyTo(new StringBuilder("support@").append(this.appProps.get("AzureADTenantName")).toString());
+				helper.setFrom(new StringBuilder("support@").append(this.appProps.get("AzureADCustomTenantName")).toString());
+				helper.setReplyTo(new StringBuilder("support@").append(this.appProps.get("AzureADCustomTenantName")).toString());
 				helper.setSubject("FD Advisor user account activation");
 				helper.setTo(newUserPayload.getOtherMails().get(0));
 				helper.setText(composeNewUserAccountActivationEmail(newlyCreatedUser, registrationToken), true);
@@ -789,7 +789,7 @@ public class AzureADClientService {
 
 	public Object enableRepeatableUserRegistration(UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {
 
-		logger.debug("Invoking user registration (possibly repeated user registration");
+		logger.debug("Invoking user registration (possibly repeated user registration)");
 		
 		// Validate the password provided by the admin; if invalid, return appropriate error key/description
 		if (!PasswordPolicyEnforcer.validate(userAccountActivation.getPassword())) {
@@ -1498,7 +1498,7 @@ public class AzureADClientService {
 		
 		ObjectNode rootNode = mapper.createObjectNode();
 		if (newUserPayload.getUserPrincipalName().indexOf('@') < 0) {
-			rootNode.put("userPrincipalName", new StringBuilder(newUserPayload.getUserPrincipalName()).append('@').append(this.appProps.get("AzureADTenantName")).toString());
+			rootNode.put("userPrincipalName", new StringBuilder(newUserPayload.getUserPrincipalName()).append('@').append(this.appProps.get("AzureADCustomTenantName")).toString());
 			rootNode.put("mailNickname", newUserPayload.getUserPrincipalName());
 		}
 		else {
@@ -1523,9 +1523,10 @@ public class AzureADClientService {
 	
 	private String composeNewUserAccountActivationEmail(User newlyCreatedUser, String registrationToken) {
 
+		String fdadvisorClientCertBase64 = new StringBuilder(appProps.get("FDAdvisorClientCertName")).append("base64").toString();
 		String base64EncodedPayload = Base64.getEncoder().encodeToString(
 				new StringBuilder(newlyCreatedUser.getUserPrincipalName()).append(' ').append(registrationToken)
-						.append(' ').append(this.appProps.get("fdadvisor2base64")).toString().getBytes());
+						.append(' ').append(this.appProps.get(fdadvisorClientCertBase64)).toString().getBytes());
 		StringBuilder emailMessageBody = new StringBuilder();
 		emailMessageBody.append("Dear ").append(newlyCreatedUser.getDisplayName()).append(',');
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
