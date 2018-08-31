@@ -44,6 +44,12 @@ public class SupaReleaseManagementService {
 		SUPA_RELEASES.add(new SupaRelease("5.4.2", "BFB57-SUPA-0017", "supa-5.4.2-1.noarch.zip", "FDA"));
 		SUPA_RELEASES.add(new SupaRelease("5.4.2", "BFB57-SUPA-0017", "supa-5.4.2-1.noarch.zip", "SLK"));
 		SUPA_RELEASES.add(new SupaRelease("5.4.2", "BFB57-SUPA-0017", "supa-5.4.2-1.noarch.zip", "UAL"));
+
+		SUPA_RELEASES.add(new SupaRelease("5.4.3", "BFB58-SUPA-0018", "supa-5.4.3-1.noarch.zip", "AMX"));
+		SUPA_RELEASES.add(new SupaRelease("5.4.3", "BFB58-SUPA-0018", "supa-5.4.3-1.noarch.zip", "EFO"));
+		SUPA_RELEASES.add(new SupaRelease("5.4.3", "BFB58-SUPA-0018", "supa-5.4.3-1.noarch.zip", "FDA"));
+		SUPA_RELEASES.add(new SupaRelease("5.4.3", "BFB58-SUPA-0018", "supa-5.4.3-1.noarch.zip", "SLK"));
+		SUPA_RELEASES.add(new SupaRelease("5.4.3", "BFB58-SUPA-0018", "supa-5.4.3-1.noarch.zip", "UAL"));
 	}
 
 	@Autowired
