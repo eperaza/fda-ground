@@ -11,21 +11,17 @@ public class PasswordPolicyEnforcer {
 			.append("- Symbols @ # $ % ^ & * - _ ! + = [ ] { } | \\ : ‘ , . ? / ` ~ “ ( ) ;")
 			.toString();
 
-	private static final String PATTERN_PASSWORD_REGEX = new StringBuilder('^')
-			// combination of lowercase, uppercase and numbers, 8 to 16 characters in length
-			.append("((?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])).{8,16}")
+	private static final String PATTERN_PASSWORD_REGEX = new StringBuilder("^(?:")
+			.append("(?=[^a-z]*[a-z])(?=[^A-Z]*[A-Z])(?=[^0-9]*[0-9])")
 			.append('|') // -or-
-			// combination of lowercase, uppercase and symbols, 8 to 16 characters in length
-			.append("((?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&*\\-_!+=\\[\\]{}|\\:‘,.?\\/`~“\\(\\);])).{8,16}")
+			.append("(?=[^a-z]*[a-z])(?=[^A-Z]*[A-Z])(?=.*[-@#$%^&*_!+=\\[\\]{}|:‘,.?/`~“();])")
 			.append('|') // -or-
-			// combination of lowercase, numbers and symbols, 8 to 16 characters in length
-			.append("((?=.*[a-z])(?=.*[0-9])(?=.*[@#$%^&*\\-_!+=\\[\\]{}|\\:‘,.?\\/`~“\\(\\);])).{8,16}")
+			.append("(?=[^a-z]*[a-z])(?=[^0-9]*[0-9])(?=.*[-@#$%^&*_!+=\\[\\]{}|:‘,.?/`~“();])")
 			.append('|') // -or-
-			// combination of uppercase, numbers and symbols 8 to 16 characters in length
-			.append("((?=.*[A-Z])(?=.*[0-9])(?=.*[@#$%^&*\\-_!+=\\[\\]{}|\\:‘,.?\\/`~“\\(\\);])).{8,16}")
-			.append('$')
-			.toString();
-	
+			.append("(?=[^A-Z]*[A-Z])(?=[^0-9]*[0-9])(?=.*[-@#$%^&*_!+=\\[\\]{}|:‘,.?/`~“();])")
+			.append(")[-A-Za-z0-9@#$%^&*_!+=\\[\\]{}|:‘,.?/`~“();]{8,16}$")
+		.toString();
+
 	public static boolean validate(String password) {
 		return password.matches(PATTERN_PASSWORD_REGEX);
 	}
