@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.boeing.cas.supa.ground.dao.SupaReleaseManagementDao;
 import com.boeing.cas.supa.ground.exceptions.SupaReleaseException;
 import com.boeing.cas.supa.ground.pojos.Group;
 import com.boeing.cas.supa.ground.pojos.SupaRelease;
@@ -28,35 +29,15 @@ public class SupaReleaseManagementService {
 	private final Logger logger = LoggerFactory.getLogger(SupaReleaseManagementService.class);
 
 	private static String SUPA_RELEASE_CONTAINER = "supa-releases";
-	private static List<SupaRelease> SUPA_RELEASES;
-	static {
-
-		SUPA_RELEASES = new ArrayList<>();
-
-		SUPA_RELEASES.add(new SupaRelease("5.4.1", "BFB56-ASUP-0016", "supa-5.4.1-1.noarch.zip", "AMX"));
-		SUPA_RELEASES.add(new SupaRelease("5.4.1", "BFB56-ASUP-0016", "supa-5.4.1-1.noarch.zip", "EFO"));
-		SUPA_RELEASES.add(new SupaRelease("5.4.1", "BFB56-ASUP-0016", "supa-5.4.1-1.noarch.zip", "FDA"));
-		SUPA_RELEASES.add(new SupaRelease("5.4.1", "BFB56-ASUP-0016", "supa-5.4.1-1.noarch.zip", "SLK"));
-		SUPA_RELEASES.add(new SupaRelease("5.4.1", "BFB56-ASUP-0016", "supa-5.4.1-1.noarch.zip", "UAL"));
-
-		SUPA_RELEASES.add(new SupaRelease("5.4.2", "BFB57-SUPA-0017", "supa-5.4.2-1.noarch.zip", "AMX"));
-		SUPA_RELEASES.add(new SupaRelease("5.4.2", "BFB57-SUPA-0017", "supa-5.4.2-1.noarch.zip", "EFO"));
-		SUPA_RELEASES.add(new SupaRelease("5.4.2", "BFB57-SUPA-0017", "supa-5.4.2-1.noarch.zip", "FDA"));
-		SUPA_RELEASES.add(new SupaRelease("5.4.2", "BFB57-SUPA-0017", "supa-5.4.2-1.noarch.zip", "SLK"));
-		SUPA_RELEASES.add(new SupaRelease("5.4.2", "BFB57-SUPA-0017", "supa-5.4.2-1.noarch.zip", "UAL"));
-
-		SUPA_RELEASES.add(new SupaRelease("5.4.3", "BFB58-SUPA-0018", "supa-5.4.3-1.noarch.zip", "AMX"));
-		SUPA_RELEASES.add(new SupaRelease("5.4.3", "BFB58-SUPA-0018", "supa-5.4.3-1.noarch.zip", "EFO"));
-		SUPA_RELEASES.add(new SupaRelease("5.4.3", "BFB58-SUPA-0018", "supa-5.4.3-1.noarch.zip", "FDA"));
-		SUPA_RELEASES.add(new SupaRelease("5.4.3", "BFB58-SUPA-0018", "supa-5.4.3-1.noarch.zip", "SLK"));
-		SUPA_RELEASES.add(new SupaRelease("5.4.3", "BFB58-SUPA-0018", "supa-5.4.3-1.noarch.zip", "UAL"));
-	}
 
 	@Autowired
 	private Map<String, String> appProps;
 
 	@Autowired
 	private AzureADClientService aadClient;
+
+	@Autowired
+	private SupaReleaseManagementDao supaReleaseManagementDao;
 
 	public List<SupaRelease> listSupaReleases(String authToken, short versions) throws SupaReleaseException {
 
@@ -72,7 +53,7 @@ public class SupaReleaseManagementService {
 			}
 			String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
 			logger.debug("User airline for retrieving SUPA releases is [{}]", airlineGroup);
-			listOfSupaReleases = SUPA_RELEASES
+			listOfSupaReleases = supaReleaseManagementDao.getSupaReleases()
 						.parallelStream()
 						.filter(sr -> !StringUtils.isBlank(sr.getAirline()) && sr.getAirline().toLowerCase().equals(airlineGroup))
 						.sorted((sr1, sr2) -> sr2.getRelease().compareTo(sr1.getRelease()))
@@ -102,7 +83,8 @@ public class SupaReleaseManagementService {
 			AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
 			if (!StringUtils.isBlank(releaseVersion)) {
 
-				Optional<SupaRelease> supaRelease = SUPA_RELEASES.parallelStream()
+				Optional<SupaRelease> supaRelease = supaReleaseManagementDao.getSupaReleases()
+						.parallelStream()
 						.filter(sr -> sr.getRelease().equals(releaseVersion) && sr.getAirline().toLowerCase().equals(airlineGroup))
 						.findFirst();
 				if (supaRelease.isPresent()) {

@@ -108,3 +108,62 @@ GO
 
 ALTER TABLE [dbo].[user_account_registrations] ENABLE TRIGGER [UserAccountReg_Trigger_UpdateTS]
 GO
+
+USE [FDAGroundServices]
+GO
+
+/****** Object:  Table [dbo].[supa_releases]    Script Date: 9/5/2018 12:40:24 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[supa_releases](
+	[release] [nvarchar](64) NOT NULL,
+	[part_number] [nvarchar](64) NOT NULL,
+	[path] [nvarchar](128) NOT NULL,
+	[airline] [nvarchar](64) NOT NULL,
+	[create_ts] [datetimeoffset](7) NOT NULL,
+	[update_ts] [datetimeoffset](7) NULL,
+ CONSTRAINT [PK_supa_releases] PRIMARY KEY CLUSTERED 
+(
+	[release] ASC,
+	[airline] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[supa_releases] ADD  CONSTRAINT [DF_supa_releases_CreateTS]  DEFAULT (sysutcdatetime()) FOR [create_ts]
+GO
+
+
+CREATE UNIQUE NONCLUSTERED INDEX [UNIQ_supa_releases_part_number_airline] ON [dbo].[supa_releases]
+(
+	[part_number] ASC,
+	[airline] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[supa_releases] ADD  CONSTRAINT [DF_supa_releases_CreateTS]  DEFAULT (sysutcdatetime()) FOR [create_ts]
+GO
+
+CREATE TRIGGER [dbo].[SupaReleases_Trigger_UpdateTS]
+ON [dbo].[supa_releases]
+AFTER INSERT, UPDATE
+AS BEGIN
+
+       SET NOCOUNT ON;
+
+       UPDATE SR
+              SET SR.update_ts = SYSUTCDATETIME()
+       FROM supa_releases AS SR
+              INNER JOIN inserted AS I
+                     ON SR.release = I.release
+                        AND SR.airline = I.airline;
+
+END
+GO
+
+ALTER TABLE [dbo].[supa_releases] ENABLE TRIGGER [SupaReleases_Trigger_UpdateTS]
+GO
