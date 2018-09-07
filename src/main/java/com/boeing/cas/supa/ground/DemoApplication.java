@@ -75,6 +75,8 @@ public class DemoApplication {
 		appSecrets.put("adwPath", keyVaultRetriever.getSecretByKey("adwPath"));
 		appSecrets.put("adwPwd", keyVaultRetriever.getSecretByKey("adwPwd"));
 		appSecrets.put("adwUser", keyVaultRetriever.getSecretByKey("adwUser"));
+		appSecrets.put("adwUpload", keyVaultRetriever.getSecretByKey("adwUpload"));
+		appSecrets.put("adwUploadFDA", keyVaultRetriever.getSecretByKey("adwUploadFDA"));
 		appSecrets.put("AzureADTenantName", keyVaultRetriever.getSecretByKey("AzureADTenantName"));
 		appSecrets.put("AzureADCustomTenantName", keyVaultRetriever.getSecretByKey("AzureADCustomTenantName"));
 		appSecrets.put("AzureADTenantID", keyVaultRetriever.getSecretByKey("AzureADTenantID"));

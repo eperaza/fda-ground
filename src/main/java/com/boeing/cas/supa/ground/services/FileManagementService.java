@@ -98,8 +98,18 @@ public class FileManagementService {
 			if (!_airline.equalsIgnoreCase(airlineGroup)) {
 				throw new FlightRecordException(String.format("Flight record filename prefix %s is not associated with airline code %s", _airline, airlineGroup));
 			}
-		    _flightDatetime = OffsetDateTime.parse(String.format("%s_%s", _flightDate, _flightTime), Constants.FlightRecordDateTimeFormatterForParse).toInstant();
-			_storagePath = new StringBuilder(_airline).append('/').append(_tail).append('/').append(OffsetDateTime.ofInstant(_flightDatetime, ZoneId.of("UTC")).format(Constants.FlightRecordDateTimeFormatterForFormat)).toString();
+			try {
+			    _flightDatetime = OffsetDateTime.parse(String.format("%s_%s", _flightDate, _flightTime), Constants.FlightRecordDateTimeFormatterForParse).toInstant();
+			} catch (DateTimeParseException dtpe) {
+				// Treat as non-critical error... don't re-throw exception
+			}
+			
+			// If tail and/or date-time tokens are missing or invalid, save file in UNRESOLVED folder
+			if (StringUtils.isBlank(_tail) || _flightDatetime == null) {
+				_storagePath = new StringBuilder(_airline).append("/UNRESOLVED").toString();
+			} else {
+				_storagePath = new StringBuilder(_airline).append('/').append(_tail).append('/').append(OffsetDateTime.ofInstant(_flightDatetime, ZoneId.of("UTC")).format(Constants.FlightRecordDateTimeFormatterForFormat)).toString();
+			}
 
 		    // Store the uploaded file in TEMP, in preparation for uploading to Azure and ADW
         	uploadFolder = ControllerUtils.saveUploadedFiles(Arrays.asList(uploadFlightRecord));
@@ -125,7 +135,8 @@ public class FileManagementService {
         final String airline = _airline,
          	   storagePath = _storagePath;
 		final Path uploadPath = _uploadPath;
-        final Instant flightDatetime = _flightDatetime;
+		// If flight date and time is absent in flight record name, default it to the minimum supported Instant
+        final Instant flightDatetime = _flightDatetime != null ? _flightDatetime : OffsetDateTime.parse("19700101_000000Z", Constants.FlightRecordDateTimeFormatterForParse).toInstant();
 
         // Prepare a final FlightRecord instance to:
         // (a) pass to the individual upload threads, so individual attributes can be updates as warranted.
@@ -138,35 +149,47 @@ public class FileManagementService {
 		List<Future<Boolean>> futures = new ArrayList<>();
 		final Map<String, String> properties = this.appProps;
 
-		// ------- Adding file to ADW -------
-		logger.debug("Adding file to ADW");
-		Future<Boolean> adwFuture = es.submit(new Callable<Boolean>() {
+		Future<Boolean> adwFuture = null;
+		// Suppress ADW upload (set via application properties, typically false for non-Production environments)
+		if (Boolean.parseBoolean(this.appProps.get("adwUpload"))) {
 
-			@Override
-			public Boolean call() throws Exception {
+			// If ADW upload is set to true, then check user associated airline:
+			// - non-FDA, proceed with upload
+			// - FDA, proceed with upload only if adwUploadFDA is set to true
+			if (!airlineGroup.equalsIgnoreCase("FDA")
+				|| airlineGroup.equalsIgnoreCase("FDA") && Boolean.parseBoolean(this.appProps.get("adwUploadFDA"))) {
 
-				Boolean xfr = false;
-				try {
+				// ------- Adding file to ADW -------
+				logger.debug("Adding file to ADW");
+				adwFuture = es.submit(new Callable<Boolean>() {
 
-					logger.info("Starting ADW Transfer");
-					String host = properties.get("adwHost");
-					String usr = properties.get("adwUser");
-					String pwd = properties.get("adwPwd");
-					String path = properties.get("adwPath");
-					ADWTransferUtil adw = new ADWTransferUtil(host, usr, pwd, path);
-					xfr = adw.sendFile(uploadPath.toFile().getAbsolutePath());
-					// Update ADW update status in flight record
-					flightRecord.setUploadToAdw(xfr);
-					logger.info("Transfer to ADW complete: {}", xfr);
-				}
-				catch(Exception e) {
-					logger.error("ApiError in ADW XFER: {}", e.getMessage(), e);
-				}
+					@Override
+					public Boolean call() throws Exception {
 
-				return xfr;
-			} 
-		});
-		futures.add(adwFuture);
+						Boolean xfr = false;
+						try {
+
+							logger.info("Starting ADW Transfer");
+							String host = properties.get("adwHost");
+							String usr = properties.get("adwUser");
+							String pwd = properties.get("adwPwd");
+							String path = properties.get("adwPath");
+							ADWTransferUtil adw = new ADWTransferUtil(host, usr, pwd, path);
+							xfr = adw.sendFile(uploadPath.toFile().getAbsolutePath());
+							// Update ADW update status in flight record
+							flightRecord.setUploadToAdw(xfr);
+							logger.info("Transfer to ADW complete: {}", xfr);
+						}
+						catch(Exception e) {
+							logger.error("ApiError in ADW XFER: {}", e.getMessage(), e);
+						}
+
+						return xfr;
+					} 
+				});
+				futures.add(adwFuture);
+			}
+		}
 
 		// ------- Adding file to Azure Storage and Message Queue -------
 		logger.debug("Adding file to Azure Storage and Message Queue");
@@ -197,7 +220,7 @@ public class FileManagementService {
 		boolean azureBool = false;
 		try {
 
-			adwBool = adwFuture.get();
+			adwBool = adwFuture != null ? adwFuture.get() : false;
 			azureBool = azureFuture.get();
 		} catch (InterruptedException | ExecutionException e) {
 			logger.error("ApiError in running executionservice: {}", e.getMessage(), e);
