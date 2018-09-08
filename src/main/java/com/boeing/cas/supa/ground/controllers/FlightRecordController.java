@@ -38,7 +38,7 @@ public class FlightRecordController {
 
 			if (uploadFlightRecord.isEmpty()) {
 				logger.warn("The flight record payload is empty");
-				throw new FlightRecordException("No file submitted");
+				throw new FlightRecordException("Empty or invalid file submitted");
 			}
 
 			FileManagementMessage flightRecordUploadResponse = this.fileManagementService.uploadFlightRecord(uploadFlightRecord, authToken);
