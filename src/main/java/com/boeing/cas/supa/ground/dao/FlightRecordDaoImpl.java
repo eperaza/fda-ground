@@ -19,8 +19,10 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.boeing.cas.supa.ground.exceptions.FlightRecordException;
+import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.FlightRecord;
 import com.boeing.cas.supa.ground.utils.Constants;
+import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 
 import microsoft.sql.DateTimeOffset;
 
@@ -55,11 +57,11 @@ public class FlightRecordDaoImpl implements FlightRecordDao {
 			int returnVal = jdbcTemplate.update(INSERT_FLIGHT_RECORD, namedParameters);
 			if (returnVal != 1) {
 				logger.error("Could not insert flight record into database: {} record(s) updated", returnVal);
-				throw new FlightRecordException(String.format("%d record(s) updated", returnVal));
+				throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPDATE_STATUS_FAILURE", String.format("%d record(s) updated", returnVal), RequestFailureReason.INTERNAL_SERVER_ERROR));
 			}
 		} catch (DataAccessException dae) {
 			logger.error("Failed to insert flight data into database: {}", dae.getMessage(), dae);
-			throw new FlightRecordException("Database exception");
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPDATE_STATUS_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 	}
 
@@ -75,7 +77,7 @@ public class FlightRecordDaoImpl implements FlightRecordDao {
 			flightRecords = jdbcTemplate.query(GET_FLIGHT_RECORDS, namedParameters, new FlightRecordRowMapper());
 		} catch (DataAccessException dae) {
 			logger.error("Failed to getAllFlightRecords: {}", dae.getMessage(), dae);
-			throw new FlightRecordException("Database exception");
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_RETRIEVAL_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 
 		return flightRecords;
@@ -95,7 +97,7 @@ public class FlightRecordDaoImpl implements FlightRecordDao {
 			return null;
 		} catch (DataAccessException dae) {
 			logger.error("Failed to retrieve existing flight record matching specified identifier: {}", dae.getMessage(), dae);
-			throw new FlightRecordException("Database exception");
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_RETRIEVAL_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 	}
 
@@ -112,7 +114,7 @@ public class FlightRecordDaoImpl implements FlightRecordDao {
 			}
 		} catch (DataAccessException dae) {
 			logger.error("Failed to update deleted on AID status of flight record: {}", dae.getMessage(), dae);
-			throw new FlightRecordException("Database exception");
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPDATE_STATUS_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 	}
 	

@@ -21,6 +21,8 @@ import com.boeing.cas.supa.ground.exceptions.FlightRecordException;
 import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.FileManagementMessage;
 import com.boeing.cas.supa.ground.services.FileManagementService;
+import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
+import com.boeing.cas.supa.ground.utils.ControllerUtils;
 
 @RestController
 public class FlightRecordController {
@@ -38,14 +40,14 @@ public class FlightRecordController {
 
 			if (uploadFlightRecord.isEmpty()) {
 				logger.warn("The flight record payload is empty");
-				throw new FlightRecordException("Empty or invalid file submitted");
+				throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPLOAD_FAILURE", "Empty or invalid file submitted", RequestFailureReason.BAD_REQUEST));
 			}
 
 			FileManagementMessage flightRecordUploadResponse = this.fileManagementService.uploadFlightRecord(uploadFlightRecord, authToken);
 			return new ResponseEntity<>(flightRecordUploadResponse, HttpStatus.OK);
 		} catch (FlightRecordException fre) {
 			logger.error("Upload flight record failed: {}", fre.getMessage());
-			return new ResponseEntity<>(new ApiError("FLIGHT_RECORD_UPLOAD", fre.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<>(fre.getError(), ControllerUtils.translateRequestFailureReasonToHttpErrorCode(fre.getError().getFailureReason()));
 		}
 	}
 
@@ -57,7 +59,7 @@ public class FlightRecordController {
 		try {
 
 			if (CollectionUtils.isEmpty(flightRecordNames)) {
-				throw new FlightRecordException("Flight record is not specified");
+				throw new FlightRecordException(new ApiError("FLIGHT_RECORD_STATUS_FAILURE", "Flight record(s) are not specified", RequestFailureReason.BAD_REQUEST));
 			}
 
 			List<FileManagementMessage> fileMgmtMessages = this.fileManagementService.updateFlightRecordOnAidStatus(flightRecordNames, authToken);

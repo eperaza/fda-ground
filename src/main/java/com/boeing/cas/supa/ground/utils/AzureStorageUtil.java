@@ -15,9 +15,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.boeing.cas.supa.ground.exceptions.FlightRecordException;
+import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.AzureStorageMessage;
 import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.pojos.UserCondensed;
+import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.storage.AccessCondition;
 import com.microsoft.azure.storage.CloudStorageAccount;
@@ -141,15 +143,15 @@ public class AzureStorageUtil {
         }
         catch (FileNotFoundException fnfe) {
         	logger.error("FileNotFoundException encountered: {}", fnfe.getMessage(), fnfe);
-        	throw new FlightRecordException(fnfe.getMessage());
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPLOAD_FAILURE", fnfe.getMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR));
         }
         catch (StorageException se) {
         	logger.error("StorageException encountered: {}", se.getMessage(), se);
-        	throw new FlightRecordException(se.getMessage());
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPLOAD_FAILURE", se.getMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR));
         }
         catch (Exception e) {
         	logger.error("Exception encountered: {}", e.getMessage(), e);
-        	throw new FlightRecordException(ExceptionUtils.getRootCause(e).getMessage());
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPLOAD_FAILURE", ExceptionUtils.getRootCause(e).getMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR));
         }
 
 		return rval;

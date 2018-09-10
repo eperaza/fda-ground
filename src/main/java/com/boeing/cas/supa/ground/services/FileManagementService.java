@@ -31,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.boeing.cas.supa.ground.dao.FlightRecordDao;
 import com.boeing.cas.supa.ground.exceptions.FlightRecordException;
+import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.FileManagementMessage;
 import com.boeing.cas.supa.ground.pojos.FlightRecord;
 import com.boeing.cas.supa.ground.pojos.Group;
@@ -38,6 +39,7 @@ import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.utils.ADWTransferUtil;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
+import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
 
 @Service
@@ -45,6 +47,8 @@ public class FileManagementService {
 
 	private final Logger logger = LoggerFactory.getLogger(FileManagementService.class);
 
+	private final static String FLIGHT_RECORDS_STORAGE_CONTAINER = "flight-records";
+	
 	@Autowired
 	private Map<String, String> appProps;
 
@@ -75,7 +79,7 @@ public class FileManagementService {
 		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
 		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
 		if (airlineGroups.size() != 1) {
-			throw new FlightRecordException("Failed to associate user with an airline");
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPLOAD_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
 		}
 		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
 		// Sample Flight Record name: FDA_ABCDEF_FDA101_KSEA_KORD_20180531_132001Z_004159
@@ -96,7 +100,7 @@ public class FileManagementService {
 			_flightDate = flightRecordNameTokens.get(5);
 			_flightTime = flightRecordNameTokens.get(6);
 			if (!_airline.equalsIgnoreCase(airlineGroup)) {
-				throw new FlightRecordException(String.format("Flight record filename prefix %s is not associated with airline code %s", _airline, airlineGroup));
+				throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPLOAD_FAILURE", String.format("Flight record filename prefix %s is not associated with %s airline user", _airline, airlineGroup.toUpperCase()), RequestFailureReason.UNAUTHORIZED));
 			}
 			try {
 			    _flightDatetime = OffsetDateTime.parse(String.format("%s_%s", _flightDate, _flightTime), Constants.FlightRecordDateTimeFormatterForParse).toInstant();
@@ -124,11 +128,9 @@ public class FileManagementService {
         		_fileSizeKb = fileChannel.size();
     		}
 		} catch (IndexOutOfBoundsException ioobe) {
-			throw new FlightRecordException("Failed to extract identifying tokens from flight record filename");
-		} catch (DateTimeParseException dtpe) {
-			throw new FlightRecordException("Invalid date and time format in flight record filename");
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPLOAD_FAILURE", "Failed to extract identifying tokens from flight record filename", RequestFailureReason.BAD_REQUEST));
 		} catch (IOException ioe) {
-			throw new FlightRecordException(String.format("I/O exception encountered %s", ioe.getMessage()));
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPLOAD_FAILURE", String.format("I/O exception encountered %s", ioe.getMessage()), RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 
 		final long fileSizeKb = _fileSizeKb;
@@ -202,7 +204,7 @@ public class FileManagementService {
 
 					logger.info("Starting Azure upload");
 					AzureStorageUtil asu = new AzureStorageUtil(properties.get("StorageAccountName"), properties.get("StorageKey"));
-					upload = asu.uploadFlightRecord("flight-records", new StringBuilder(storagePath).append('/').append(flightRecord.getFlightRecordName()).toString(), uploadPath.toFile().getAbsolutePath(), user);
+					upload = asu.uploadFlightRecord(FLIGHT_RECORDS_STORAGE_CONTAINER, new StringBuilder(storagePath).append('/').append(flightRecord.getFlightRecordName()).toString(), uploadPath.toFile().getAbsolutePath(), user);
 					logger.info("Upload to Azure complete: {}", upload);
 				} catch (FlightRecordException fre) {
 					logger.error("Failed to upload to Azure Storage: {}", fre.getMessage());
@@ -245,7 +247,7 @@ public class FileManagementService {
 
 		// If Azure Storage upload fails, that is a crucial error that warrants an appropriate error response to the user
 		if (!azureBool) {
-			throw new FlightRecordException(flightRecordUploadResponse.getMessage());
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPLOAD_FAILURE", flightRecordUploadResponse.getMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 
 		// Since Azure Storage upload is successful, the upload must be logged into the database
@@ -254,10 +256,10 @@ public class FileManagementService {
 			flightRecordUploadResponse.setUploaded(true);
 		} catch (FlightRecordException fre) {
 			logger.error("Failed to record flight record upload to FDA Ground! {}", fre.getMessage());
-			throw new FlightRecordException(String.format("Failed to log flight record upload to FDA Ground: %s", fre.getMessage()));
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPLOAD_FAILURE", String.format("Failed to log flight record upload to FDA Ground: %s", fre.getMessage()), RequestFailureReason.INTERNAL_SERVER_ERROR));
 		} catch (Exception e) {
 			logger.error("Failed to record flight record upload to FDA Ground! {}", ExceptionUtils.getRootCause(e).getMessage());
-			throw new FlightRecordException(String.format("Failed to log flight record upload to FDA Ground: %s", ExceptionUtils.getRootCause(e).getMessage()));
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPLOAD_FAILURE", String.format("Failed to log flight record upload to FDA Ground: %s", ExceptionUtils.getRootCause(e).getMessage()), RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
         
 		return flightRecordUploadResponse;
@@ -273,7 +275,7 @@ public class FileManagementService {
 		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
 		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
 		if (airlineGroups.size() != 1) {
-			throw new FlightRecordException("Failed to associate user with an airline");
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPDATE_STATUS_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
 		}
 		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
 
@@ -285,7 +287,7 @@ public class FileManagementService {
 				try {					
 					_airline = flightRecordNameTokens.get(0);
 					if (!_airline.equalsIgnoreCase(airlineGroup)) {
-						throw new FlightRecordException(String.format("Flight record filename prefix %s is not associated with airline code %s", _airline, airlineGroup));
+						throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPDATE_STATUS_FAILURE", String.format("Flight record filename prefix %s is not associated with airline code %s", _airline, airlineGroup), RequestFailureReason.UNAUTHORIZED));
 					}
 				} catch (IndexOutOfBoundsException ioobe) {
 					fmm.setMessage("Failed to extract identifying tokens from flight record filename");
@@ -294,6 +296,7 @@ public class FileManagementService {
 				} catch (Exception e) {
 					fmm.setMessage(e.getMessage());
 				}
+
 				return fmm;
 			})
 			.map(fmm -> {
@@ -313,7 +316,7 @@ public class FileManagementService {
 						
 						FlightRecord flightRecord = this.flightRecordDao.getFlightRecord(fmm.getFlightRecordName());
 						if (flightRecord == null) {
-							throw new FlightRecordException("Flight record not found");
+							throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPDATE_STATUS_FAILURE", "Flight record not found", RequestFailureReason.NOT_FOUND));
 						} else if (!flightRecord.isDeletedOnAid()) {
 							logger.error("Unable to update deleted-on-AID status on flight record: {}", flightRecord.toString());
 							fmm.setUploaded(true);
@@ -343,7 +346,7 @@ public class FileManagementService {
 		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
 		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
 		if (airlineGroups.size() != 1) {
-			throw new FlightRecordException("Failed to associate user with an airline");
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_RETRIEVAL_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
 		}
 		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
 
@@ -367,7 +370,7 @@ public class FileManagementService {
 		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
 		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
 		if (airlineGroups.size() != 1) {
-			throw new FlightRecordException("Failed to associate user with an airline");
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_STATUS_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
 		}
 		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
 
