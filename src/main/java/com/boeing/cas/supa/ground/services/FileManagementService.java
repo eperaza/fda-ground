@@ -157,7 +157,7 @@ public class FileManagementService {
 			// - non-FDA, proceed with upload
 			// - FDA, proceed with upload only if adwUploadFDA is set to true
 			if (!airlineGroup.equalsIgnoreCase("FDA")
-				|| airlineGroup.equalsIgnoreCase("FDA") && Boolean.parseBoolean(this.appProps.get("adwUploadFDA"))) {
+				|| Boolean.parseBoolean(this.appProps.get("adwUploadFDA"))) {
 
 				// ------- Adding file to ADW -------
 				logger.debug("Adding file to ADW");
