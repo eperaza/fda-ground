@@ -1,59 +1,42 @@
 package com.boeing.cas.supa.ground.controllers;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
+import com.boeing.cas.supa.ground.exceptions.FileDownloadException;
+import com.boeing.cas.supa.ground.services.FileManagementService;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
 
 @Controller
 public class FileDownloadController {
 
 	@Autowired
-	private Map<String, String> appProps;
+	private FileManagementService fileManagementService;
 
-	private final Logger logger = LoggerFactory.getLogger(FileDownloadController.class);
-
-	@ResponseBody
 	@RequestMapping(value = "/download", method = RequestMethod.GET)
-	public byte[] downloadJSONFile(@RequestParam("file") String file, @RequestParam("type") String type,
-			HttpServletRequest request, HttpServletResponse response) {
+	public ResponseEntity<Object> getFileFromStorage(@RequestHeader("Authorization") String authToken,
+			@RequestParam String file, @RequestParam String type,
+			HttpServletResponse response) {
+
+		CacheControl cacheControl = CacheControl.maxAge(0, TimeUnit.SECONDS);
 
 		try {
-
-			AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
-			if (file != null) {
-
-				ByteArrayOutputStream outputStream = null;
-				// Files are always case sensitive so no need to change fileparam...PLEASE
-				outputStream = asu.downloadFile(type.toLowerCase(), file);
-				if (outputStream != null) {
-					response.setStatus(HttpServletResponse.SC_OK);
-					return outputStream.toByteArray();
-				}
-
-				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-				return new byte[0];
-			}
-		} catch (IOException e) {
-			logger.error("ApiError retrieving file [{}] of type [{}]: {}", ControllerUtils.sanitizeString(file),
-					ControllerUtils.sanitizeString(type), e.getMessage(), e);
+			byte[] fileInBytes = this.fileManagementService.getFileFromStorage(file, type, authToken);
+			return ResponseEntity.ok()
+					.cacheControl(cacheControl)
+					.body(fileInBytes);
+		} catch (FileDownloadException fde) {
+			return new ResponseEntity<>(fde.getError(), ControllerUtils.translateRequestFailureReasonToHttpErrorCode(fde.getError().getFailureReason()));
 		}
-
-		response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-		return new byte[0];
 	}
 }
