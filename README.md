@@ -51,6 +51,4 @@ $ curl  -X POST https://fdagroundtest3.azurewebsites.net/register \
 ```
 
 ### Future outstanding tasks:
-* Use Azure KeyVault (L)
-* User management in Azure AD (M)
 * CI/CD for Azure WebApp (L)

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -16,11 +15,13 @@ import org.springframework.stereotype.Service;
 
 import com.boeing.cas.supa.ground.dao.SupaReleaseManagementDao;
 import com.boeing.cas.supa.ground.exceptions.SupaReleaseException;
+import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.Group;
 import com.boeing.cas.supa.ground.pojos.SupaRelease;
 import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
+import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
 
 @Service
@@ -49,21 +50,17 @@ public class SupaReleaseManagementService {
 			final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
 			List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
 			if (airlineGroups.size() != 1) {
-				throw new SupaReleaseException("Failed to associate user with an airline");
+				throw new SupaReleaseException(new ApiError("SUPA_RELEASE_MGMT", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
 			}
 			String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
 			logger.debug("User airline for retrieving SUPA releases is [{}]", airlineGroup);
-			listOfSupaReleases = supaReleaseManagementDao.getSupaReleases()
-						.parallelStream()
-						.filter(sr -> !StringUtils.isBlank(sr.getAirline()) && sr.getAirline().toLowerCase().equals(airlineGroup))
-						.sorted((sr1, sr2) -> sr2.getRelease().compareTo(sr1.getRelease()))
-						.collect(Collectors.toList());
+			listOfSupaReleases = supaReleaseManagementDao.getSupaReleases(airlineGroup.toLowerCase());
 
 			return listOfSupaReleases.subList(0, ((versions < listOfSupaReleases.size()) ? versions : listOfSupaReleases.size()));
 
 		} catch (IllegalArgumentException iae) {
 			logger.error("Probable missing or invalid version count [{}]: {}", versions, iae.getMessage());
-			throw new SupaReleaseException("Missing or invalid release count requested");
+			throw new SupaReleaseException(new ApiError("SUPA_RELEASE_MGMT", "Missing or invalid release count requested", RequestFailureReason.BAD_REQUEST));
 		}
 	}
 
@@ -73,7 +70,7 @@ public class SupaReleaseManagementService {
 		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
 		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
 		if (airlineGroups.size() != 1) {
-			throw new SupaReleaseException("Failed to associate user with an airline");
+			throw new SupaReleaseException(new ApiError("SUPA_RELEASE_DOWNLOAD", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
 		}
 		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
 		logger.debug("User airline for retrieving SUPA releases is [{}]", airlineGroup);
@@ -83,30 +80,26 @@ public class SupaReleaseManagementService {
 			AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
 			if (!StringUtils.isBlank(releaseVersion)) {
 
-				Optional<SupaRelease> supaRelease = supaReleaseManagementDao.getSupaReleases()
-						.parallelStream()
-						.filter(sr -> sr.getRelease().equals(releaseVersion) && sr.getAirline().toLowerCase().equals(airlineGroup))
-						.findFirst();
-				if (supaRelease.isPresent()) {
-					// Clone the original object, because an object in the in-memory repository should not be updated!
-					// This can be cleaned up when the repository corresponds to a real database (Azure SQL)
-					SupaRelease forDownload = new SupaRelease(supaRelease.get());
-					String supaReleasePath = forDownload.getPath();
-					try (ByteArrayOutputStream outputStream = asu.downloadFile(SUPA_RELEASE_CONTAINER, new StringBuilder(releaseVersion).append('/').append(supaReleasePath).toString())) {
-						
+				SupaRelease supaRelease = supaReleaseManagementDao.getSupaReleaseByRelease(releaseVersion, airlineGroup.toLowerCase());
+				if (supaRelease != null) {
+
+					try (ByteArrayOutputStream outputStream = asu.downloadFile(SUPA_RELEASE_CONTAINER, new StringBuilder(releaseVersion).append('/').append(supaRelease.getPath()).toString())) {
+
 						if (outputStream != null) {
 							outputStream.flush();
-							forDownload.setFile(outputStream.toByteArray());
-							return forDownload;
+							supaRelease.setFile(outputStream.toByteArray());
+							return supaRelease;
 						}
 					}
 				} else {
 					logger.error("Failed to retrieve specified SUPA release: {}", ControllerUtils.sanitizeString(releaseVersion));
+					throw new SupaReleaseException(new ApiError("SUPA_RELEASE_DOWNLOAD", String.format("Failed to retrieve specified SUPA release: %s", ControllerUtils.sanitizeString(releaseVersion)), RequestFailureReason.INTERNAL_SERVER_ERROR));
 				}
 			}
 		} catch (IOException e) {
 			logger.error("ApiError retrieving SUPA release version [{}]: {}", ControllerUtils.sanitizeString(releaseVersion),
 					e.getMessage(), e);
+			throw new SupaReleaseException(new ApiError("SUPA_RELEASE_DOWNLOAD", String.format("Failed to retrieve specified SUPA release: %s", ControllerUtils.sanitizeString(releaseVersion)), RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 
 		return null;

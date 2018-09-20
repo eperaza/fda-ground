@@ -1505,7 +1505,6 @@ public class AzureADClientService {
 			rootNode.put("userPrincipalName", newUserPayload.getUserPrincipalName());
 			rootNode.put("mailNickname", newUserPayload.getUserPrincipalName().substring(0, newUserPayload.getUserPrincipalName().indexOf('@')));
 		}
-		//rootNode.put("accountEnabled", newUserPayload.isAccountEnabled());
 		rootNode.put("accountEnabled", false);
 		rootNode.put("givenName", newUserPayload.getGivenName());
 		rootNode.put("surname", newUserPayload.getSurname());

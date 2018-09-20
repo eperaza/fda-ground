@@ -26,6 +26,7 @@ import com.boeing.cas.supa.ground.exceptions.SupaReleaseException;
 import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.SupaRelease;
 import com.boeing.cas.supa.ground.services.SupaReleaseManagementService;
+import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
 
 @RestController
@@ -74,11 +75,11 @@ public class SupaMgmtController {
 			}
 
 			// Throw exception if this point is reached
-			throw new SupaReleaseException("Missing or invalid SUPA release");
+			throw new SupaReleaseException(new ApiError("SUPA_RELEASE_DOWNLOAD", "Missing or invalid SUPA release", RequestFailureReason.BAD_REQUEST));
 		} catch (SupaReleaseException sre) {
 
 			logger.error("Failed to retrieve specified SUPA release [{}]: {}", ControllerUtils.sanitizeString(releaseVersion), sre.getMessage(), sre);
-			return new ResponseEntity<>(new ApiError("SUPA_RELEASE_DOWNLOAD", sre.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<>(sre.getError(), ControllerUtils.translateRequestFailureReasonToHttpErrorCode(sre.getError().getFailureReason()));
 		}
 	}
 }

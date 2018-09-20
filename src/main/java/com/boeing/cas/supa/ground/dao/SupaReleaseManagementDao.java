@@ -7,9 +7,9 @@ import com.boeing.cas.supa.ground.pojos.SupaRelease;
 
 public interface SupaReleaseManagementDao {
 
-	public List<SupaRelease> getSupaReleases() throws SupaReleaseException;
+	public List<SupaRelease> getSupaReleases(String airline) throws SupaReleaseException;
 	
-	public SupaRelease getSupaReleaseByRelease(String release) throws SupaReleaseException;
+	public SupaRelease getSupaReleaseByRelease(String release, String airline) throws SupaReleaseException;
 
-	public SupaRelease getSupaReleaseByPartNumber(String partNumber) throws SupaReleaseException;
+	public SupaRelease getSupaReleaseByPartNumber(String partNumber, String airline) throws SupaReleaseException;
 }
