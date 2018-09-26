@@ -123,7 +123,14 @@ public class AzureADAuthFilter implements Filter {
         }
         catch (SecurityException se) {
         	responseCode = 401;
-            logger.error("Security exception while verifying cert and/or OAuth2 token: {}", se.getMessage(), se);
+        	// If request URL corresponds to root of application, a monitoring/ping service may be behind
+        	// the calls. In that case, do not show the stack trace and categorize this as a warning.
+        	if (path.equals("/")
+        		|| path.equals(StringUtils.EMPTY)) {
+        		logger.warn("Security exception while verifying cert and/or OAuth2 token: {}", se.getMessage());
+        	} else {
+        		logger.error("Security exception while verifying cert and/or OAuth2 token for request URL [{}]: {}", path, se.getMessage(), se);
+        	}
         	responseException = new ApiError("MISSING_INVALID_CLIENT_AUTH", se.getMessage());
         }
         finally {
