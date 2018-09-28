@@ -167,3 +167,51 @@ GO
 
 ALTER TABLE [dbo].[supa_releases] ENABLE TRIGGER [SupaReleases_Trigger_UpdateTS]
 GO
+
+CREATE TABLE [dbo].[demo_flight_streams](
+	[flight_stream_name] [nvarchar](64) NOT NULL,
+	[path] [nvarchar](128) NOT NULL,
+	[create_ts] [datetimeoffset](7) NOT NULL,
+	[update_ts] [datetimeoffset](7) NULL
+) ON [PRIMARY]
+GO
+SET ANSI_PADDING ON
+GO
+ALTER TABLE [dbo].[demo_flight_streams] ADD  CONSTRAINT [PK_demo_flight_streams] PRIMARY KEY CLUSTERED 
+(
+	[flight_stream_name] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+GO
+SET ANSI_PADDING ON
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [UNIQ_demo_flight_streams_path] ON [dbo].[demo_flight_streams]
+(
+	[path] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[demo_flight_streams] ADD  CONSTRAINT [DF_demo_flight_streams_CreateTS]  DEFAULT (sysutcdatetime()) FOR [create_ts]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TRIGGER [dbo].[DemoFlightStreams_Trigger_UpdateTS]
+ON [dbo].[demo_flight_streams]
+AFTER INSERT, UPDATE
+AS BEGIN
+
+       SET NOCOUNT ON;
+
+       UPDATE DFS
+              SET DFS.update_ts = SYSUTCDATETIME()
+       FROM demo_flight_streams AS DFS
+              INNER JOIN inserted AS I
+                     ON DFS.flight_stream_name = I.flight_stream_name;
+
+END
+
+GO
+ALTER TABLE [dbo].[demo_flight_streams] ENABLE TRIGGER [DemoFlightStreams_Trigger_UpdateTS]
+GO
+

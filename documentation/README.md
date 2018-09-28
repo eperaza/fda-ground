@@ -921,6 +921,62 @@ Transfer-Encoding: chunked
 }
 ```
 
+# List Playback Demo Flights (_for FDA_)
+```sh
+$ curl -s "https://HOST/playback/list" \
+       --cert $CERT --pass $CERTPASS \
+       -H "Authorization: Bearer <ACCESS-TOKEN>"
+```
+
+### Response for successful listing of playback demo flights (_for FDA_)
+```
+HTTP/1.1 200 OK
+Content-Length: 82
+Content-Type: application/json;charset=UTF-8
+X-Application-Context: application
+[
+    {
+        "flightStreamName": "StepClimb",
+        "path": "StepClimb_FlightStream.txt",
+        "file": null
+    },
+    ...
+]
+```
+
+# Download Playback Demo Flight Stream (_for FDA_)
+```sh
+$ curl -s -OJ "https://HOST/playback/getDemoFlight/<FLIGHT-STREAM-NAME>" \
+       --cert $CERT --pass $CERTPASS \
+       -H "Authorization: Bearer <ACCESS-TOKEN>"
+```
+
+### Response for successful download of Demo Flight Stream (_for FDA_)
+```
+HTTP/1.1 200 OK
+Cache-Control: max-age=0
+Content-Length: 12455113
+Content-Type: application/octet-stream
+X-Application-Context: application
+Content-Disposition: attachment; filename="StepClimb_FlightStream.txt"
+<Binary file stream for download...>
+```
+
+### Response for failed download of playback demo flight stream (_for FDA_)
+```
+HTTP/1.1 404
+Content-Length: 163
+X-Application-Context: application:localhost
+Content-Type: application/json;charset=UTF-8
+Transfer-Encoding: chunked
+{
+    "errorLabel": "PLAYBACK_DEMO_FLIGHT_MGMT",
+    "errorDescription": "Missing or invalid demo flight stream identifier",
+    "failureReason": "NOT_FOUND",
+    "timestamp": 1538155723
+}
+```
+
 # Common errors
 
 ### Invalid Access Token for Authorized Requests
