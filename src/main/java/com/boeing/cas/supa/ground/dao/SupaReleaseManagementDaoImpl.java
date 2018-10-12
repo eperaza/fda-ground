@@ -38,10 +38,11 @@ public class SupaReleaseManagementDaoImpl implements SupaReleaseManagementDao {
 
 		List<SupaRelease> supaReleases = new ArrayList<>();
 		Map<String,Object> namedParameters = new HashMap<>();
-		namedParameters.put("release", airline);
+		//namedParameters.put("release", airline);
+		namedParameters.put("airline", airline);
 
 		try {
-
+			logger.debug(GET_SUPA_RELEASES + " using [" + namedParameters.get("airline")+ "]");
 			supaReleases = jdbcTemplate.query(GET_SUPA_RELEASES, namedParameters, new SupaReleaseRowMapper());
 		} catch (DataAccessException dae) {
 			logger.error("Failed to get all SUPA releases: {}", dae.getMessage(), dae);
