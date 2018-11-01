@@ -10,10 +10,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -22,6 +19,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.boeing.cas.supa.ground.pojos.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -33,11 +31,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.boeing.cas.supa.ground.dao.FlightRecordDao;
 import com.boeing.cas.supa.ground.exceptions.FileDownloadException;
 import com.boeing.cas.supa.ground.exceptions.FlightRecordException;
-import com.boeing.cas.supa.ground.pojos.ApiError;
-import com.boeing.cas.supa.ground.pojos.FileManagementMessage;
-import com.boeing.cas.supa.ground.pojos.FlightRecord;
-import com.boeing.cas.supa.ground.pojos.Group;
-import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.utils.ADWTransferUtil;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
@@ -421,8 +414,58 @@ public class FileManagementService {
 
 		return listOfFlightMgmtMessages;
 	}
-	
-	public List<FileManagementMessage> getStatusOfFlightRecords(List<String>flightRecordNames, String authToken) throws FlightRecordException {
+
+    public List<FlightCount> countFlightRecords(String authToken) throws FlightRecordException {
+
+        List<FlightCount> listOfFlightCounts = new ArrayList<>();
+
+        // Determine the airline from the user's membership.
+        final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
+        List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+        if (airlineGroups.size() != 1) {
+            throw new FlightRecordException(new ApiError("FLIGHT_RECORD_RETRIEVAL_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
+        }
+        String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+
+        List<FlightRecord> listOfFlightRecords = this.flightRecordDao.getAllFlightRecords(airlineGroup);
+
+		// Sort via storage path in order to group tails together
+        Collections.sort(listOfFlightRecords,Comparator.comparing(FlightRecord :: getStoragePath));
+
+		FlightCount currentTail = new FlightCount("", 0);
+
+		if (listOfFlightRecords != null && listOfFlightRecords.size() > 0) {
+
+            for (FlightRecord fr : listOfFlightRecords) {
+				// Get tail from storage path: AMX/tail/
+				int endIndex = fr.getStoragePath().indexOf("/", 5);
+				// Tail could be AMX/UNRESOLVED
+				String tail = fr.getStoragePath().substring(4);
+				if (endIndex > 0)
+                	tail = fr.getStoragePath().substring(4, endIndex);
+
+                if (!tail.equals(currentTail.getTail())) {
+                	// We have a new tail!
+					if (!currentTail.getTail().equals("")) {
+						listOfFlightCounts.add(currentTail);
+					}
+					// Reset tail
+					currentTail = new FlightCount(tail, 1);
+				} else {
+                	// Increment count of current tail
+                	currentTail.setCount(currentTail.getCount() + 1);
+				}
+            }
+            // Add last record
+			if (!currentTail.getTail().equals("")) {
+				listOfFlightCounts.add(currentTail);
+			}
+        }
+        return listOfFlightCounts;
+    }
+
+
+    public List<FileManagementMessage> getStatusOfFlightRecords(List<String>flightRecordNames, String authToken) throws FlightRecordException {
 		
 		List<FileManagementMessage> listOfFlightMgmtMessages = new ArrayList<>();
 

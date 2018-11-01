@@ -91,7 +91,7 @@ public class RegistrationController {
 		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
 
-    private String getPlistFromBlob(String containerName, String fileName) {
+	private String getPlistFromBlob(String containerName, String fileName) {
 
         String base64 = null;
         try {
