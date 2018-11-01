@@ -91,7 +91,24 @@ public class RegistrationController {
 		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
 
-    private String getPlistFromBlob(String containerName, String fileName) {
+
+	@RequestMapping(path="/resetpassword", method = { RequestMethod.POST })
+	public ResponseEntity<Object> resetUserPassword(@RequestBody UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {
+
+		logger.debug("Received reset password request from user: {}", ControllerUtils.sanitizeString(userAccountActivation.getUsername()));
+		Object reset = aadClient.setPassword(userAccountActivation);
+
+		if (reset instanceof ApiError) {
+
+			ApiError error = (ApiError) reset;
+			logger.error(error.getErrorLabel(), error.getErrorDescription());
+			return new ResponseEntity<>(reset, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		return new ResponseEntity<>(reset, HttpStatus.OK);
+	}
+
+
+	private String getPlistFromBlob(String containerName, String fileName) {
 
         String base64 = null;
         try {

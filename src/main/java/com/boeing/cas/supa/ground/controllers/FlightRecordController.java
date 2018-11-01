@@ -2,6 +2,7 @@ package com.boeing.cas.supa.ground.controllers;
 
 import java.util.List;
 
+import com.boeing.cas.supa.ground.pojos.FlightCount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,6 +78,17 @@ public class FlightRecordController {
 			return new ResponseEntity<>(fileMgmtMessages, HttpStatus.OK);
 		} catch (FlightRecordException fre) {
 			return new ResponseEntity<>(new ApiError("FLIGHT_RECORD_LIST", fre.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@RequestMapping(path = "/countFlightRecords", method = { RequestMethod.GET }, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<Object> countFlightRecords(@RequestHeader("Authorization") String authToken) {
+
+		try {
+			List<FlightCount> flightCount = this.fileManagementService.countFlightRecords(authToken);
+			return new ResponseEntity<>(flightCount, HttpStatus.OK);
+		} catch (FlightRecordException fre) {
+			return new ResponseEntity<>(new ApiError("FLIGHT_RECORD_COUNT", fre.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
