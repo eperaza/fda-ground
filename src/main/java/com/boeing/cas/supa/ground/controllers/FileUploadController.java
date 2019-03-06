@@ -157,6 +157,7 @@ public class FileUploadController {
 	private static String saveUploadedFiles(List<MultipartFile> files) throws IOException {
 
 		Path tempDirPath = Files.createTempDirectory(StringUtils.EMPTY);
+
 		String uploadFolder = tempDirPath.toString();
 
 		for (MultipartFile file : files) {

@@ -8,8 +8,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
+import java.nio.file.FileAlreadyExistsException;
 import java.security.InvalidKeyException;
 
+import com.boeing.cas.supa.ground.exceptions.SupaSystemLogException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,7 +106,42 @@ public class AzureStorageUtil {
 		return rval;
 	}
 
-	public boolean uploadFlightRecord(String containerName, String fileName, String sourceFilePath, User user) throws FlightRecordException {
+    public boolean uploadFile(String fileLocation, String fileName) {
+
+        String containerName = "tmp";
+        boolean rval = false;
+
+        try {
+
+            CloudBlobClient serviceClient = this.storageAccount.createCloudBlobClient();
+            // NOTE: Container name must be lower case.
+            CloudBlobContainer container = serviceClient.getContainerReference(containerName);
+            container.createIfNotExists();
+            // Upload the file as a Blob.
+            CloudBlockBlob blob = container.getBlockBlobReference(fileName);
+            // NOTE: If the Blob exists currently we are overriding the existing blob.
+            // possibly never be an issue since most file names are uniquely identifiable.
+            File sourceFile = new File(fileLocation);
+            try (InputStream sourceStream = new FileInputStream(sourceFile)) {
+                blob.upload(sourceStream, sourceFile.length());
+            }
+            rval = true;
+        }
+        catch (FileNotFoundException fnfe) {
+            logger.error("FileNotFoundException encountered: {}", fnfe.getMessage(), fnfe);
+        }
+        catch (StorageException se) {
+            logger.error("StorageException encountered: {}", se.getMessage(), se);
+        }
+        catch (Exception e) {
+            logger.error("Exception encountered: {}", e.getMessage(), e);
+        }
+
+        return rval;
+    }
+
+
+    public boolean uploadFlightRecord(String containerName, String fileName, String sourceFilePath, User user) throws FlightRecordException {
 
 		boolean rval = false;
 
@@ -157,7 +194,57 @@ public class AzureStorageUtil {
 		return rval;
 	}
 
-	public ByteArrayOutputStream downloadFile(String containerName, String fileName) {
+
+    public boolean BlobExistsOnCloud(String containerName, String fileName) throws URISyntaxException, StorageException
+    {
+        CloudBlobClient serviceClient = storageAccount.createCloudBlobClient();
+
+        return serviceClient.getContainerReference(containerName)
+                .getBlockBlobReference(fileName)
+                .exists();
+    }
+
+
+    public boolean uploadSupaSystemLog(String containerName, String fileName, String sourceFilePath) throws SupaSystemLogException {
+
+        boolean rval = false;
+
+        try {
+
+            CloudBlobClient serviceClient = this.storageAccount.createCloudBlobClient();
+            // NOTE: Container name must be lower case.
+            CloudBlobContainer container = serviceClient.getContainerReference(containerName);
+            container.createIfNotExists();
+            // Upload the file as a Blob.
+            CloudBlockBlob blob = container.getBlockBlobReference(fileName);
+            // NOTE: If the Blob exists currently we are overriding the existing blob.
+            // possibly never be an issue since most file names are uniquely identifiable.
+            File sourceFile = new File(sourceFilePath);
+            try (InputStream sourceStream = new FileInputStream(sourceFile)) {
+                AccessCondition accessCondition = AccessCondition.generateIfNotExistsCondition();
+                BlobRequestOptions options = null;
+                OperationContext context = new OperationContext();
+                blob.upload(sourceStream, sourceFile.length(), accessCondition, options, context);
+            }
+            rval = true;
+        }
+        catch (FileNotFoundException fnfe) {
+            logger.error("FileNotFoundException encountered: {}", fnfe.getMessage(), fnfe);
+            throw new SupaSystemLogException(new ApiError("SUPA_SYSTEM_LOG_UPLOAD_FAILURE", fnfe.getMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR));
+        }
+        catch (StorageException se) {
+            logger.error("StorageException encountered: {}", se.getMessage(), se);
+            throw new SupaSystemLogException(new ApiError("SUPA_SYSTEM_LOG_UPLOAD_FAILURE", se.getMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR));
+        }
+        catch (Exception e) {
+            logger.error("Exception encountered: {}", e.getMessage(), e);
+            throw new SupaSystemLogException(new ApiError("SUPA_SYSTEM_LOG_UPLOAD_FAILURE", ExceptionUtils.getRootCause(e).getMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR));
+        }
+
+        return rval;
+    }
+
+    public ByteArrayOutputStream downloadFile(String containerName, String fileName) {
 
 		// Create the Azure Storage Blob Client.
 	    CloudBlobClient blobClient = this.storageAccount.createCloudBlobClient();

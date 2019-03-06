@@ -30,6 +30,8 @@ public class ControllerUtils {
 				return HttpStatus.UNAUTHORIZED;
 			case NOT_FOUND:
 				return HttpStatus.NOT_FOUND;
+			case ALREADY_REPORTED:
+				return HttpStatus.ALREADY_REPORTED;
 			default:
 		}
 
@@ -40,6 +42,8 @@ public class ControllerUtils {
 
 		switch (responseCode) {
 
+			case 208:
+				return RequestFailureReason.ALREADY_REPORTED;
 			case 400:
 				return RequestFailureReason.BAD_REQUEST;
 			case 409:

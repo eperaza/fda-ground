@@ -11,10 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.boeing.cas.supa.ground.exceptions.UserAccountRegistrationException;
 import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
@@ -74,6 +71,23 @@ public class RegistrationController {
 		logger.warn("User registration requested (improper token information received in request)!");
 		return null;
 	}
+
+//	@RequestMapping(path="/getregistrationcode", method = { RequestMethod.GET })
+//	public ResponseEntity<Object> getRegistrationCode(@RequestParam String uuid) throws UserAccountRegistrationException {
+//
+//		logger.debug("Get registration code request for {}", uuid);
+//		Object result = aadClient.getRegistrationCode(uuid);
+//
+//		if (result instanceof ApiError) {
+//
+//			ApiError error = (ApiError) result;
+//			logger.error(error.getErrorLabel(), error.getErrorDescription());
+//			return new ResponseEntity<>(result, HttpStatus.INTERNAL_SERVER_ERROR);
+//		}
+//
+//		return new ResponseEntity<>(result, HttpStatus.OK);
+//	}
+
 
 	@RequestMapping(path="/registeruser", method = { RequestMethod.POST })
 	public ResponseEntity<Object> registerUserAccount(@RequestBody UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {

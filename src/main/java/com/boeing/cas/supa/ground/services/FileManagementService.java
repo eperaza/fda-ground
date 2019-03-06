@@ -3,6 +3,7 @@ package com.boeing.cas.supa.ground.services;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,7 +20,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.boeing.cas.supa.ground.exceptions.SupaSystemLogException;
 import com.boeing.cas.supa.ground.pojos.*;
+import com.microsoft.azure.storage.StorageException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -43,9 +46,11 @@ public class FileManagementService {
 	private final Logger logger = LoggerFactory.getLogger(FileManagementService.class);
 
 	private final static String FLIGHT_RECORDS_STORAGE_CONTAINER = "flight-records";
+	private final static String SUPA_SYSTEM_LOGS_STORAGE_CONTAINER = "supa-system-logs";
 	private final static String TSP_STORAGE_CONTAINER = "tsp";
 	private final static String MOBILECONFIG_STORAGE_CONTAINER = "config";
 	private final static String PREFERENCES_STORAGE_CONTAINER = "preferences";
+	private final static String PREFERENCES_REFRESH_STORAGE_CONTAINER = "preferencesRefresh";
 	
 	@Autowired
 	private Map<String, String> appProps;
@@ -68,7 +73,13 @@ public class FileManagementService {
 			if (airlineGroups.size() != 1) {
 				throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
 			}
+			List<Group> roleGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
+			if (roleGroups.size() != 1) {
+				throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "Failed to associate user with a role", RequestFailureReason.UNAUTHORIZED));
+			}
+
 			String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+			String userRole = roleGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_USER_ROLE_PREFIX, StringUtils.EMPTY);
 
 			AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
 			if (StringUtils.isBlank(file) || StringUtils.isBlank(type)) {
@@ -84,9 +95,11 @@ public class FileManagementService {
 			} else if (MOBILECONFIG_STORAGE_CONTAINER.equals(type)) {
 				container = MOBILECONFIG_STORAGE_CONTAINER;
 				filePath = file;
-			} else if (PREFERENCES_STORAGE_CONTAINER.equals(type)) {
+			} else if (PREFERENCES_STORAGE_CONTAINER.equals(type) || PREFERENCES_REFRESH_STORAGE_CONTAINER.equals(type)) {
 				container = PREFERENCES_STORAGE_CONTAINER;
-				filePath = file;
+				file = userRole + ".plist";
+				filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/').append(file).toString();
+
 			} else {
 				throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "Invalid file type requested for download", RequestFailureReason.BAD_REQUEST));
 			}
@@ -99,6 +112,21 @@ public class FileManagementService {
 				}
 				outputStream.flush();
 				fileInBytes = outputStream.toByteArray();
+
+				if (PREFERENCES_STORAGE_CONTAINER.equals(type)) {
+					// for preferences, replace userkey with key for initial call
+					fileInBytes = new String(fileInBytes).replaceAll("userkey","key").getBytes();
+				}
+				if (PREFERENCES_REFRESH_STORAGE_CONTAINER.equals(type)) {
+					String tmp = new String(fileInBytes);
+					int startIndex = tmp.indexOf("<userkey>");
+					int endIndex = tmp.lastIndexOf("</dict>");
+					if (startIndex > 0 && endIndex > 0) {
+						fileInBytes = new String(tmp.substring(0, startIndex) +
+							tmp.substring(endIndex)).getBytes();
+					}
+				}
+
 			} catch (IOException e) {
 				logger.error("Error retrieving file [{}] of type [{}]: {}", ControllerUtils.sanitizeString(file), ControllerUtils.sanitizeString(type), e.getMessage(), e);
 				throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("Error retrieving file [%s] of type [%s]: %s", file, type, e.getMessage()), RequestFailureReason.INTERNAL_SERVER_ERROR));
@@ -318,6 +346,161 @@ public class FileManagementService {
 		return flightRecordUploadResponse;
 	}
 
+
+	public FileManagementMessage uploadSupaSystemLog(final MultipartFile uploadSupaSystemLog, String authToken) throws SupaSystemLogException {
+
+		logger.debug("Upload Supa system log request");
+		final FileManagementMessage supaSystemLogUploadResponse = new FileManagementMessage(uploadSupaSystemLog.getOriginalFilename());
+
+		String supaSystemLogName = uploadSupaSystemLog.getOriginalFilename();
+
+		// Determine the airline from the user's membership.
+		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
+		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+		if (airlineGroups.size() != 1) {
+			throw new SupaSystemLogException(new ApiError("SUPA_SYSTEM_LOG_UPLOAD_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
+		}
+
+		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+		// Sample Flight log: {airline}_{tailNumber}_{webFBSerialNumber}_systemLog_{yyyyMMdd}_{HHmmss}Z.zip
+		List<String> supaSystemLogNameTokens = Arrays.asList(supaSystemLogName.split("_"));
+		String uploadFolder = null;
+		Path _uploadPath = null;
+		long _fileSizeKb = 0L;
+		String _airline = null,
+				_tail = null,
+				_logDate = null,
+				_logTime = null,
+				_storagePath = null;
+		Instant _logDatetime = null;
+		try {
+			_airline = supaSystemLogNameTokens.get(0);
+			// Remove hyphen from tail identifier, if present, and convert to lowercase.
+			_tail = supaSystemLogNameTokens.get(1).toLowerCase().replace("-", StringUtils.EMPTY);
+			_logDate = supaSystemLogNameTokens.get(4);
+			_logTime = supaSystemLogNameTokens.get(5).replace(".zip", StringUtils.EMPTY);
+			if (!_airline.equalsIgnoreCase(airlineGroup)) {
+				throw new SupaSystemLogException(new ApiError("SUPA_SYSTEM_LOG_UPLOAD_FAILURE", String.format("Supa system log filename prefix %s is not associated with %s airline user", _airline, airlineGroup.toUpperCase()), RequestFailureReason.UNAUTHORIZED));
+			}
+			try {
+				_logDatetime = OffsetDateTime.parse(String.format("%s_%s", _logDate, _logTime), Constants.SupaSystemLogDateTimeFormatterForParse).toInstant();
+			} catch (DateTimeParseException dtpe) {
+				logger.warn(dtpe.getMessage());
+				// Treat as non-critical error... don't re-throw exception
+			}
+
+			// If tail and/or date-time tokens are missing or invalid, save file in undetermined folder
+			if (StringUtils.isBlank(_tail) || _logDatetime == null) {
+				_storagePath = new StringBuilder(_airline).append("/UNDETERMINED").toString();
+			} else {
+				_storagePath = new StringBuilder(_airline).append('/').append(_tail).append('/').append(OffsetDateTime.ofInstant(_logDatetime, ZoneId.of("UTC")).format(Constants.SupaSystemLogDateTimeFormatterForFormat)).toString();
+			}
+
+			// Store the uploaded file in TEMP, in preparation for uploading to Azure
+			uploadFolder = ControllerUtils.saveUploadedFiles(Arrays.asList(uploadSupaSystemLog));
+			if (StringUtils.isBlank(uploadFolder)) {
+				throw new IOException("Failed to establish upload folder");
+			}
+			_uploadPath = Paths.get(new StringBuilder(uploadFolder)
+					.append(File.separator)
+					.append(uploadSupaSystemLog.getOriginalFilename())
+					.toString());
+			try (FileChannel fileChannel = FileChannel.open(_uploadPath)) {
+				_fileSizeKb = fileChannel.size();
+			}
+		} catch (IndexOutOfBoundsException ioobe) {
+			throw new SupaSystemLogException(new ApiError("SUPA_SYSTEM_LOG_UPLOAD_FAILURE", "Failed to extract identifying tokens from flight log filename", RequestFailureReason.BAD_REQUEST));
+		} catch (IOException ioe) {
+			throw new SupaSystemLogException(new ApiError("SUPA_SYSTEM_LOG_UPLOAD_FAILURE", String.format("I/O exception encountered %s", ioe.getMessage()), RequestFailureReason.INTERNAL_SERVER_ERROR));
+		}
+
+		final long fileSizeKb = _fileSizeKb;
+		final String airline = _airline,
+				storagePath = _storagePath;
+		final Path uploadPath = _uploadPath;
+		// If flight date and time is absent in flight record name, default it to the minimum supported Instant
+		final Instant logDatetime = _logDatetime != null ? _logDatetime : OffsetDateTime.parse("19700101_000000Z", Constants.SupaSystemLogDateTimeFormatterForParse).toInstant();
+
+		// Prepare a final Flight Log instance to
+		// pass to the individual upload threads, so individual attributes can be updates as warranted.
+		final SupaSystemLog supaSystemLog = new SupaSystemLog(uploadSupaSystemLog.getOriginalFilename(), storagePath,
+				fileSizeKb, logDatetime, airline, user.getUserPrincipalName(), null);
+
+		// Check to see if the Blob already exists
+		boolean bExists = false;
+		try {
+			AzureStorageUtil asu = new AzureStorageUtil(appProps.get("StorageAccountName"), appProps.get("StorageKey"));
+			bExists = asu.BlobExistsOnCloud(SUPA_SYSTEM_LOGS_STORAGE_CONTAINER, new StringBuilder(storagePath).append('/')
+					.append(supaSystemLog.getSupaSystemLogName()).toString());
+		} catch (IOException ioe) {
+
+		} catch (URISyntaxException uri) {
+
+		} catch (StorageException stex) {
+
+		}
+		if (bExists) {
+			throw new SupaSystemLogException(new ApiError("SUPA_SYSTEM_LOG_UPLOAD_FAILURE", "The specified blob already exists.", RequestFailureReason.ALREADY_REPORTED));
+		}
+		// Set up executor pool for performing ADW and Azure uploads concurrently
+		ExecutorService es = Executors.newFixedThreadPool(3);
+		List<Future<Boolean>> futures = new ArrayList<>();
+		final Map<String, String> properties = this.appProps;
+
+		// ------- Adding file to Azure Storage -------
+		logger.debug("Adding file to Azure Storage");
+		Future<Boolean> azureFuture = es.submit(new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+
+				Boolean upload = false;
+				try {
+					logger.info("Starting Azure upload");
+					AzureStorageUtil asu = new AzureStorageUtil(properties.get("StorageAccountName"), properties.get("StorageKey"));
+					upload = asu.uploadSupaSystemLog(SUPA_SYSTEM_LOGS_STORAGE_CONTAINER, new StringBuilder(storagePath).append('/')
+						.append(supaSystemLog.getSupaSystemLogName()).toString(), uploadPath.toFile().getAbsolutePath());
+					logger.info("Upload to Azure complete: {}", upload);
+				} catch (SupaSystemLogException fre) {
+					logger.error("Failed to upload to Azure Storage: {}", fre.getMessage());
+					supaSystemLogUploadResponse.setMessage(fre.getMessage());
+				} catch(Exception e) {
+					logger.error("ApiError in Azure upload: {}", e.getMessage(), e);
+				}
+				return upload;
+			}
+		});
+		futures.add(azureFuture);
+
+		boolean azureBool = false;
+		try {
+			azureBool = azureFuture.get();
+		} catch (InterruptedException | ExecutionException e) {
+			logger.error("ApiError in running executionservice: {}", e.getMessage(), e);
+		}
+		es.shutdown();
+
+		try {
+			if (!es.awaitTermination(1, TimeUnit.MINUTES)) {
+				es.shutdownNow();
+			}
+		} catch (InterruptedException e) {
+
+			Thread.currentThread().interrupt();
+			logger.error("ApiError in shuttingdown executionservice: {}", e.getMessage(), e);
+			es.shutdownNow();
+		}
+
+		// If Azure Storage upload fails, that is a crucial error that warrants an appropriate error response to the user
+		if (!azureBool) {
+			throw new SupaSystemLogException(new ApiError("SUPA_SYSTEM_LOG_UPLOAD_FAILURE",
+				supaSystemLogUploadResponse.getMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR));
+		}
+		supaSystemLogUploadResponse.setUploaded(true);
+
+		return supaSystemLogUploadResponse;
+	}
+
+
 	public List<FileManagementMessage> updateFlightRecordOnAidStatus(List<String> flightRecordNames, String authToken) throws FlightRecordException {
 
 		// Ensure that the user is authorized to update the status, by comparing the user-airline
@@ -432,7 +615,7 @@ public class FileManagementService {
 		// Sort via storage path in order to group tails together
         Collections.sort(listOfFlightRecords,Comparator.comparing(FlightRecord :: getStoragePath));
 
-		FlightCount currentTail = new FlightCount("", 0);
+		FlightCount currentTail = new FlightCount("", 0, 0);
 
 		if (listOfFlightRecords != null && listOfFlightRecords.size() > 0) {
 
@@ -450,10 +633,13 @@ public class FileManagementService {
 						listOfFlightCounts.add(currentTail);
 					}
 					// Reset tail
-					currentTail = new FlightCount(tail, 1);
+					currentTail = new FlightCount(tail, 1, 1);
 				} else {
                 	// Increment count of current tail
                 	currentTail.setCount(currentTail.getCount() + 1);
+                	if (fr.isProcessedByAnalytics()) {
+						currentTail.setProcessed(currentTail.getProcessed() + 1);
+					}
 				}
             }
             // Add last record

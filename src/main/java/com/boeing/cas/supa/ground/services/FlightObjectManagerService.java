@@ -1,14 +1,31 @@
 package com.boeing.cas.supa.ground.services;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import javax.naming.ConfigurationException;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
+import com.boeing.cas.supa.ground.exceptions.FileDownloadException;
+import com.boeing.cas.supa.ground.pojos.CosmosDbFlightPlanSource;
+import com.boeing.cas.supa.ground.pojos.Group;
+import com.boeing.cas.supa.ground.pojos.User;
+import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
+import com.boeing.cas.supa.ground.utils.Constants;
+import com.mongodb.BasicDBObject;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+import org.apache.commons.lang3.StringUtils;
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,16 +43,54 @@ public class FlightObjectManagerService {
 	private static final String FLIGHT_OBJECTS_PATH = "/perfect_flights";
 	private static final String OPERATIONAL_FLIGHT_PLANS_PATH = "/flight_plans";
 
+	private static final String FLIGHT_PLAN_CONTAINER = "flight-plan-source";
+
 	@Autowired
 	private Map<String, String> appProps;
 
 	@Autowired
+	private AzureADClientService aadClient;
+
+	@Autowired
 	private SSLSocketFactory sslSocketFactory;
 
-	public Object getAllFlightObjects(Optional<String> flightId,
-			Optional<String> departureAirport,
-			Optional<String> arrivalAirport,
-			String authToken) {
+	@Autowired
+	private MongoFlightManagerService mongoFlightManagerService;
+
+
+	public Object getAllFlightObjects(Optional<String> flightId, Optional<String> departureAirport,
+			Optional<String> arrivalAirport, String authToken)
+	{
+			final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
+			List<Group> airlineGroups = user.getGroups().stream()
+				.filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+			if (airlineGroups.size() != 1) {
+				return new ApiError("FILE_DOWNLOAD_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED);
+			}
+			String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+
+			CosmosDbFlightPlanSource source = this.getFlightPlanSourceFromBlob(airlineGroup);
+			// if the CosmosDB flight plan is available, use it - otherwise use RS.
+			if (source != null ) {
+				logger.debug("Use CosmosDb to obtain the flight plan.");
+				return mongoFlightManagerService.getAllFlightObjectsFromCosmosDB(flightId, departureAirport, arrivalAirport, source);
+			}
+			else if (airlineGroup.equalsIgnoreCase("amx")){
+				logger.debug("Use [AMX] Route Sync to obtain the flight plan.");
+				return getAllFlightObjectsFromRS(flightId, departureAirport, arrivalAirport, authToken);
+			} else {
+				String message = "No flight plan available.";
+				logger.debug(message);
+				return new ApiError("FLIGHT_OBJECTS_REQUEST", message, RequestFailureReason.NOT_FOUND);
+			}
+	}
+
+
+
+
+	private Object getAllFlightObjectsFromRS(Optional<String> flightId, Optional<String> departureAirport,
+			Optional<String> arrivalAirport, String authToken)
+	{
 
 		try {
 
@@ -92,12 +147,41 @@ public class FlightObjectManagerService {
 
 			return stringBuilder.toString();
 		} catch (Exception ex) {
-			logger.error("Request all flight objects failed: {}", ex.getMessage(), ex);
+			logger.error("Request all flight objects from RS failed: {}", ex.getMessage(), ex);
 			return new ApiError("FLIGHT_OBJECTS_REQUEST", ex.getMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR);
 		}
 	}
 
+
 	public Object getFlightObjectById(String id, String authToken) {
+
+		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
+		List<Group> airlineGroups = user.getGroups().stream()
+				.filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+		if (airlineGroups.size() != 1) {
+			return new ApiError("FILE_DOWNLOAD_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED);
+		}
+		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+
+		CosmosDbFlightPlanSource source = this.getFlightPlanSourceFromBlob(airlineGroup);
+
+		// if the CosmosDB flight plan is available, use it - otherwise use RS.
+		if (source != null ) {
+			logger.debug("Use CosmosDb to obtain the flight plan.");
+			return mongoFlightManagerService.getFlightObjectByIdFromCosmosDB(id, source);
+		}
+		else if (airlineGroup.equalsIgnoreCase("amx")){
+			logger.debug("Use [AMX] Route Sync to obtain the flight plan.");
+			return getFlightObjectByIdFromRS(id, authToken);
+		} else {
+			String message = "No flight plan available.";
+			logger.debug(message);
+			return new ApiError("FLIGHT_OBJECTS_REQUEST", message, RequestFailureReason.NOT_FOUND);
+		}
+	}
+
+
+	private Object getFlightObjectByIdFromRS(String id, String authToken) {
 
 		try {
 
@@ -128,12 +212,43 @@ public class FlightObjectManagerService {
 
 			return stringBuilder.toString();
 		} catch (Exception ex) {
-			logger.error("Request flight object failed: {}", ex.getMessage(), ex);
+			logger.error("Request flight object from RS failed: {}", ex.getMessage(), ex);
 			return new ApiError("FLIGHT_PLANS_REQUEST", ex.getMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR);
 		}
 	}
 
+
 	public Object getOperationalFlightPlanByFlightPlanId(String flightPlanId, String authToken) {
+
+		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
+		List<Group> airlineGroups = user.getGroups().stream()
+				.filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+		if (airlineGroups.size() != 1) {
+			return new ApiError("FILE_DOWNLOAD_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED);
+		}
+		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+
+		CosmosDbFlightPlanSource source = this.getFlightPlanSourceFromBlob(airlineGroup);
+
+		// if the CosmosDB flight plan is available, use it - otherwise use RS.
+		if (source != null ) {
+			logger.debug("Use CosmosDb to obtain the flight plan.");
+			return mongoFlightManagerService.getOperationalFlightPlanByFlightPlanIdFromCosmosDB(flightPlanId, source);
+		}
+		else if (airlineGroup.equalsIgnoreCase("amx")){
+			logger.debug("Use [AMX] Route Sync to obtain the flight plan.");
+			return getOperationalFlightPlanByFlightPlanIdFromRS(flightPlanId, authToken);
+		} else {
+			String message = "No flight plan available.";
+			logger.debug(message);
+			return new ApiError("FLIGHT_OBJECTS_REQUEST", message, RequestFailureReason.NOT_FOUND);
+		}
+
+	}
+
+
+
+	private Object getOperationalFlightPlanByFlightPlanIdFromRS(String flightPlanId, String authToken) {
 
 		try {
 
@@ -164,8 +279,41 @@ public class FlightObjectManagerService {
 
 			return stringBuilder.toString();
 		} catch (Exception ex) {
-			logger.error("Request operational flight plan failed: {}", ex.getMessage(), ex);
+			logger.error("Request operational flight plan from RS failed: {}", ex.getMessage(), ex);
 			return new ApiError("OPERATIONAL_FLIGHT_PLAN_REQUEST", ex.getMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR);
 		}
 	}
+
+
+	/**
+	 * getFlightPlanSourceFromBlob - gets the Flight Plan Source from Blob
+	 * @param airline airline
+	 * @return contents of flight plan source
+	 */
+	private CosmosDbFlightPlanSource getFlightPlanSourceFromBlob(String airline) {
+
+		CosmosDbFlightPlanSource flightPlanSource = new CosmosDbFlightPlanSource(airline);
+
+		String fileName = airline + ".source";
+		logger.debug("Retrieve data from [" + fileName + "]");
+		try {
+
+			AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
+			try (ByteArrayOutputStream outputStream = asu.downloadFile(FLIGHT_PLAN_CONTAINER, fileName)) {
+
+				flightPlanSource.addFlightPlanSource(outputStream.toString());
+
+			} catch (NullPointerException npe) {
+				logger.error("Failed to retrieve Plist [{}] from [{}]: {}", fileName, FLIGHT_PLAN_CONTAINER, npe.getMessage());
+				flightPlanSource = null;
+			}
+		}
+		catch (IOException | org.apache.commons.configuration.ConfigurationException ioe) {
+			logger.error("Failed to retrieve Plist [{}] from [{}]: {}", fileName, FLIGHT_PLAN_CONTAINER, ioe.getMessage());
+			flightPlanSource = null;
+		}
+
+		return flightPlanSource;
+	}
+
 }

@@ -24,9 +24,70 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 	private static final String USER_ACCOUNT_ACTIVATION_PRECHECK_SQL = "SELECT COUNT(1) FROM user_account_registrations WHERE registration_token = :registration_token AND user_principal_name = :user_principal_name AND account_state = :account_state";
 	private static final String USER_ACCOUNT_ACTIVATION_SQL = "UPDATE user_account_registrations SET account_state = :account_state_to WHERE registration_token = :registration_token AND user_principal_name = :user_principal_name AND account_state = :account_state_from";
 	private static final String USER_ACCOUNT_REMOVAL_SQL = "DELETE FROM user_account_registrations WHERE user_principal_name = :user_principal_name";
-	
+
+//	private static final String USER_ACCOUNT_CODE_SQL_INSERT = "INSERT INTO user_account_codes (uuid, code, user_principal_name, airline) VALUES (:uuid, :code, :user_principal_name, :airline)";
+//	private static final String USER_ACCOUNT_CODE_SQL_SELECT = "SELECT code FROM user_account_codes WHERE uuid = :uuid"; // AND user_principal_name = :user_principal_name AND airline = :airline";
+//	private static final String USER_ACCOUNT_CODE_SQL_DELETE = "DELETE FROM user_account_codes WHERE uuid = :uuid";
+
 	@Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;
+
+
+//	@Override
+//	public void insertRegistrationCode(String uuid, String code, String user_principal_name, String airline) throws UserAccountRegistrationException {
+//
+//		Map<String,Object> namedParameters = new HashMap<>();
+//		namedParameters.put("uuid", uuid);
+//		namedParameters.put("code", code);
+//		namedParameters.put("user_principal_name", user_principal_name);
+//		namedParameters.put("airline", airline);
+//		try {
+//
+//			int returnVal = jdbcTemplate.update(USER_ACCOUNT_CODE_SQL_INSERT, namedParameters);
+//			if (returnVal != 1) {
+//				logger.warn("Could not record user account code in database: {} record(s) updated", returnVal);
+//				throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", String.format("%d record(s) updated", returnVal), RequestFailureReason.INTERNAL_SERVER_ERROR));
+//			}
+//		}
+//		catch (DataAccessException dae) {
+//
+//			logger.warn("Failed to insert user account code record in database: {}", dae.getMessage(), dae);
+//			throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
+//		}
+//	}
+
+//	@Override
+//	public String getRegistrationCode(String uuid) throws UserAccountRegistrationException {
+//
+//		Map<String,Object> namedParameters = new HashMap<>();
+//		namedParameters.put("uuid", uuid);
+//
+//		try {
+//			String code = jdbcTemplate.queryForObject(USER_ACCOUNT_CODE_SQL_SELECT, namedParameters, String.class);
+//			return code;
+//		}
+//		catch (DataAccessException dae) {
+//
+//			logger.warn("Failed to obtain user code: {}", dae.getMessage(), dae);
+//			throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
+//		}
+//	}
+//
+//	@Override
+//	public void removeRegistrationCode(String uuid) throws UserAccountRegistrationException {
+//
+//		Map<String,Object> namedParameters = new HashMap<>();
+//		namedParameters.put("uuid", uuid);
+//		try {
+//			jdbcTemplate.update(USER_ACCOUNT_CODE_SQL_DELETE, namedParameters);
+//		}
+//		catch (DataAccessException dae) {
+//
+//			logger.warn("Failed to remove user account code in database: {}", dae.getMessage(), dae);
+//			throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
+//		}
+//	}
+//
 
 	@Override
 	public void registerNewUserAccount(UserAccountRegistration userAccountRegistration) throws UserAccountRegistrationException {

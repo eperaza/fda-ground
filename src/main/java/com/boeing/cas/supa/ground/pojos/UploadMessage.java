@@ -13,6 +13,12 @@ public class UploadMessage {
 		this.message = message;
 	}
 
+	public UploadMessage(String azureUpload, String message) {
+
+		this.azureUpload = azureUpload;
+		this.message = message;
+	}
+
 	public String getAdwTransfer() {
 		return this.adwTransfer;
 	}

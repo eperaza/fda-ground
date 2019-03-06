@@ -51,13 +51,13 @@ public class PlaybackDemoFlightMgmtService {
 		if (airlineGroups.size() != 1) {
 			throw new PlaybackDemoFlightException(new ApiError("DEMO_FLIGHT_MGMT_LIST", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
 		}
-		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
-		logger.debug("User airline for retrieving SUPA releases is [{}]", airlineGroup);
+		//String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+		//logger.debug("User airline for retrieving SUPA releases is [{}]", airlineGroup);
 		// This is presently accessible only to users in the FDA airline group
-		if (!"FDA".equalsIgnoreCase(airlineGroup)) {
-			logger.error("Non-FDA users [{}] are not allowed to playback demo flights", airlineGroup);
-			throw new PlaybackDemoFlightException(new ApiError("DEMO_FLIGHT_MGMT_LIST", "Only FDA users are allowed to playback demo flights", RequestFailureReason.UNAUTHORIZED));
-		}
+		//if (!"FDA".equalsIgnoreCase(airlineGroup)) {
+		//	logger.error("Non-FDA users [{}] are not allowed to playback demo flights", airlineGroup);
+		//	throw new PlaybackDemoFlightException(new ApiError("DEMO_FLIGHT_MGMT_LIST", "Only FDA users are allowed to playback demo flights", RequestFailureReason.UNAUTHORIZED));
+		//}
 
 		playbackDemoFlights = playbackDemoFlightMgmtDao.listDemoFlightStreams();
 		

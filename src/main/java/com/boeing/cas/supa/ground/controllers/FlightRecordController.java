@@ -2,6 +2,7 @@ package com.boeing.cas.supa.ground.controllers;
 
 import java.util.List;
 
+import com.boeing.cas.supa.ground.exceptions.SupaSystemLogException;
 import com.boeing.cas.supa.ground.pojos.FlightCount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +49,24 @@ public class FlightRecordController {
 			return new ResponseEntity<>(flightRecordUploadResponse, HttpStatus.OK);
 		} catch (FlightRecordException fre) {
 			logger.error("Upload flight record failed: {}", fre.getMessage());
+			return new ResponseEntity<>(fre.getError(), ControllerUtils.translateRequestFailureReasonToHttpErrorCode(fre.getError().getFailureReason()));
+		}
+	}
+
+	@RequestMapping(path = "/uploadSupaSystemLog", method = { RequestMethod.POST })
+	public ResponseEntity<Object> uploadSupaSystemLog(final @RequestParam("file") MultipartFile uploadSupaSystemLog,
+													 @RequestHeader("Authorization") String authToken) {
+		try {
+
+			if (uploadSupaSystemLog.isEmpty()) {
+				logger.warn("The flight log payload is empty");
+				throw new SupaSystemLogException(new ApiError("SUPA_SYSTEM_LOG_UPLOAD_FAILURE", "Empty or invalid file submitted", RequestFailureReason.BAD_REQUEST));
+			}
+
+			FileManagementMessage supaSystemLogUploadResponse = this.fileManagementService.uploadSupaSystemLog(uploadSupaSystemLog, authToken);
+			return new ResponseEntity<>(supaSystemLogUploadResponse, HttpStatus.OK);
+		} catch (SupaSystemLogException fre) {
+			logger.error("Upload flight log failed: {}", fre.getMessage());
 			return new ResponseEntity<>(fre.getError(), ControllerUtils.translateRequestFailureReasonToHttpErrorCode(fre.getError().getFailureReason()));
 		}
 	}
