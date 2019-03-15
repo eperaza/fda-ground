@@ -11,6 +11,12 @@ public class Constants {
 
 	public static final String ACCEPT_CT_JSON_ODATAMINIMAL = "application/json;odata=minimalmetadata";
 
+	public static final String ACCEPT_CT_JSON_OVERBOSE = "application/json;odata=verbose";
+
+	public static final String ACCEPT_CT_JSON_ONOMETADATA = "application/json;odata=nometadata";
+
+	public static final String ACCEPT_CT_JSON_ONOTHING = "application/json";
+
 	public static final String AUTH_HEADER_PREFIX = "Bearer ";
 
 	public static final String CHECKSUM_PREFIX_SHA1 = ".sha1";
