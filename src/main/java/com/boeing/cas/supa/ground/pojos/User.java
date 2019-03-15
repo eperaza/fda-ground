@@ -32,6 +32,8 @@ public class User extends DirectoryObject {
 	protected String usageLocation;
 	protected String userPrincipalName;
 
+	protected String createdDateTime;
+
 	// The groups holds a list of group entity(s) this user belongs to.
 	private List<Group> groups = new ArrayList<>();
 
@@ -277,6 +279,10 @@ public class User extends DirectoryObject {
 		return this.otherMails;
 	}
 
+	public String getCreatedDateTime() { return this.createdDateTime;	}
+
+	public void setCreatedDateTime(String createdDateTime) { this.createdDateTime = createdDateTime; }
+
     @Override
 	public String toString() {
 
@@ -307,6 +313,7 @@ public class User extends DirectoryObject {
 				.append("telephoneNumber=").append(this.telephoneNumber).append(',')
 				.append("usageLocation=").append(this.usageLocation).append(',')
 				.append("userPrincipalName=").append(this.userPrincipalName).append(',')
+				.append("createdDateTime=").append(this.createdDateTime).append(',')
 				.append("otherMails=").append(StringUtils.join(this.otherMails, ","))
 			.toString();
 	}

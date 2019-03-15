@@ -633,7 +633,11 @@ public class FileManagementService {
 						listOfFlightCounts.add(currentTail);
 					}
 					// Reset tail
-					currentTail = new FlightCount(tail, 1, 1);
+					currentTail = new FlightCount(tail, 1, 0);
+					if (fr.isProcessedByAnalytics()) {
+						currentTail.setProcessed(1);
+					}
+
 				} else {
                 	// Increment count of current tail
                 	currentTail.setCount(currentTail.getCount() + 1);

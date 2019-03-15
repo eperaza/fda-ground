@@ -5,15 +5,6 @@ import com.boeing.cas.supa.ground.pojos.UserAccountRegistration;
 
 public interface UserAccountRegistrationDao {
 
-//	public void insertRegistrationCode(String uuid, String message, String user_principal_name, String airline)
-//			throws UserAccountRegistrationException;
-//
-//	public String getRegistrationCode(String uuid)
-//			throws UserAccountRegistrationException;
-//
-//	public void removeRegistrationCode(String uuid)
-//			throws UserAccountRegistrationException;
-//
 	public void registerNewUserAccount(UserAccountRegistration userAccountRegistration)
 			throws UserAccountRegistrationException;
 

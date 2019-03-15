@@ -9,9 +9,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.InvalidKeyException;
 
 import com.boeing.cas.supa.ground.exceptions.SupaSystemLogException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -243,6 +246,27 @@ public class AzureStorageUtil {
 
         return rval;
     }
+
+    public File downloadBlobReferencedInMessage(String containerName, String fileName, String airline)
+            throws IOException, URISyntaxException, StorageException {
+        // need to get just the file name without path.
+        //String justFileName = FilenameUtils.getName(fileName);
+        Path path = Files.createTempDirectory(StringUtils.EMPTY);
+        File tempFile = new File(path.toString() + File.separator + fileName);
+
+        // Create the Azure Storage Blob Client.
+        CloudBlobClient blobClient = this.storageAccount.createCloudBlobClient();
+
+        if (airline != null) {
+            fileName = airline + File.separator + fileName;
+        }
+
+        CloudBlobContainer container = blobClient.getContainerReference(containerName);
+        CloudBlockBlob blob = container.getBlockBlobReference(fileName);
+        blob.downloadToFile(tempFile.getAbsolutePath());
+        return tempFile;
+    }
+
 
     public ByteArrayOutputStream downloadFile(String containerName, String fileName) {
 
