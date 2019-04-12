@@ -13,7 +13,7 @@ FDA ground services requires number of open source projects to work properly:
 ### Prerequistes 
 * Non-Boeing internet connection
 * Azure account
-* Base64 embedded certificate text file (email: [Mihir](mihir.shah@boeing.com) or [Ashwin](ashwin.k.raj@boeing.com))
+* Base64 embedded certificate text file (email: [John](john.whelan@boeing.com))
 
 ### Build
 
