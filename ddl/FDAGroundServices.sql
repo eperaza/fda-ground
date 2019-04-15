@@ -75,6 +75,12 @@ CREATE TABLE [dbo].[user_account_registrations](
         [airline] [nvarchar](50) NOT NULL,
         [work_email] [nvarchar](100) NOT NULL,
         [account_state] [nvarchar](32) NOT NULL,
+        [display_name] [nvarchar](x) NULL,
+        [first_name] [nvarchar](x) NULL,
+        [last_name] [nvarchar](x) NULL,
+        [email_address] [nvarchar](x) NULL,
+        [user_role] [nvarchar](x) NULL,
+        [registration_date] [nvarchar](x) NULL,
         [create_ts] [datetime2](7) NOT NULL,
         [update_ts] [datetime2](7) NULL,
  CONSTRAINT [UNQ_user_account_registrations_RT] UNIQUE NONCLUSTERED
@@ -214,4 +220,150 @@ END
 GO
 ALTER TABLE [dbo].[demo_flight_streams] ENABLE TRIGGER [DemoFlightStreams_Trigger_UpdateTS]
 GO
+
+
+
+USE [FDAGroundServices]
+GO
+
+ALTER TABLE [dbo].[feature_management] DROP CONSTRAINT [DF_feature_management_create_ts]
+GO
+
+DROP INDEX airline1 ON feature_management
+GO
+
+/****** Object:  Table [dbo].[feature_management]    Script Date: 12/6/2017 1:18:20 PM ******/
+DROP TABLE [dbo].[feature_management]
+GO
+
+/****** Object:  Table [dbo].[feature_management]    Script Date: 12/6/2017 1:18:20 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[feature_management](
+	[id] [int] NOT NULL IDENTITY(1,1),
+	[airline] [nvarchar](50) NOT NULL,
+	[title] [nvarchar](180) NOT NULL,
+	[feature_key] [nvarchar](220) NOT NULL,
+	[description] [text] NOT NULL,
+	[choice_pilot] [bit] NOT NULL,
+	[choice_focal] [bit] NOT NULL,
+	[choice_check_airman] [bit] NOT NULL,
+	[choice_maintenance] [bit] NOT NULL,
+	[updated_by] [nvarchar](220) NOT NULL,
+	[create_ts] [datetime] NOT NULL,
+	
+PRIMARY KEY  
+(
+	[id] ASC
+)) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[feature_management] ADD CONSTRAINT [DF_feature_management_create_ts]  DEFAULT (getdate()) FOR [create_ts]
+GO
+
+CREATE INDEX airline1 ON feature_management (airline);
+GO
+
+
+
+USE [FDAGroundServices]
+GO
+
+ALTER TABLE [dbo].[airline_preferences] DROP CONSTRAINT [DF_airline_preferences_create_ts]
+GO
+
+DROP INDEX airline1 ON airline_preferences
+GO
+
+/****** Object:  Table [dbo].[airline_preferences]    Script Date: 12/6/2017 1:18:20 PM ******/
+DROP TABLE [dbo].[airline_preferences]
+GO
+
+/****** Object:  Table [dbo].[airline_preferences]    Script Date: 12/6/2017 1:18:20 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[airline_preferences](
+	[id] [int] NOT NULL IDENTITY(1,1),
+	[airline] [nvarchar](50) NOT NULL,
+	[preference] [nvarchar](220) NOT NULL,
+	[airline_key] [nvarchar](220) NOT NULL,
+	[description] [text] NOT NULL,
+	[display] [bit] NOT NULL,
+	[choice_pilot] [bit] NOT NULL,
+	[choice_focal] [bit] NOT NULL,
+	[choice_check_airman] [bit] NOT NULL,
+	[choice_maintenance] [bit] NOT NULL,
+	[updated_by] [nvarchar](220) NOT NULL,
+	[create_ts] [datetime] NOT NULL,
+	
+PRIMARY KEY  
+(
+	[id] ASC
+)) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[airline_preferences] ADD CONSTRAINT [DF_airline_preferences_create_ts]  DEFAULT (getdate()) FOR [create_ts]
+GO
+
+CREATE INDEX airline1 ON airline_preferences (airline);
+GO
+
+
+USE [FDAGroundServices]
+GO
+
+ALTER TABLE [dbo].[user_preferences] DROP CONSTRAINT [DF_user_preferences_create_ts]
+GO
+
+DROP INDEX airline1 ON user_preferences
+GO
+
+/****** Object:  Table [dbo].[user_preferences]    Script Date: 12/6/2017 1:18:20 PM ******/
+DROP TABLE [dbo].[user_preferences]
+GO
+
+/****** Object:  Table [dbo].[user_preferences]    Script Date: 12/6/2017 1:18:20 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[user_preferences](
+	[id] [int] NOT NULL IDENTITY(1,1),
+	[airline] [nvarchar](50) NOT NULL,
+	[preference] [nvarchar](220) NOT NULL,
+	[user_key] [nvarchar](220) NOT NULL,
+	[description] [text] NOT NULL,
+	[groupby] [nvarchar](420) NULL,
+	[toggle] [bit] NULL,
+	[value] [nvarchar](180) NOT NULL,
+	[min] [nvarchar](40) NULL,
+	[max] [nvarchar](40) NULL,
+	[default_value] [nvarchar](180) NULL,
+	[updated_by] [nvarchar](220) NOT NULL,
+	[create_ts] [datetime] NOT NULL,
+	
+PRIMARY KEY  
+(
+	[id] ASC
+)) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[user_preferences] ADD CONSTRAINT [DF_user_preferences_create_ts]  DEFAULT (getdate()) FOR [create_ts]
+GO
+
+CREATE INDEX airline1 ON user_preferences (airline);
+GO
+
+
+
 

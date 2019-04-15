@@ -304,12 +304,12 @@ public class FlightObjectManagerService {
 				flightPlanSource.addFlightPlanSource(outputStream.toString());
 
 			} catch (NullPointerException npe) {
-				logger.error("Failed to retrieve Plist [{}] from [{}]: {}", fileName, FLIGHT_PLAN_CONTAINER, npe.getMessage());
+				logger.error("Failed to retrieve flight plan [{}] from [{}]: {}", fileName, FLIGHT_PLAN_CONTAINER, npe.getMessage());
 				flightPlanSource = null;
 			}
 		}
 		catch (IOException | org.apache.commons.configuration.ConfigurationException ioe) {
-			logger.error("Failed to retrieve Plist [{}] from [{}]: {}", fileName, FLIGHT_PLAN_CONTAINER, ioe.getMessage());
+			logger.error("Failed to retrieve flight plan [{}] from [{}]: {}", fileName, FLIGHT_PLAN_CONTAINER, ioe.getMessage());
 			flightPlanSource = null;
 		}
 
