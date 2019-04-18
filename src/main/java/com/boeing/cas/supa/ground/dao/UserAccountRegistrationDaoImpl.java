@@ -1,18 +1,21 @@
 package com.boeing.cas.supa.ground.dao;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
+import com.boeing.cas.supa.ground.pojos.*;
+import com.boeing.cas.supa.ground.utils.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.boeing.cas.supa.ground.exceptions.UserAccountRegistrationException;
-import com.boeing.cas.supa.ground.pojos.ApiError;
-import com.boeing.cas.supa.ground.pojos.UserAccountRegistration;
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 
 @Repository
@@ -24,9 +27,87 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 	private static final String USER_ACCOUNT_ACTIVATION_PRECHECK_SQL = "SELECT COUNT(1) FROM user_account_registrations WHERE registration_token = :registration_token AND user_principal_name = :user_principal_name AND account_state = :account_state";
 	private static final String USER_ACCOUNT_ACTIVATION_SQL = "UPDATE user_account_registrations SET account_state = :account_state_to WHERE registration_token = :registration_token AND user_principal_name = :user_principal_name AND account_state = :account_state_from";
 	private static final String USER_ACCOUNT_REMOVAL_SQL = "DELETE FROM user_account_registrations WHERE user_principal_name = :user_principal_name";
-	
+
+	private static final String USER_ACCOUNT_SELECT_SQL = "SELECT * FROM user_account_registrations WHERE airline = :airline AND user_object_id != :user_object_id";
+	private static final String USER_ACCOUNT_UPDATE_SQL
+		= "UPDATE user_account_registrations SET display_name = :display_name, first_name = :first_name, last_name = :last_name, "
+		+ " email_address = :email_address, user_role = :user_role, registration_date = :registration_date "
+		+ " WHERE user_object_id = :user_object_id AND airline = :airline";
+
+
 	@Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;
+
+	@Override
+	public List<UserAccount> getAllUsers(String airline, String userObjectId) throws UserAccountRegistrationException {
+
+		List<UserAccount> users = new ArrayList<>();
+		Map<String,Object> namedParameters = new HashMap<>();
+		namedParameters.put("airline", airline);
+		namedParameters.put("user_object_id", userObjectId);
+
+		try {
+			users = jdbcTemplate.query(USER_ACCOUNT_SELECT_SQL, namedParameters, new UserRowMapper());
+		} catch (DataAccessException dae) {
+			logger.error("Failed to getAllUserAccounts: {}", dae.getMessage(), dae);
+			throw new UserAccountRegistrationException(new ApiError("SELECT_USER_ACCOUNT_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
+		}
+
+		return users;
+	}
+
+
+	@Override
+	public void updateUserAccount(User user) throws UserAccountRegistrationException {
+
+		Map<String,Object> namedParameters = new HashMap<>();
+
+		List<Group> grps = user.getGroups();
+		String airline = "airline-unknown";
+		String role = "role-unknown";
+		if (grps != null && grps.size() == 2)
+		{
+			for (Group gp : grps) {
+				if (gp.getDisplayName().toLowerCase().startsWith("airline-")) airline = gp.getDisplayName();
+				if (gp.getDisplayName().toLowerCase().startsWith("role-")) role = gp.getDisplayName();
+			}
+		}
+		namedParameters.put("user_object_id", user.getObjectId());
+		namedParameters.put("airline", airline);
+		namedParameters.put("display_name", user.getDisplayName());
+		namedParameters.put("first_name", user.getGivenName());
+		namedParameters.put("last_name", user.getSurname());
+		if (user.getOtherMails() != null && !user.getOtherMails().isEmpty()) {
+			namedParameters.put("email_address", user.getOtherMails().get(0));
+		} else {
+			namedParameters.put("email_address", "unknown");
+		}
+		namedParameters.put("user_role", role);
+		if (user.getCreatedDateTime() != null && !user.getCreatedDateTime().isEmpty()) {
+			namedParameters.put("registration_date", user.getCreatedDateTime());
+		}
+		else {
+			Calendar cNow = Calendar.getInstance();
+			SimpleDateFormat date = new SimpleDateFormat("yyyy-MM-dd");
+			SimpleDateFormat time = new SimpleDateFormat("HH:mm:ss");
+			String date_time = date.format(cNow.getTime()) + "T" + time.format(cNow.getTime()) + "Z";
+			namedParameters.put("registration_date", date_time);
+		}
+		try {
+
+			int returnVal = jdbcTemplate.update(USER_ACCOUNT_UPDATE_SQL, namedParameters);
+			if (returnVal != 1) {
+				logger.warn("Could not update user account in database: {} record(s) updated", returnVal);
+				throw new UserAccountRegistrationException(new ApiError("UPDATE_USER_ACCOUNT_FAILURE", String.format("%d record(s) updated", returnVal), RequestFailureReason.INTERNAL_SERVER_ERROR));
+			}
+		}
+		catch (DataAccessException dae) {
+
+			logger.warn("Failed to update user account registration record in database: {}", dae.getMessage(), dae);
+			throw new UserAccountRegistrationException(new ApiError("UPDATE_USER_ACCOUNT_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
+		}
+	}
+
 
 	@Override
 	public void registerNewUserAccount(UserAccountRegistration userAccountRegistration) throws UserAccountRegistrationException {
@@ -110,4 +191,35 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 			throw new UserAccountRegistrationException(new ApiError("DELETE_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 	}
+
+	private static final class UserRowMapper implements RowMapper<UserAccount> {
+
+		@Override
+		public UserAccount mapRow(ResultSet resultSet, int rowNum) throws SQLException {
+
+			UserAccount user = new UserAccount();
+				user.setObjectType("User");
+				user.setObjectId(resultSet.getString("USER_OBJECT_ID"));
+				user.setUserPrincipalName(resultSet.getString("USER_PRINCIPAL_NAME"));
+				String account_state = resultSet.getString("ACCOUNT_STATE");
+				user.setAccountEnabled(account_state.equals("USER_ACTIVATED")?"true":"false");
+
+				user.setDisplayName(resultSet.getString("DISPLAY_NAME"));
+				user.setGivenName(resultSet.getString("FIRST_NAME"));
+				user.setSurname(resultSet.getString("LAST_NAME"));
+				int endPoint = user.getUserPrincipalName().indexOf("@");
+				if (endPoint > 0) {
+					user.setMailNickname(user.getUserPrincipalName().substring(0, endPoint));
+				}
+				String other_email = resultSet.getString("EMAIL_ADDRESS");
+				List<String> emails = new ArrayList<>();
+				emails.add(other_email);
+
+				user.setOtherMails(emails);
+				user.setUserRole(resultSet.getString("USER_ROLE"));
+				user.setCreatedDateTime(resultSet.getString("REGISTRATION_DATE"));
+			return user;
+		}
+	}
+
 }

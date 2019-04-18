@@ -11,10 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.boeing.cas.supa.ground.exceptions.UserAccountRegistrationException;
 import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
@@ -27,6 +24,10 @@ import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
 import com.microsoft.aad.adal4j.AuthenticationException;
 import com.microsoft.aad.adal4j.AuthenticationResult;
+
+import com.boeing.cas.supa.ground.utils.Constants;
+import org.apache.commons.lang3.StringUtils;
+
 
 @RestController
 public class RegistrationController {
@@ -74,6 +75,25 @@ public class RegistrationController {
 		logger.warn("User registration requested (improper token information received in request)!");
 		return null;
 	}
+
+	@RequestMapping(path="/roles", method = { RequestMethod.GET })
+	public ResponseEntity<Object> getRoles(@RequestHeader("Authorization") String authToken) {
+
+		// Extract the access token from the authorization request header
+		String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
+
+
+		// Create user with the received payload/parameters defining the new account.
+		Object result = aadClient.getRoles(accessTokenInRequest);
+
+		if (result instanceof ApiError) {
+			return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
+		}
+
+		return new ResponseEntity<>(result, HttpStatus.OK);
+	}
+
+
 
 	@RequestMapping(path="/registeruser", method = { RequestMethod.POST })
 	public ResponseEntity<Object> registerUserAccount(@RequestBody UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {

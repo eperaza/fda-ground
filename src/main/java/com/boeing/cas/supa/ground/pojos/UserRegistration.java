@@ -13,7 +13,9 @@ public class UserRegistration extends AccessToken {
 			String preferences, String mobileConfig) {
 
 		super(authenticationResult, airline, roles);
+
 		this.preferences = preferences;
+
 		this.mobileConfig = mobileConfig;
 	}
 

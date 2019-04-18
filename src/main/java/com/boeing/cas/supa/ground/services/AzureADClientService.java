@@ -1,38 +1,29 @@
 package com.boeing.cas.supa.ground.services;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.io.*;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import javax.mail.internet.MimeMessage;
 import javax.net.ssl.HttpsURLConnection;
 
+import com.boeing.cas.supa.ground.dao.FeatureManagementDao;
+import com.boeing.cas.supa.ground.exceptions.*;
+import com.boeing.cas.supa.ground.pojos.*;
+import com.microsoft.azure.storage.StorageException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -42,25 +33,8 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.boeing.cas.supa.ground.dao.UserAccountRegistrationDao;
-import com.boeing.cas.supa.ground.exceptions.ApiErrorException;
-import com.boeing.cas.supa.ground.exceptions.ElevatedPermissionException;
-import com.boeing.cas.supa.ground.exceptions.MobileConfigurationException;
-import com.boeing.cas.supa.ground.exceptions.UserAccountRegistrationException;
-import com.boeing.cas.supa.ground.exceptions.UserAuthenticationException;
 import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
 import com.boeing.cas.supa.ground.helpers.HttpClientHelper;
-import com.boeing.cas.supa.ground.pojos.AccessToken;
-import com.boeing.cas.supa.ground.pojos.ApiError;
-import com.boeing.cas.supa.ground.pojos.Credential;
-import com.boeing.cas.supa.ground.pojos.DirectoryObject;
-import com.boeing.cas.supa.ground.pojos.DirectoryRole;
-import com.boeing.cas.supa.ground.pojos.Group;
-import com.boeing.cas.supa.ground.pojos.NewUser;
-import com.boeing.cas.supa.ground.pojos.User;
-import com.boeing.cas.supa.ground.pojos.UserAccountActivation;
-import com.boeing.cas.supa.ground.pojos.UserAccountRegistration;
-import com.boeing.cas.supa.ground.pojos.UserMembership;
-import com.boeing.cas.supa.ground.pojos.UserRegistration;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.Constants.PermissionType;
@@ -106,13 +80,15 @@ public class AzureADClientService {
 	@Autowired
 	private UserAccountRegistrationDao userAccountRegister;
 
+	@Autowired
+	private FeatureManagementDao featureManagementDao;
+
 	public Object getAccessTokenFromUserCredentials(String username, String password, String authority, String clientId) {
 
         AuthenticationResult result = null;
         ExecutorService service = null;
 
         try {
-
         	service = Executors.newFixedThreadPool(1);
         	AuthenticationContext context = new AuthenticationContext(authority, false, service);
             Future<AuthenticationResult> future = context.acquireToken(azureadApiUri, clientId, username, password, null);
@@ -491,24 +467,45 @@ public class AzureADClientService {
 				progressLog.append("\nUser added to airline and role groups");
 
 				// User creation looks good... set new user to the return value [resultObj]
-				resultObj = newlyCreatedUser;
-				logger.info("Added new user {} to {} and {} groups", newlyCreatedUser.getUserPrincipalName(), airlineGroup.getDisplayName(), ControllerUtils.sanitizeString(roleGroupName));
+				UserAccount newUser = new UserAccount(newlyCreatedUser);
+				newUser.setUserRole(ControllerUtils.sanitizeString(roleGroupName));
+
+				//resultObj = newlyCreatedUser;
+				resultObj = newUser;
+				//logger.info("Added new user {} to {} and {} groups", newlyCreatedUser.getUserPrincipalName(), airlineGroup.getDisplayName(), ControllerUtils.sanitizeString(roleGroupName));
+				logger.info("Added new user {} to {} and {} groups", newUser.getUserPrincipalName(), airlineGroup.getDisplayName(), ControllerUtils.sanitizeString(roleGroupName));
 
 				// Register new user in the account registration database
 				String registrationToken = UUID.randomUUID().toString();
 				UserAccountRegistration registration = new UserAccountRegistration(registrationToken, newlyCreatedUser.getObjectId(), newlyCreatedUser.getUserPrincipalName(), airlineGroup.getDisplayName(), newUserPayload.getOtherMails().get(0), Constants.UserAccountState.PENDING_USER_ACTIVATION.toString());
 				userAccountRegister.registerNewUserAccount(registration);
+				userAccountRegister.updateUserAccount(newlyCreatedUser);
 				progressLog.append("\nRegistered new user account in database");
 				logger.info("Registered new user {} in the account registration database", newlyCreatedUser.getUserPrincipalName());
 				
 				// New user account registration is successful. Now send email to user (use otherMail address)
 				MimeMessage message = emailSender.createMimeMessage();
-				MimeMessageHelper helper = new MimeMessageHelper(message);
-				helper.setFrom(new StringBuilder("support@").append(this.appProps.get("AzureADCustomTenantName")).toString());
-				helper.setReplyTo(new StringBuilder("support@").append(this.appProps.get("AzureADCustomTenantName")).toString());
-				helper.setSubject("FD Advisor user account activation");
+				MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+				//MimeMessageHelper helper = new MimeMessageHelper(message);
+				helper.setFrom(new StringBuilder("noreply@").append(this.appProps.get("AzureADCustomTenantName")).toString());
+				helper.setReplyTo(new StringBuilder("noreply@").append(this.appProps.get("AzureADCustomTenantName")).toString());
+				helper.setSubject("Welcome to FliteDeck Advisor - New Account Registration");
 				helper.setTo(newUserPayload.getOtherMails().get(0));
+
 				helper.setText(composeNewUserAccountActivationEmail(newlyCreatedUser, registrationToken), true);
+
+				String mpFileName = newlyCreatedUser.getDisplayName().replaceAll("\\s+", "_").toLowerCase() + ".mp";
+
+				File emailPdfAttachment = getFileFromBlob("email-instructions",
+					"FDA_registration_instructions.pdf", airlineGroup.getDisplayName().substring(new String("airline-").length()));
+				File emailMpAttachment = getFileFromBlob("tmp", mpFileName, null);
+
+				logger.debug("attach mp email [{}]", emailMpAttachment.getAbsolutePath());
+				helper.addAttachment(emailMpAttachment.getName(), emailMpAttachment);
+
+				logger.debug("attach pdf instructions email [{}]", emailPdfAttachment.getAbsolutePath());
+				helper.addAttachment(emailPdfAttachment.getName(), emailPdfAttachment);
+
 				emailSender.send(message);
 				logger.info("Sent account activation email to new user {}", newlyCreatedUser.getUserPrincipalName());
 				progressLog.append("\nSuccessfully queued email for delivery");
@@ -539,6 +536,9 @@ public class AzureADClientService {
 		} catch (MailException me) {
 			logger.error("Failed to send email: {}", me.getMessage(), me);
 			resultObj = new ApiError("USER_CREATE_FAILED", "FDAGNDSVCERR0032");
+		} catch (FileDownloadException dwn) {
+			logger.error("Failed to download Blobs: {}", dwn.getMessage(), dwn);
+			resultObj = new ApiError("USER_CREATE_FAILED", "FDAGNDSVCERR0064");
 		} catch (Exception e) {
 
 			Throwable nestedException = null;
@@ -559,10 +559,11 @@ public class AzureADClientService {
 		return resultObj;
 	}
 
+
 	public Object getUsers(String accessTokenInRequest) {
 
 		Object resultObj = null;
-		StringBuilder progressLog = new StringBuilder("Delete user -");
+		StringBuilder progressLog = new StringBuilder("Get Users -");
 
 		try {
 
@@ -570,11 +571,119 @@ public class AzureADClientService {
 			 // and one and only one airline group.
 			User airlineFocalCurrentUser = getUserInfoFromJwtAccessToken(accessTokenInRequest);
 
+			String airline = "airline-unknown";
+
+			// Validate user privileges by checking group membership. Must belong to Role-AirlineFocal group and a single Airline group.
+			List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
+			//List<Group> roleAirlineFocalGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).peek(g -> logger.info("Role Group: {}", g)).collect(Collectors.toList());
+			//if (roleAirlineFocalGroups.isEmpty()) {
+			//	return new ApiError("USERS_LIST_FAILED", "User [role] must be a focal", RequestFailureReason.UNAUTHORIZED);
+			//}
+			if (airlineGroups.size() != 1 ) {
+				return new ApiError("USERS_LIST_FAILED", "User membership is ambiguous, airlines[" + airlineGroups.size() + "]", RequestFailureReason.UNAUTHORIZED);
+			} else {
+				airline = airlineGroups.get(0).getDisplayName();
+			}
+			progressLog.append("\nRequesting user belongs to single airline group and airline focal role group");
+			List<UserAccount> users = userAccountRegister.getAllUsers(airline, airlineFocalCurrentUser.getObjectId());
+
+			ObjectMapper mapper = new ObjectMapper()
+					.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+					.setSerializationInclusion(Include.NON_NULL);
+
+			logger.info("returned [{}] members of Airline Group", users.size());
+
+			resultObj = mapper.setSerializationInclusion(Include.NON_NULL).setSerializationInclusion(Include.NON_EMPTY)
+					.writeValueAsString(users);
+			progressLog.append("\nObtained members of group in SQL DB");
+
+		} catch (JsonProcessingException jpe) {
+			logger.error("JsonProcessingException: {}", jpe.getMessage(), jpe);
+			resultObj = new ApiError("USERS_LIST_FAILED", "Failed to format user record.");
+		} catch (UserAccountRegistrationException uare) {
+			logger.error("UserAccountRegistrationException: {}", uare.getMessage(), uare);
+			resultObj = new ApiError("USERS_LIST_FAILED", "Unable to locate records.");
+		} finally {
+			
+			if (resultObj instanceof ApiError) {
+				logger.error("FDAGndSvcLog> {}", ControllerUtils.sanitizeString(progressLog.toString()));
+			}
+		}
+		
+		return resultObj;
+	}
+
+
+	public Object getRoles(String accessTokenInRequest) {
+
+		Object resultObj = null;
+		List<String> roles = new ArrayList<>();
+
+		try {
+
+			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
+					.append("/groups")
+					.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX).append(azureadApiVersion)
+							.toString())
+					.toString());
+
+			HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+			// Set the appropriate header fields in the request header.
+			conn.setRequestMethod("GET");
+			conn.setRequestProperty("api-version", azureadApiVersion);
+			conn.setRequestProperty("Authorization", accessTokenInRequest);
+			conn.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
+
+			String responseStr = HttpClientHelper.getResponseStringFromConn(conn, conn.getResponseCode() == HttpStatus.OK.value());
+			if (conn.getResponseCode() == HttpStatus.OK.value()) {
+
+				Group group = null;
+				ObjectMapper mapper = new ObjectMapper();
+				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+				JsonNode valuesNode = mapper.readTree(responseStr).path("value");
+				if (valuesNode.isArray()) {
+
+					for (final JsonNode objNode : valuesNode) {
+						group = mapper.treeToValue(objNode, Group.class);
+						if (group.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)) {
+							roles.add(group.getDisplayName());
+						}
+					}
+				}
+			}
+			ObjectMapper mapper = new ObjectMapper()
+					.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+					.setSerializationInclusion(Include.NON_NULL);
+
+			logger.info("returned [{}] roles", roles.size());
+
+			resultObj = mapper.setSerializationInclusion(Include.NON_NULL).setSerializationInclusion(Include.NON_EMPTY)
+					.writeValueAsString(roles);
+		}
+		catch (Exception e) {
+			logger.error("Failed to query groups: {}", e.getMessage(), e);
+		}
+
+		return resultObj;
+	}
+
+
+	public Object loadUsers(String accessTokenInRequest) {
+
+		Object resultObj = null;
+		StringBuilder progressLog = new StringBuilder("Load users -");
+
+		try {
+
+			// Get group membership of user issuing request. Ensure that user belongs to role-airlinefocal group
+			// and one and only one airline group.
+			User airlineFocalCurrentUser = getUserInfoFromJwtAccessToken(accessTokenInRequest);
+
 			// Validate user privileges by checking group membership. Must belong to Role-AirlineFocal group and a single Airline group.
 			List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
 			List<Group> roleAirlineFocalGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).peek(g -> logger.info("Role Group: {}", g)).collect(Collectors.toList());
 			if (airlineGroups.size() != 1 || roleAirlineFocalGroups.size() != 1) {
-				return new ApiError("USERS_LIST_FAILED", "User membership is ambiguous", RequestFailureReason.UNAUTHORIZED);
+				return new ApiError("USERS_LIST_FAILED", "User membership is ambiguous, airlines[" + airlineGroups.size() + "] roles[" + roleAirlineFocalGroups.size() + "]", RequestFailureReason.UNAUTHORIZED);
 			}
 			progressLog.append("\nRequesting user belongs to single airline group and airline focal role group");
 
@@ -593,6 +702,7 @@ public class AzureADClientService {
 				progressLog.append("\nObtained impersonation access token");
 			}
 
+			// Build URL to get initial users (under 100)
 			URL url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
 					.append("/groups/").append(airlineGroups.get(0).getObjectId()).append("/members")
 					.append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
@@ -606,32 +716,97 @@ public class AzureADClientService {
 			connListUsers.setRequestProperty("Authorization", accessToken);
 			connListUsers.setRequestProperty("Content-Type", "application/json");
 			connListUsers.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
-			
+
 			String responseStr = HttpClientHelper.getResponseStringFromConn(connListUsers, connListUsers.getResponseCode() == HttpStatus.OK.value());
 			ObjectMapper mapper = new ObjectMapper()
 					.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 					.setSerializationInclusion(Include.NON_NULL);
 			JsonNode errorNode = StringUtils.isBlank(responseStr) ? null : mapper.readTree(responseStr).path("odata.error");
+
+			// Get the nextNode, if available
+			JsonNode nextNode = StringUtils.isBlank(responseStr) ? null : mapper.readTree(responseStr).path("odata.nextLink");
+
+			List<User> membersOfAirlineGroup = new ArrayList<>();
+			logger.info("List of users in {} group in Azure AD", airlineGroups.get(0).getDisplayName());
+
 			if (connListUsers.getResponseCode() == HttpStatus.OK.value() && (errorNode == null || errorNode instanceof MissingNode)) {
 
-				List<User> membersOfAirlineGroup = new ArrayList<>();
-				logger.info("List of users in {} group in Azure AD", airlineGroups.get(0).getDisplayName());
 				Iterator<JsonNode> iterator = mapper.readTree(responseStr).path("value").iterator();
 				while (iterator.hasNext()) {
 					JsonNode nextElemNode = iterator.next();
 					if (nextElemNode.path("objectType").asText().equals("User")) {
 
 						User member = mapper.readValue(nextElemNode.toString(), User.class);
-						if (member.getObjectId().equals(airlineFocalCurrentUser.getObjectId())) {
-							continue;
-						}
+						// need to obtain roles for each member
+						UserMembership userMembership = getUserMembershipFromGraph(member.getObjectId(), accessToken);
+						member.setGroups(userMembership.getUserGroups());
+						//member.setDirectoryRoles(userMembership.getUserRoles());
 						membersOfAirlineGroup.add(member);
+						try {
+							userAccountRegister.updateUserAccount(member);
+						} catch (UserAccountRegistrationException ex) {
+							ex.printStackTrace();
+						}
 					}
 				}
-				resultObj = mapper.setSerializationInclusion(Include.NON_NULL).setSerializationInclusion(Include.NON_EMPTY)
-						.writeValueAsString(membersOfAirlineGroup);
-				progressLog.append("\nObtained members of group in Azure AD");
+
 			}
+
+			// Check for nextNode
+			while (nextNode != null && nextNode.textValue() != null && !nextNode.textValue().equals(""))
+			{
+				// Build URL to get next users (next 100)
+				url = new URL(new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
+						.append('/').append(nextNode.textValue()).toString());
+
+				connListUsers = (HttpsURLConnection) url.openConnection();
+				// Set the appropriate header fields in the request header.
+				connListUsers.setRequestMethod("GET");
+				connListUsers.setRequestProperty("api-version", azureadApiVersion);
+				connListUsers.setRequestProperty("Authorization", accessToken);
+				connListUsers.setRequestProperty("Content-Type", "application/json");
+				connListUsers.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
+
+				responseStr = HttpClientHelper.getResponseStringFromConn(connListUsers, connListUsers.getResponseCode() == HttpStatus.OK.value());
+				mapper = new ObjectMapper()
+						.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+						.setSerializationInclusion(Include.NON_NULL);
+
+				errorNode = StringUtils.isBlank(responseStr) ? null : mapper.readTree(responseStr).path("odata.error");
+
+				// Get the nextNode, if available
+				nextNode = StringUtils.isBlank(responseStr) ? null : mapper.readTree(responseStr).path("odata.nextLink");
+				logger.info("nextNode [{}]", nextNode.textValue());
+
+				if (connListUsers.getResponseCode() == HttpStatus.OK.value() && (errorNode == null || errorNode instanceof MissingNode)) {
+
+					Iterator<JsonNode> iterator = mapper.readTree(responseStr).path("value").iterator();
+					while (iterator.hasNext()) {
+						JsonNode nextElemNode = iterator.next();
+						if (nextElemNode.path("objectType").asText().equals("User")) {
+
+							User member = mapper.readValue(nextElemNode.toString(), User.class);
+							// need to obtain roles for each member
+							UserMembership userMembership = getUserMembershipFromGraph(member.getObjectId(), accessToken);
+							member.setGroups(userMembership.getUserGroups());
+							//member.setDirectoryRoles(userMembership.getUserRoles());
+							membersOfAirlineGroup.add(member);
+							try {
+								userAccountRegister.updateUserAccount(member);
+							} catch (UserAccountRegistrationException ex) {
+								ex.printStackTrace();
+							}
+						}
+					}
+				}
+			} // end of while nextNode is available
+
+			logger.info("returned [{}] members of Airline Group", membersOfAirlineGroup.size());
+
+			resultObj = mapper.setSerializationInclusion(Include.NON_NULL).setSerializationInclusion(Include.NON_EMPTY)
+					.writeValueAsString(membersOfAirlineGroup);
+			progressLog.append("\nObtained members of group in Azure AD");
+
 		} catch (JsonProcessingException jpe) {
 			logger.error("JsonProcessingException: {}", jpe.getMessage(), jpe);
 			resultObj = new ApiError("USERS_LIST_FAILED", "FDAGNDSVCERR0002");
@@ -645,15 +820,16 @@ public class AzureADClientService {
 			logger.error("IOException: {}", ioe.getMessage(), ioe);
 			resultObj = new ApiError("USERS_LIST_FAILED", "FDAGNDSVCERR0016");
 		} finally {
-			
+
 			if (resultObj instanceof ApiError) {
 				logger.error("FDAGndSvcLog> {}", ControllerUtils.sanitizeString(progressLog.toString()));
 			}
 		}
-		
+
 		return resultObj;
 	}
-	
+
+
 	public Object deleteUser(String userId, String accessTokenInRequest, boolean isSuperAdmin) {
 
 		Object resultObj = null;
@@ -787,6 +963,8 @@ public class AzureADClientService {
 		return resultObj;
 	}
 
+
+
 	public Object enableRepeatableUserRegistration(UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {
 
 		logger.debug("Invoking user registration (possibly repeated user registration)");
@@ -842,10 +1020,15 @@ public class AzureADClientService {
 					String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
 					List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
 					String airline = groupName != null ? groupName.replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY) : null;
-					String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline).append(".plist").toString()) : null;
-					String mobileConfigFromBlob = airline != null ? getPlistFromBlob("config", new StringBuilder(airline).append(".mobileconfig").toString()) : null;
-					if (getPlistFromBlob != null && mobileConfigFromBlob != null) {
-						UserRegistration userReg = new UserRegistration(authResult, groupName, roleNames, getPlistFromBlob, mobileConfigFromBlob);
+					//String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline).append(".plist").toString()) : null;
+					//String file = roleNames.get(0).substring(new String("role-").length()) + ".plist";
+					//String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline.toUpperCase()).append('/').append(file).toString()) : null;
+
+					String getPlistFromSQL = airline != null ? getPlistFromSQL(airline, roleNames.get(0)) : null;
+
+					String mobileConfigFromBlob = airline != null ? getMobileConfigFromBlob("config", new StringBuilder(airline).append(".mobileconfig").toString()) : null;
+					if (getPlistFromSQL != null && mobileConfigFromBlob != null) {
+						UserRegistration userReg = new UserRegistration(authResult, groupName, roleNames, getPlistFromSQL, mobileConfigFromBlob);
 						resultObj = userReg;
 					}
 					else {
@@ -1005,10 +1188,15 @@ public class AzureADClientService {
 					String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
 					List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
 					String airline = groupName != null ? groupName.replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY) : null;
-					String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline).append(".plist").toString()) : null;
-					String mobileConfigFromBlob = airline != null ? getPlistFromBlob("config", new StringBuilder(airline).append(".mobileconfig").toString()) : null;
-					if (getPlistFromBlob != null && mobileConfigFromBlob != null) {
-						UserRegistration userReg = new UserRegistration(authResult, groupName, roleNames, getPlistFromBlob, mobileConfigFromBlob);
+					//String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline).append(".plist").toString()) : null;
+					//String file = roleNames.get(0).substring(new String("role-").length()) + ".plist";
+					//String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline.toUpperCase()).append('/').append(file).toString()) : null;
+
+					String getPlistFromSQL = airline != null ? getPlistFromSQL(airline, roleNames.get(0)) : null;
+
+					String mobileConfigFromBlob = airline != null ? getMobileConfigFromBlob("config", new StringBuilder(airline).append(".mobileconfig").toString()) : null;
+					if (getPlistFromSQL != null && mobileConfigFromBlob != null) {
+						UserRegistration userReg = new UserRegistration(authResult, groupName, roleNames, getPlistFromSQL, mobileConfigFromBlob);
 						resultObj = userReg;
 					}
 					else {
@@ -1180,10 +1368,15 @@ public class AzureADClientService {
 				String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
 				List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
 				String airline = groupName != null ? groupName.replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY) : null;
-				String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline).append(".plist").toString()) : null;
-				String mobileConfigFromBlob = airline != null ? getPlistFromBlob("config", new StringBuilder(airline).append(".mobileconfig").toString()) : null;
-				if (getPlistFromBlob != null && mobileConfigFromBlob != null) {
-					UserRegistration userReg = new UserRegistration(authResult, groupName, roleNames, getPlistFromBlob, mobileConfigFromBlob);
+				//String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline).append(".plist").toString()) : null;
+				//String file = roleNames.get(0).substring(new String("role-").length()) + ".plist";
+				//String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline.toUpperCase()).append('/').append(file).toString()) : null;
+				String getPlistFromSQL = airline != null ? getPlistFromSQL(airline, roleNames.get(0)) : null;
+
+				String mobileConfigFromBlob = airline != null ? getMobileConfigFromBlob("config", new StringBuilder(airline).append(".mobileconfig").toString()) : null;
+
+				if (getPlistFromSQL != null && mobileConfigFromBlob != null) {
+					UserRegistration userReg = new UserRegistration(authResult, groupName, roleNames, getPlistFromSQL, mobileConfigFromBlob);
 					resultObj = userReg;
 				}
 				else {
@@ -1371,11 +1564,10 @@ public class AzureADClientService {
 		return userObj;
 	}
 
+
+
 	public UserMembership getUserMembershipFromGraph(String uniqueId, String accessToken) {
 
-		logger.debug("Getting group object list info from graph");
-		logger.debug("uniqueId: {}", ControllerUtils.sanitizeString(uniqueId));
-		logger.debug("accessToken:\n-------\n{}\n-------", ControllerUtils.sanitizeString(accessToken));
 		UserMembership userMembership = null;
 		HttpURLConnection conn = null;
 		try {
@@ -1519,41 +1711,175 @@ public class AzureADClientService {
 		
 		return rootNode;
 	}
-	
-	private String composeNewUserAccountActivationEmail(User newlyCreatedUser, String registrationToken) {
 
+
+	private String composeNewUserAccountActivationEmail(User newlyCreatedUser, String registrationToken)
+		throws UserAccountRegistrationException
+	{
 		String fdadvisorClientCertBase64 = new StringBuilder(appProps.get("FDAdvisorClientCertName")).append("base64").toString();
 		String base64EncodedPayload = Base64.getEncoder().encodeToString(
 				new StringBuilder(newlyCreatedUser.getUserPrincipalName()).append(' ').append(registrationToken)
 						.append(' ').append(this.appProps.get(fdadvisorClientCertBase64)).toString().getBytes());
 		StringBuilder emailMessageBody = new StringBuilder();
-		emailMessageBody.append("Dear ").append(newlyCreatedUser.getDisplayName()).append(',');
-		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-		emailMessageBody.append(
-				String.format("Please click on this link from your mobile device to complete your %s [%s] user account activation:",
-						newlyCreatedUser.getGroups().stream()
+		emailMessageBody.append("Hi ").append(newlyCreatedUser.getDisplayName()).append(' ').append(String.format("(%s),",
+				newlyCreatedUser.getGroups().stream()
 						.filter(group -> group.getDisplayName().startsWith("airline-"))
 						.map(group -> group.getDisplayName().replace("airline-", StringUtils.EMPTY).toUpperCase())
-						.collect(Collectors.joining(",")),
-					newlyCreatedUser.getGroups().stream()
-						.filter(group -> group.getDisplayName().startsWith("role-"))
-						.map(group -> group.getDisplayName().replace("role-", StringUtils.EMPTY).toUpperCase())
-						.collect(Collectors.joining(","))));
+						.collect(Collectors.joining(","))
+		));
+
+		String role = newlyCreatedUser.getGroups().stream()
+				.filter(group -> group.getDisplayName().startsWith("role-"))
+				.map(group -> group.getDisplayName().replace("role-airline", StringUtils.EMPTY).toLowerCase())
+				.collect(Collectors.joining(","));
+
+
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-		emailMessageBody.append("<a href=\"iavfdaapplication://register?").append(base64EncodedPayload).append("\">").append("FD Advisor Account Activation").append("</a>");
+		emailMessageBody.append("Your new account for FliteDeck Advisor has been successfully created. The Airline ").append(String.format("%s",
+				StringUtils.capitalize(role))).append( " role is assigned to your account.");
+
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-		emailMessageBody.append("Thank you").append(Constants.HTML_LINE_BREAK).append("Flight Deck Advisor Support");
-		
+		emailMessageBody.append("To get started with your new account registration,");
+
+		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+		emailMessageBody.append("   1. Go to the <a href=\"https://itunes.apple.com/us/app/flitedeck-advisor/id1058617698\">App Store</a>")
+			.append(" to install FliteDeck Advisor on your iPad. Open the installed application.").append(Constants.HTML_LINE_BREAK);
+		emailMessageBody.append("   2. Come back to this email and tap on the MP attachment to open it. Tap on the icon at the top-right corner")
+			.append(" of the new screen, then tap on \"Copy to FliteDeck Advisor\" to continue.").append(Constants.HTML_LINE_BREAK);
+
+		emailMessageBody.append("   3. After completing the registration and the WiFi configuration, reopen the FliteDeck Advisor to start using it.");
+
+		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+        emailMessageBody.append("Please find the attached PDF document for detailed instructions. If you experience any issues or have any questions, please contact our representative, Jim Fritz at james.l.fritz@boeing.com. ");
+		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+		emailMessageBody.append("Thank you, ").append("FliteDeck Advisor Support");
+		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+
+		try {
+			File emailMpAttachment = new ClassPathResource(appProps.get("EmailMpAttachmentLocation")).getFile();
+			BufferedReader reader = new BufferedReader(new FileReader(emailMpAttachment));
+			String str;
+			StringBuffer sb = new StringBuffer();
+			while ((str = reader.readLine()) != null)
+			{
+				str = str.replaceAll("<!-- Add Certificate here -->", base64EncodedPayload);
+				sb.append(str + "\n");
+			}
+			reader.close();
+			String mpFileName = newlyCreatedUser.getDisplayName().replaceAll("\\s+", "_").toLowerCase() + ".mp";
+			Path path = Files.createTempDirectory(StringUtils.EMPTY);
+			File mpFile = new File(path.toString() + File.separator + mpFileName);
+			BufferedWriter writer = new BufferedWriter(new FileWriter(mpFile));
+			writer.write(sb.toString());
+			writer.close();
+			logger.debug("upload mp file to azure blob [{}]", mpFile.getAbsolutePath());
+			this.uploadAttachment(mpFile);
+			logger.debug("upload complete!");
+		}
+		catch (IOException io) {
+			logger.warn("Failed to read attachment: {}", io.getMessage(), io);
+			throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", "failed to read attachment", RequestFailureReason.INTERNAL_SERVER_ERROR));
+		}
+		logger.info("Registered {} ", newlyCreatedUser.getUserPrincipalName());
+
+
 		return emailMessageBody.toString();
 	}
 
-    private String getPlistFromBlob(String containerName, String fileName) {
+
+	private File getFileFromBlob(String containerName, String fileName, String airline) throws FileDownloadException {
+
+		File file = null;
+		try {
+
+			AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"),
+				this.appProps.get("StorageKey"));
+
+			file = asu.downloadBlobReferencedInMessage(containerName, fileName, airline);
+
+		} catch (IOException | StorageException | URISyntaxException ioe ) {
+			logger.error("Failed to retrieve Blob from storage [{}]: {}", fileName, ioe.getMessage(), ioe);
+			throw new FileDownloadException();
+		}
+		return file;
+	}
+
+	private String getPlistFromSQL(String airline, String userRole) {
+
+		StringBuilder preferencesBody = new StringBuilder();
+
+		try {
+
+			List<AirlinePreferences> airlinePreferences = featureManagementDao.getAirlinePreferences(airline, false);
+			preferencesBody.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n");
+			preferencesBody.append("<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\r\n");
+			preferencesBody.append("<plist version=\"1.0\">\r\n").append("<dict>\r\n");
+			preferencesBody.append("<key>AIDProtocolKey</key>\r\n");
+			preferencesBody.append("<string>https</string>\r\n");
+			preferencesBody.append("<key>AIDHostKey</key>\r\n");
+			preferencesBody.append("<string>172.31.1.1</string>\r\n");
+			for (AirlinePreferences ap : airlinePreferences)
+			{
+				preferencesBody.append("<key>" + ap.getAirlineKey() + "</key>\r\n");
+				if (userRole.equals("role-airlinefocal")) {
+					if (ap.isChoiceFocal()) {
+						preferencesBody.append("<true/>\r\n");
+					} else {
+						preferencesBody.append("<false/>\r\n");
+					}
+				}
+				if (userRole.equals("role-airlinepilot")) {
+					if (ap.isChoicePilot()) {
+						preferencesBody.append("<true/>\r\n");
+					} else {
+						preferencesBody.append("<false/>\r\n");
+					}
+				}
+				if (userRole.equals("role-airlinecheckairman")) {
+					if (ap.isChoiceCheckAirman()) {
+						preferencesBody.append("<true/>\r\n");
+					} else {
+						preferencesBody.append("<false/>\r\n");
+					}
+				}
+				if (userRole.equals("role-airlinemaintenance")) {
+					if (ap.isChoiceMaintenance()) {
+						preferencesBody.append("<true/>\r\n");
+					} else {
+						preferencesBody.append("<false/>\r\n");
+					}
+				}
+			}
+			List<UserPreferences> userPreferences = featureManagementDao.getUserPreferences(airline);
+			for (UserPreferences up : userPreferences) {
+				preferencesBody.append("<key>" + up.getUserKey() + "</key>\r\n");
+				if (!up.isToggle()) {
+					preferencesBody.append("<string>" + up.getValue() + "</string>\r\n");
+				} else {
+					preferencesBody.append("<"+ up.getValue() +"/>\r\n");
+				}
+			}
+			preferencesBody.append("</dict>\r\n").append("</plist>\r\n");
+
+			logger.info("returned [{}] airline preferences records of Airline Group [{}]", airlinePreferences.size(), airline);
+
+		} catch (FeatureManagementException fme) {
+			logger.error("FeatureManagementException: {}", fme.getMessage(), fme);
+		}
+		return preferencesBody.toString();
+	}
+
+
+	private String getMobileConfigFromBlob(String containerName, String fileName) {
 
         String base64 = null;
         try {
             AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
             try (ByteArrayOutputStream outputStream = asu.downloadFile(containerName, fileName)) {
-                base64 = Base64.getEncoder().encodeToString(outputStream.toString().getBytes());
+
+				base64 = Base64.getEncoder().encodeToString(outputStream.toString().getBytes());
+
             } catch (NullPointerException npe) {
             	logger.error("Failed to retrieve Plist [{}]: {}", fileName, npe.getMessage(), npe);
             }
@@ -1585,4 +1911,96 @@ public class AzureADClientService {
 
 		return errorObj;
 	}
+
+
+	private boolean uploadAttachment(final File uploadfile) throws IOException {
+
+		logger.debug("Upload File method invoked -  Single file upload!");
+
+
+		String uploadFolder = null;
+		try {
+			uploadFolder = this.saveUploadedFile(uploadfile);
+			if (StringUtils.isBlank(uploadFolder)) {
+				throw new IOException("Failed to establish upload folder");
+			}
+		} catch (IOException e) {
+			throw new IOException("Failed to establish upload folder");
+		}
+
+		final Path uploadFolderPath = Paths.get(uploadFolder + File.separator + uploadfile.getName());
+		logger.debug("File uploaded to {}", uploadFolderPath.toFile().getAbsolutePath());
+
+		ExecutorService es = Executors.newFixedThreadPool(3);
+		List<Future<Boolean>> futures = new ArrayList<>();
+		final Map<String, String> properties = this.appProps;
+
+		// ------- Adding file to Azure Storage -------
+		logger.debug("Adding file to Azure Storage");
+		Future<Boolean> azureFuture = es.submit(new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+
+				Boolean upload = false;
+				try {
+
+					logger.debug("Starting Azure upload");
+					AzureStorageUtil asu = new AzureStorageUtil(properties.get("StorageAccountName"), properties.get("StorageKey"));
+					upload = asu.uploadFile(uploadFolderPath.toFile().getAbsolutePath(), uploadfile.getName());
+					logger.debug("Upload to Azure complete: {}", upload);
+				}
+				catch(Exception e) {
+					logger.error("ApiError in Azure upload: {}", e.getMessage(), e);
+				}
+
+				return upload;
+			}
+		});
+
+		futures.add(azureFuture);
+
+		boolean azureBool = false;
+
+		try {
+
+			logger.debug("Getting results for Azure and ADW uploads");
+			azureBool = azureFuture.get();
+		} catch (InterruptedException | ExecutionException e) {
+			logger.error("ApiError in running executionservice: {}", e.getMessage(), e);
+		}
+		es.shutdown();
+
+		try {
+			if (!es.awaitTermination(1, TimeUnit.MINUTES)) {
+				es.shutdownNow();
+			}
+		} catch (InterruptedException e) {
+
+			Thread.currentThread().interrupt();
+			logger.error("ApiError in shuttingdown executionservice: {}", e.getMessage(), e);
+			es.shutdownNow();
+		}
+		return (azureBool ? true : false);
+	}
+
+	private static String saveUploadedFile(File file) throws IOException {
+
+		Path tempDirPath = Files.createTempDirectory(StringUtils.EMPTY);
+
+		String uploadFolder = tempDirPath.toString();
+
+		BufferedReader reader = new BufferedReader(new FileReader(file));
+		String line;
+		StringBuffer sbtmp = new StringBuffer();
+		while ((line = reader.readLine()) != null) {
+			sbtmp.append(line);
+		}
+
+		byte[] bytes = sbtmp.toString().getBytes();
+		Path path = Paths.get(uploadFolder + File.separator + file.getName());
+		Files.write(path, bytes);
+
+		return uploadFolder;
+	}
+
 }

@@ -68,20 +68,20 @@ public class DemoApplication {
 
 	@Bean
 	public Map<String,String> getAppSecrets(KeyVaultRetriever keyVaultRetriever) {
-
 		Map<String, String> appSecrets = new ConcurrentHashMap<String, String>();
 
 		appSecrets.put("adwHost", keyVaultRetriever.getSecretByKey("adwHost"));
 		appSecrets.put("adwPath", keyVaultRetriever.getSecretByKey("adwPath"));
 		appSecrets.put("adwPwd", keyVaultRetriever.getSecretByKey("adwPwd"));
-		appSecrets.put("adwUser", keyVaultRetriever.getSecretByKey("adwUser"));
 		appSecrets.put("adwUpload", keyVaultRetriever.getSecretByKey("adwUpload"));
 		appSecrets.put("adwUploadFDA", keyVaultRetriever.getSecretByKey("adwUploadFDA"));
-		appSecrets.put("AzureADTenantName", keyVaultRetriever.getSecretByKey("AzureADTenantName"));
-		appSecrets.put("AzureADCustomTenantName", keyVaultRetriever.getSecretByKey("AzureADCustomTenantName"));
-		appSecrets.put("AzureADTenantID", keyVaultRetriever.getSecretByKey("AzureADTenantID"));
-		appSecrets.put("AzureADTenantAuthEndpoint", keyVaultRetriever.getSecretByKey("AzureADTenantAuthEndpoint"));
+		appSecrets.put("adwUser", keyVaultRetriever.getSecretByKey("adwUser"));
 		appSecrets.put("AzureADAppClientID", keyVaultRetriever.getSecretByKey("AzureADAppClientID"));
+		appSecrets.put("AzureADCustomTenantName", keyVaultRetriever.getSecretByKey("AzureADCustomTenantName"));
+		appSecrets.put("AzureADTenantAuthEndpoint", keyVaultRetriever.getSecretByKey("AzureADTenantAuthEndpoint"));
+		appSecrets.put("AzureADTenantID", keyVaultRetriever.getSecretByKey("AzureADTenantID"));
+		appSecrets.put("AzureADTenantName", keyVaultRetriever.getSecretByKey("AzureADTenantName"));
+		appSecrets.put("EmailMpAttachmentLocation", keyVaultRetriever.getSecretByKey("EmailMpAttachmentLocation"));
 		appSecrets.put("FDAdvisorClientCertName", keyVaultRetriever.getSecretByKey("FDAdvisorClientCertName"));
 		appSecrets.put("FDAdvisorClientCertBundlePassword", keyVaultRetriever.getSecretByKey("FDAdvisorClientCertBundlePassword"));
 		String fdaClientCertBase64 = new StringBuilder(appSecrets.get("FDAdvisorClientCertName")).append("base64").toString();
@@ -113,7 +113,6 @@ public class DemoApplication {
 	public Map<String, X509Certificate> getAppCertificates(KeyVaultRetriever keyVaultRetriever) {
 
 		Map<String, X509Certificate> appCertificates = new ConcurrentHashMap<String, X509Certificate>();
-
 		String fdaClientCertName = keyVaultRetriever.getSecretByKey("FDAdvisorClientCertName");
 		appCertificates.put(fdaClientCertName, keyVaultRetriever.getCertificateByCertName(fdaClientCertName));
 

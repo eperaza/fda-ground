@@ -2,6 +2,8 @@ package com.boeing.cas.supa.ground.controllers;
 
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -19,6 +21,8 @@ import com.boeing.cas.supa.ground.utils.ControllerUtils;
 @RestController
 public class FlightPlanController {
 
+	private final Logger logger = LoggerFactory.getLogger(FlightPlanController.class);
+
 	@Autowired
 	private FlightObjectManagerService flightObjectManagerService;
 
@@ -28,6 +32,8 @@ public class FlightPlanController {
 			@RequestParam("departureAirport") Optional<String> departureAirport,
 			@RequestParam("arrivalAirport") Optional<String> arrivalAirport,
 			@RequestHeader("Authorization") String authToken) {
+
+		logger.debug("Get all flight_objects request");
 
 		Object allFlightObjectsResponse = this.flightObjectManagerService.getAllFlightObjects(flightId, departureAirport, arrivalAirport, authToken);
 		if (allFlightObjectsResponse instanceof ApiError) {
@@ -43,6 +49,7 @@ public class FlightPlanController {
 			@PathVariable("id") String id,
 			@RequestHeader("Authorization") String authToken) {
 
+		logger.debug("Get flight_object request for id:{}", id);
 		Object flightObjectResponse = this.flightObjectManagerService.getFlightObjectById(id, authToken);
 		if (flightObjectResponse instanceof ApiError) {
 			ApiError errorResponse = (ApiError) flightObjectResponse;
@@ -56,6 +63,8 @@ public class FlightPlanController {
 	public ResponseEntity<Object> getOperationalFlightPlanByFlightPlanId(
 			@PathVariable("flightPlanId") String flightPlanId,
 			@RequestHeader("Authorization") String authToken) {
+
+		logger.debug("Get operational_flight_plans request for flightPlanId:{}", flightPlanId);
 
 		Object operationalflightPlanResponse = this.flightObjectManagerService.getOperationalFlightPlanByFlightPlanId(flightPlanId, authToken);
 		if (operationalflightPlanResponse instanceof ApiError) {
