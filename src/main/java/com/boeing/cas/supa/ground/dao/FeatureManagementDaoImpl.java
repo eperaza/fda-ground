@@ -253,6 +253,7 @@ public class FeatureManagementDaoImpl implements FeatureManagementDao {
 			featureManagement.setTitle(resultSet.getString("TITLE"));
 			featureManagement.setDescription(resultSet.getString("DESCRIPTION"));
 			featureManagement.setFeatureKey(resultSet.getString("FEATURE_KEY"));
+			featureManagement.setEnabled(resultSet.getBoolean("ENABLED"));
 			featureManagement.setChoicePilot(resultSet.getBoolean("CHOICE_PILOT"));
 			featureManagement.setChoiceFocal(resultSet.getBoolean("CHOICE_FOCAL"));
 			featureManagement.setChoiceCheckAirman(resultSet.getBoolean("CHOICE_CHECK_AIRMAN"));
@@ -273,6 +274,7 @@ public class FeatureManagementDaoImpl implements FeatureManagementDao {
 
 			airlinePreferences.setPreference(resultSet.getString("PREFERENCE"));
 			airlinePreferences.setAirlineKey(resultSet.getString("AIRLINE_KEY"));
+			airlinePreferences.setEnabled(resultSet.getBoolean("ENABLED"));
 			airlinePreferences.setDescription(resultSet.getString("DESCRIPTION"));
 			airlinePreferences.setChoicePilot(resultSet.getBoolean("CHOICE_PILOT"));
 			airlinePreferences.setChoiceFocal(resultSet.getBoolean("CHOICE_FOCAL"));
@@ -294,6 +296,7 @@ public class FeatureManagementDaoImpl implements FeatureManagementDao {
 
 			userPreferences.setPreference(resultSet.getString("PREFERENCE"));
 			userPreferences.setUserKey(resultSet.getString("USER_KEY"));
+			userPreferences.setEnabled(resultSet.getBoolean("ENABLED"));
 			userPreferences.setDescription(resultSet.getString("DESCRIPTION"));
 			userPreferences.setGroupBy(resultSet.getString("GROUPBY"));
 			userPreferences.setToggle(resultSet.getBoolean("TOGGLE"));

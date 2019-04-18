@@ -6,6 +6,7 @@ public class AirlinePreferences {
 	protected String airline;
 	protected String preference;
 	protected String airlineKey;
+	protected boolean enabled;
 	protected String description;
 	protected boolean choicePilot;
 	protected boolean choiceFocal;
@@ -47,6 +48,10 @@ public class AirlinePreferences {
 	public void setAirlineKey(String airlineKey) {
 		this.airlineKey = airlineKey;
 	}
+
+	public boolean isEnabled() { return enabled; }
+
+	public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
 	public String getDescription() {
 		return description;
@@ -106,10 +111,11 @@ public class AirlinePreferences {
 
 	@Override
 	public String toString() {
-		return "FeatureManagement{" +
+		return "AirlinePreferences{" +
 				"airline='" + airline + '\'' +
 				", preference='" + preference + '\'' +
 				", airlineKey='" + airlineKey + '\'' +
+				", enabled='" + enabled + '\'' +
 				", description='" + description + '\'' +
 				", choicePilot=" + choicePilot +
 				", choiceFocal=" + choiceFocal +

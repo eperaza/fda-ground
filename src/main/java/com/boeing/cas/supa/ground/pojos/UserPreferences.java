@@ -6,6 +6,7 @@ public class UserPreferences {
 	protected String airline;
 	protected String preference;
 	protected String userKey;
+	protected boolean enabled;
 	protected String description;
 	protected String groupBy;
 	protected boolean toggle;
@@ -44,6 +45,10 @@ public class UserPreferences {
 	public void setUserKey(String userKey) {
 		this.userKey = userKey;
 	}
+
+	public boolean isEnabled() { return enabled; }
+
+	public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
 	public String getDescription() {
 		return description;
@@ -95,8 +100,10 @@ public class UserPreferences {
 				"airline='" + airline + '\'' +
 				", preference='" + preference + '\'' +
 				", userKey='" + userKey + '\'' +
+				", enabled='" + enabled + '\'' +
 				", description='" + description + '\'' +
 				", groupBy='" + groupBy + '\'' +
+				", toggle='" + toggle + '\'' +
 				", value='" + value + '\'' +
 				", updatedBy='" + updatedBy + '\'' +
 				", createdDateTime='" + createdDateTime + '\'' +

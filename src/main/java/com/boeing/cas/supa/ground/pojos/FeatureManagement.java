@@ -6,6 +6,7 @@ public class FeatureManagement {
 	protected String airline;
 	protected String title;
 	protected String featureKey;
+	protected boolean enabled;
 	protected String description;
 	protected boolean choicePilot;
 	protected boolean choiceFocal;
@@ -47,6 +48,10 @@ public class FeatureManagement {
 	public void setFeatureKey(String featureKey) {
 		this.featureKey = featureKey;
 	}
+
+	public boolean isEnabled() { return enabled; }
+
+	public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
 	public String getDescription() {
 		return description;
@@ -110,6 +115,7 @@ public class FeatureManagement {
 				"airline='" + airline + '\'' +
 				", title='" + title + '\'' +
 				", featureKey='" + featureKey + '\'' +
+				", enabled='" + enabled + '\'' +
 				", description='" + description + '\'' +
 				", choicePilot=" + choicePilot +
 				", choiceFocal=" + choiceFocal +

@@ -68,6 +68,9 @@ values ('airline-amx','"Show" button on Flight Plans','showFlightPlanShowButton'
 insert into airline_preferences (airline, preference, airline_key, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
 values ('airline-amx','Flight Progress Tables','showFlightProgressTables','Display Flight Progress Tables in Settings.',1,1,1,1,1,'jwhelan@fdacustomertest.onmicrosoft.com')
 
+insert into airline_preferences (airline, preference, airline_key, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Show Map View','showMapView','Show Map View',0,0,0,0,0,'jwhelan@fdacustomertest.onmicrosoft.com')
+
 //AIRLINE-PREFERENCES - PROD
 
 insert into airline_preferences (airline, preference, airline_key, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
@@ -96,6 +99,9 @@ values ('airline-amx','"Show" button on Flight Plans','showFlightPlanShowButton'
 
 insert into airline_preferences (airline, preference, airline_key, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
 values ('airline-amx','Flight Progress Tables','showFlightProgressTables','Display Flight Progress Tables in Settings.',1,1,1,1,1,'jwhelan@flitedeckadvisor.com')
+
+insert into airline_preferences (airline, preference, airline_key, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Show Map View','showMapView','Show Map View',0,0,0,0,0,'jwhelan@flitedeckadvisor.com')
 
 //USER-PREFERENCES - TEST
 
