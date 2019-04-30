@@ -1020,9 +1020,6 @@ public class AzureADClientService {
 					String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
 					List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
 					String airline = groupName != null ? groupName.replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY) : null;
-					//String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline).append(".plist").toString()) : null;
-					//String file = roleNames.get(0).substring(new String("role-").length()) + ".plist";
-					//String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline.toUpperCase()).append('/').append(file).toString()) : null;
 
 					String getPlistFromSQL = airline != null ? getPlistFromSQL(airline, roleNames.get(0)) : null;
 
@@ -1188,9 +1185,6 @@ public class AzureADClientService {
 					String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
 					List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
 					String airline = groupName != null ? groupName.replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY) : null;
-					//String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline).append(".plist").toString()) : null;
-					//String file = roleNames.get(0).substring(new String("role-").length()) + ".plist";
-					//String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline.toUpperCase()).append('/').append(file).toString()) : null;
 
 					String getPlistFromSQL = airline != null ? getPlistFromSQL(airline, roleNames.get(0)) : null;
 
@@ -1368,9 +1362,7 @@ public class AzureADClientService {
 				String groupName = userAirlineGroups.size() == 1 ? userAirlineGroups.get(0).getDisplayName() : null;
 				List<String> roleNames = userRoleGroups.stream().map(g -> g.getDisplayName()).collect(Collectors.toList());
 				String airline = groupName != null ? groupName.replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY) : null;
-				//String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline).append(".plist").toString()) : null;
-				//String file = roleNames.get(0).substring(new String("role-").length()) + ".plist";
-				//String getPlistFromBlob = airline != null ? getPlistFromBlob("preferences", new StringBuilder(airline.toUpperCase()).append('/').append(file).toString()) : null;
+
 				String getPlistFromSQL = airline != null ? getPlistFromSQL(airline, roleNames.get(0)) : null;
 
 				String mobileConfigFromBlob = airline != null ? getMobileConfigFromBlob("config", new StringBuilder(airline).append(".mobileconfig").toString()) : null;
@@ -1810,6 +1802,9 @@ public class AzureADClientService {
 		StringBuilder preferencesBody = new StringBuilder();
 
 		try {
+			if (!airline.startsWith("airline-")) {
+				airline = "airline-" + airline;
+			}
 
 			List<AirlinePreferences> airlinePreferences = featureManagementDao.getAirlinePreferences(airline, false);
 			preferencesBody.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n");

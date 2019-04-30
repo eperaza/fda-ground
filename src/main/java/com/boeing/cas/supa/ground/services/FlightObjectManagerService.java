@@ -75,7 +75,7 @@ public class FlightObjectManagerService {
 				logger.debug("Use CosmosDb to obtain the flight plan.");
 				return mongoFlightManagerService.getAllFlightObjectsFromCosmosDB(flightId, departureAirport, arrivalAirport, source);
 			}
-			else if (airlineGroup.equalsIgnoreCase("amx")){
+			else if (airlineGroup.equalsIgnoreCase("amx") || airlineGroup.equalsIgnoreCase("fda")){
 				logger.debug("Use [AMX] Route Sync to obtain the flight plan.");
 				return getAllFlightObjectsFromRS(flightId, departureAirport, arrivalAirport, authToken);
 			} else {
@@ -170,7 +170,7 @@ public class FlightObjectManagerService {
 			logger.debug("Use CosmosDb to obtain the flight plan.");
 			return mongoFlightManagerService.getFlightObjectByIdFromCosmosDB(id, source);
 		}
-		else if (airlineGroup.equalsIgnoreCase("amx")){
+		else if (airlineGroup.equalsIgnoreCase("amx") || airlineGroup.equalsIgnoreCase("fda")){
 			logger.debug("Use [AMX] Route Sync to obtain the flight plan.");
 			return getFlightObjectByIdFromRS(id, authToken);
 		} else {
@@ -235,7 +235,7 @@ public class FlightObjectManagerService {
 			logger.debug("Use CosmosDb to obtain the flight plan.");
 			return mongoFlightManagerService.getOperationalFlightPlanByFlightPlanIdFromCosmosDB(flightPlanId, source);
 		}
-		else if (airlineGroup.equalsIgnoreCase("amx")){
+		else if (airlineGroup.equalsIgnoreCase("amx") || airlineGroup.equalsIgnoreCase("fda")){
 			logger.debug("Use [AMX] Route Sync to obtain the flight plan.");
 			return getOperationalFlightPlanByFlightPlanIdFromRS(flightPlanId, authToken);
 		} else {
