@@ -49,9 +49,7 @@ public class FileManagementService {
 	private final static String SUPA_SYSTEM_LOGS_STORAGE_CONTAINER = "supa-system-logs";
 	private final static String TSP_STORAGE_CONTAINER = "tsp";
 	private final static String MOBILECONFIG_STORAGE_CONTAINER = "config";
-	private final static String PREFERENCES_STORAGE_CONTAINER = "preferences";
-	private final static String PREFERENCES_REFRESH_STORAGE_CONTAINER = "preferencesRefresh";
-	
+
 	@Autowired
 	private Map<String, String> appProps;
 
@@ -95,11 +93,6 @@ public class FileManagementService {
 			} else if (MOBILECONFIG_STORAGE_CONTAINER.equals(type)) {
 				container = MOBILECONFIG_STORAGE_CONTAINER;
 				filePath = file;
-			} else if (PREFERENCES_STORAGE_CONTAINER.equals(type) || PREFERENCES_REFRESH_STORAGE_CONTAINER.equals(type)) {
-				container = PREFERENCES_STORAGE_CONTAINER;
-				file = userRole + ".plist";
-				filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/').append(file).toString();
-
 			} else {
 				throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "Invalid file type requested for download", RequestFailureReason.BAD_REQUEST));
 			}
@@ -112,20 +105,6 @@ public class FileManagementService {
 				}
 				outputStream.flush();
 				fileInBytes = outputStream.toByteArray();
-
-				if (PREFERENCES_STORAGE_CONTAINER.equals(type)) {
-					// for preferences, replace userkey with key for initial call
-					fileInBytes = new String(fileInBytes).replaceAll("userkey","key").getBytes();
-				}
-				if (PREFERENCES_REFRESH_STORAGE_CONTAINER.equals(type)) {
-					String tmp = new String(fileInBytes);
-					int startIndex = tmp.indexOf("<userkey>");
-					int endIndex = tmp.lastIndexOf("</dict>");
-					if (startIndex > 0 && endIndex > 0) {
-						fileInBytes = new String(tmp.substring(0, startIndex) +
-							tmp.substring(endIndex)).getBytes();
-					}
-				}
 
 			} catch (IOException e) {
 				logger.error("Error retrieving file [{}] of type [{}]: {}", ControllerUtils.sanitizeString(file), ControllerUtils.sanitizeString(type), e.getMessage(), e);

@@ -279,6 +279,8 @@ public class User extends DirectoryObject {
 		return this.otherMails;
 	}
 
+	public void setOtherMails(List<String> emails) { this.otherMails = emails; }
+
 	public String getCreatedDateTime() { return this.createdDateTime;	}
 
 	public void setCreatedDateTime(String createdDateTime) { this.createdDateTime = createdDateTime; }

@@ -25,6 +25,10 @@ import com.boeing.cas.supa.ground.utils.ControllerUtils;
 import com.microsoft.aad.adal4j.AuthenticationException;
 import com.microsoft.aad.adal4j.AuthenticationResult;
 
+import com.boeing.cas.supa.ground.utils.Constants;
+import org.apache.commons.lang3.StringUtils;
+
+
 @RestController
 public class RegistrationController {
 
@@ -72,21 +76,23 @@ public class RegistrationController {
 		return null;
 	}
 
-//	@RequestMapping(path="/getregistrationcode", method = { RequestMethod.GET })
-//	public ResponseEntity<Object> getRegistrationCode(@RequestParam String uuid) throws UserAccountRegistrationException {
-//
-//		logger.debug("Get registration code request for {}", uuid);
-//		Object result = aadClient.getRegistrationCode(uuid);
-//
-//		if (result instanceof ApiError) {
-//
-//			ApiError error = (ApiError) result;
-//			logger.error(error.getErrorLabel(), error.getErrorDescription());
-//			return new ResponseEntity<>(result, HttpStatus.INTERNAL_SERVER_ERROR);
-//		}
-//
-//		return new ResponseEntity<>(result, HttpStatus.OK);
-//	}
+	@RequestMapping(path="/roles", method = { RequestMethod.GET })
+	public ResponseEntity<Object> getRoles(@RequestHeader("Authorization") String authToken) {
+
+		// Extract the access token from the authorization request header
+		String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
+
+
+		// Create user with the received payload/parameters defining the new account.
+		Object result = aadClient.getRoles(accessTokenInRequest);
+
+		if (result instanceof ApiError) {
+			return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
+		}
+
+		return new ResponseEntity<>(result, HttpStatus.OK);
+	}
+
 
 
 	@RequestMapping(path="/registeruser", method = { RequestMethod.POST })

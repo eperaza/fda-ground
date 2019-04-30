@@ -30,7 +30,7 @@ public class AirlineFocalAdminController {
 
 	private final Logger logger = LoggerFactory.getLogger(AirlineFocalAdminController.class);
 
-	private static final List<String> ALLOWED_USER_ROLES = Arrays.asList(new String[] { "role-airlinefocal", "role-airlinepilot", "role-airlinemaintenance" });
+	private static final List<String> ALLOWED_USER_ROLES = Arrays.asList(new String[] { "role-airlinefocal", "role-airlinepilot", "role-airlinemaintenance", "role-airlinecheckairman" });
 
 	@Autowired
 	private AzureADClientService aadClient;
@@ -48,7 +48,7 @@ public class AirlineFocalAdminController {
 		List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
 		List<Group> roleGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).peek(g -> logger.info("Role Group: {}", g)).collect(Collectors.toList());
 		if (airlineGroups.size() != 1 || roleGroups.size() != 1) {
-			return new ResponseEntity<>(new ApiError("MISSING_OR_INVALID_MEMBERSHIP", "User membership is ambiguous"), HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(new ApiError("MISSING_OR_INVALID_MEMBERSHIP", "User membership is ambiguous, airlines[\" + airlineGroups.size() + \"] roles[\" + roleAirlineFocalGroups.size() + \"]\""), HttpStatus.UNAUTHORIZED);
 		}
 
 		// Validate role-based group requested for new user - must be role-airlinefocal, role-airlinepilot or role-airlinemaintenance
@@ -100,4 +100,21 @@ public class AirlineFocalAdminController {
 
 		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
+
+	@RequestMapping(path="/airlinefocaladmin/loadusers", method = { RequestMethod.GET })
+	public ResponseEntity<Object> loadUsers(@RequestHeader("Authorization") String authToken) {
+
+		// Extract the access token from the authorization request header
+		String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
+
+		// Create user with the received payload/parameters defining the new account.
+		Object result = aadClient.loadUsers(accessTokenInRequest);
+
+		if (result instanceof ApiError) {
+			return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
+		}
+
+		return new ResponseEntity<>(result, HttpStatus.OK);
+	}
+
 }
