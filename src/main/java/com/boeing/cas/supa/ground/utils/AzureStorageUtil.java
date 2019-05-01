@@ -198,13 +198,16 @@ public class AzureStorageUtil {
 	}
 
 
-    public boolean BlobExistsOnCloud(String containerName, String fileName) throws URISyntaxException, StorageException
-    {
-        CloudBlobClient serviceClient = storageAccount.createCloudBlobClient();
-
-        return serviceClient.getContainerReference(containerName)
-                .getBlockBlobReference(fileName)
-                .exists();
+    public boolean blobExistsOnCloud(String containerName, String fileName) {
+    	try {
+	        CloudBlobClient serviceClient = storageAccount.createCloudBlobClient();
+	
+	        return serviceClient.getContainerReference(containerName)
+	                .getBlockBlobReference(fileName)
+	                .exists();
+    	} catch (Exception ex) {
+    		return false;
+    	}
     }
 
 
