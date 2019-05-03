@@ -92,6 +92,13 @@ public class FileManagementService {
 					// in case the file is not exist, try to upper case the file name
 					String tailNumberPart = file.substring(0, file.indexOf(".json"));
 					filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/').append(tailNumberPart.toUpperCase()).append(".json").toString();
+					
+					if (asu.blobExistsOnCloud(container, filePath) != true) {
+						// in case the file is not exist, try to upper case the first letter to support camel file name
+						filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/')
+													.append(file.substring(0, 1).toUpperCase())
+													.append(file.substring(1)).toString();
+					}
 				}
 			} else if (MOBILECONFIG_STORAGE_CONTAINER.equals(type)) {
 				container = MOBILECONFIG_STORAGE_CONTAINER;
