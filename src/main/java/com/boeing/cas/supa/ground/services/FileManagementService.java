@@ -3,7 +3,6 @@ package com.boeing.cas.supa.ground.services;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -22,7 +21,6 @@ import java.util.stream.Collectors;
 
 import com.boeing.cas.supa.ground.exceptions.SupaSystemLogException;
 import com.boeing.cas.supa.ground.pojos.*;
-import com.microsoft.azure.storage.StorageException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -90,6 +88,18 @@ public class FileManagementService {
 			if (TSP_STORAGE_CONTAINER.equals(type)) {
 				container = TSP_STORAGE_CONTAINER;
 				filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/').append(file).toString();
+				if (asu.blobExistsOnCloud(container, filePath) != true) {
+					// in case the file is not exist, try to upper case the file name
+					String tailNumberPart = file.substring(0, file.indexOf(".json"));
+					filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/').append(tailNumberPart.toUpperCase()).append(".json").toString();
+					
+					if (asu.blobExistsOnCloud(container, filePath) != true) {
+						// in case the file is not exist, try to upper case the first letter to support camel file name
+						filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/')
+													.append(file.substring(0, 1).toUpperCase())
+													.append(file.substring(1)).toString();
+					}
+				}
 			} else if (MOBILECONFIG_STORAGE_CONTAINER.equals(type)) {
 				container = MOBILECONFIG_STORAGE_CONTAINER;
 				filePath = file;
@@ -409,15 +419,12 @@ public class FileManagementService {
 		boolean bExists = false;
 		try {
 			AzureStorageUtil asu = new AzureStorageUtil(appProps.get("StorageAccountName"), appProps.get("StorageKey"));
-			bExists = asu.BlobExistsOnCloud(SUPA_SYSTEM_LOGS_STORAGE_CONTAINER, new StringBuilder(storagePath).append('/')
+			bExists = asu.blobExistsOnCloud(SUPA_SYSTEM_LOGS_STORAGE_CONTAINER, new StringBuilder(storagePath).append('/')
 					.append(supaSystemLog.getSupaSystemLogName()).toString());
 		} catch (IOException ioe) {
 
-		} catch (URISyntaxException uri) {
-
-		} catch (StorageException stex) {
-
-		}
+		} 
+		
 		if (bExists) {
 			throw new SupaSystemLogException(new ApiError("SUPA_SYSTEM_LOG_UPLOAD_FAILURE", "The specified blob already exists.", RequestFailureReason.ALREADY_REPORTED));
 		}
