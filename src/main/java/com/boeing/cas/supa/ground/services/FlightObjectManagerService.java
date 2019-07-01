@@ -8,24 +8,15 @@ import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import javax.naming.ConfigurationException;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
-import com.boeing.cas.supa.ground.exceptions.FileDownloadException;
 import com.boeing.cas.supa.ground.pojos.CosmosDbFlightPlanSource;
 import com.boeing.cas.supa.ground.pojos.Group;
 import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
-import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
 import org.apache.commons.lang3.StringUtils;
-import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,7 +70,14 @@ public class FlightObjectManagerService {
 					|| airlineGroup.equalsIgnoreCase("fda")
 					|| airlineGroup.equalsIgnoreCase("bgs")){
 				logger.debug("Use [AMX] Route Sync to obtain the flight plan.");
-				return getAllFlightObjectsFromRS(flightId, departureAirport, arrivalAirport, authToken);
+				int counter = 1;
+				Object obj = getAllFlightObjectsFromRS(flightId, departureAirport, arrivalAirport, authToken);
+				while (obj instanceof ApiError && counter < 5) {
+					logger.debug("RS Flight Plans Request FAILED. try Request again {}", counter);
+					counter++;
+					obj = getAllFlightObjectsFromRS(flightId, departureAirport, arrivalAirport, authToken);
+				}
+				return obj;
 			} else {
 				String message = "No flight plan available.";
 				logger.debug(message);
@@ -124,7 +122,7 @@ public class FlightObjectManagerService {
 					// parameter not passed
 				}
 			}
-
+			logger.debug("Route Sych URL = [{}]", fomUrl.toString());
 			URL url = new URL(fomUrl.toString());
 			HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
 			connection.setSSLSocketFactory(sslSocketFactory);
@@ -176,7 +174,14 @@ public class FlightObjectManagerService {
 				|| airlineGroup.equalsIgnoreCase("fda")
 				|| airlineGroup.equalsIgnoreCase("bgs")){
 			logger.debug("Use [AMX] Route Sync to obtain the flight plan.");
-			return getFlightObjectByIdFromRS(id, authToken);
+			int counter = 1;
+			Object obj = getFlightObjectByIdFromRS(id, authToken);
+			while (obj instanceof ApiError && counter < 5) {
+				logger.debug("RS Flight Object Request FAILED. try Request again {}", counter);
+				counter++;
+				obj = getFlightObjectByIdFromRS(id, authToken);
+			}
+			return obj;
 		} else {
 			String message = "No flight plan available.";
 			logger.debug(message);
@@ -239,11 +244,16 @@ public class FlightObjectManagerService {
 			logger.debug("Use CosmosDb to obtain the flight plan.");
 			return mongoFlightManagerService.getOperationalFlightPlanByFlightPlanIdFromCosmosDB(flightPlanId, source);
 		}
-		else if (airlineGroup.equalsIgnoreCase("amx")
-				|| airlineGroup.equalsIgnoreCase("fda")
-				|| airlineGroup.equalsIgnoreCase("bgs")){
+		else if (airlineGroup.equalsIgnoreCase("amx") || airlineGroup.equalsIgnoreCase("fda")){
+			int counter = 1;
 			logger.debug("Use [AMX] Route Sync to obtain the flight plan.");
-			return getOperationalFlightPlanByFlightPlanIdFromRS(flightPlanId, authToken);
+			Object obj = getOperationalFlightPlanByFlightPlanIdFromRS(flightPlanId, authToken);
+			while (obj instanceof ApiError && counter < 5) {
+				logger.debug("Flight Plan Request FAILED. try Request again {}", counter);
+				counter++;
+				obj = getOperationalFlightPlanByFlightPlanIdFromRS(flightPlanId, authToken);
+			}
+			return obj;
 		} else {
 			String message = "No flight plan available.";
 			logger.debug(message);
