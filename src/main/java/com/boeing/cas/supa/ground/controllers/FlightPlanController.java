@@ -67,6 +67,7 @@ public class FlightPlanController {
 		logger.debug("Get operational_flight_plans request for flightPlanId:{}", flightPlanId);
 
 		Object operationalflightPlanResponse = this.flightObjectManagerService.getOperationalFlightPlanByFlightPlanId(flightPlanId, authToken);
+
 		if (operationalflightPlanResponse instanceof ApiError) {
 			ApiError errorResponse = (ApiError) operationalflightPlanResponse;
 			return new ResponseEntity<>(errorResponse, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(errorResponse.getFailureReason()));
