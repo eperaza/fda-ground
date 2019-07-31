@@ -267,7 +267,8 @@ GO
 
 CREATE INDEX airline1 ON feature_management (airline);
 GO
-
+CREATE UNIQUE INDEX featurekey1 ON feature_management (airline, feature_key);
+GO
 
 
 USE [FDAGroundServices]
@@ -315,6 +316,9 @@ GO
 
 CREATE INDEX airline1 ON airline_preferences (airline);
 GO
+CREATE UNIQUE INDEX airlinekey1 ON airline_preferences (airline, airline_key);
+GO
+
 
 
 USE [FDAGroundServices]
@@ -362,6 +366,8 @@ ALTER TABLE [dbo].[user_preferences] ADD CONSTRAINT [DF_user_preferences_create_
 GO
 
 CREATE INDEX airline1 ON user_preferences (airline);
+GO
+CREATE UNIQUE INDEX userkey1 ON user_preferences (airline, user_key);
 GO
 
 
