@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -47,6 +48,8 @@ public class FileManagementService {
 	private final static String MOBILECONFIG_STORAGE_CONTAINER = "config";
 	private final static String CERTIFICATES_STORAGE_CONTAINER = "certificates";
 
+	private Calendar cLatestDate = null;
+
 	@Autowired
 	private Map<String, String> appProps;
 
@@ -55,6 +58,7 @@ public class FileManagementService {
 
 	@Autowired
 	private FlightRecordDao flightRecordDao;
+
 
 	public byte[] getFileFromStorage(String file, String type, String authToken) throws FileDownloadException {
 
@@ -153,6 +157,7 @@ public class FileManagementService {
 			String role = "na";
 			if (userRole.equalsIgnoreCase("airlinepilot")) { role = "fc"; file = "fc_exp2022_04_15.pfx"; }
 			if (userRole.equalsIgnoreCase("airlinefocal")) { role = "fc"; file = "fc_exp2022_04_15.pfx"; }
+			if (userRole.equalsIgnoreCase("airlineefbadmin")) { role = "fc"; file = "fc_exp2022_04_15.pfx"; }
 			if (userRole.equalsIgnoreCase("airlinemaintenance")) { role = "mc"; file = "mc_exp2022_04_14.pfx"; }
 			if (userRole.equalsIgnoreCase("airlinecheckairman")) { role = "mc"; file = "mc_exp2022_04_14.pfx"; }
 			String filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/').append(role)
@@ -175,9 +180,9 @@ public class FileManagementService {
 			logger.error("Error accessing Azure Storage: {}", ioe.getMessage(), ioe);
 			throw new OnsCertificateException(new ApiError("FILE_DOWNLOAD_FAILURE", "Error retrieving Ons Certificate", RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
-		String password = "p@ssword";
+		String key = "p@ssword";
 
-		String base64EncodedPayload = Base64.getEncoder().encodeToString(password.getBytes());
+		String base64EncodedPayload = Base64.getEncoder().encodeToString(key.getBytes());
 		OnsCertificate onsCertificate = new OnsCertificate(base64EncodedPayload, fileInBytes);
 		certificates.add(onsCertificate);
 		return certificates;
@@ -640,6 +645,7 @@ public class FileManagementService {
 		return listOfFlightMgmtMessages;
 	}
 
+
     public List<FlightCount> countFlightRecords(String authToken) throws FlightRecordException {
 
         List<FlightCount> listOfFlightCounts = new ArrayList<>();
@@ -654,10 +660,11 @@ public class FileManagementService {
 
         List<FlightRecord> listOfFlightRecords = this.flightRecordDao.getAllFlightRecords(airlineGroup);
 
-		// Sort via storage path in order to group tails together
-        Collections.sort(listOfFlightRecords,Comparator.comparing(FlightRecord :: getStoragePath));
+		// Sort via storage path (airline/tail only) in order to group tails together,
+		// then sort by flight_datetime - using the last record to get the supa version
+        Collections.sort(listOfFlightRecords);
 
-		FlightCount currentTail = new FlightCount("", 0, 0);
+		FlightCount currentTail = new FlightCount("", 0, 0, "");
 
 		if (listOfFlightRecords != null && listOfFlightRecords.size() > 0) {
 
@@ -669,19 +676,24 @@ public class FileManagementService {
 				if (endIndex > 0)
                 	tail = fr.getStoragePath().substring(4, endIndex);
 
-                if (!tail.equals(currentTail.getTail())) {
+				if (!tail.equals(currentTail.getTail())) {
                 	// We have a new tail!
 					if (!currentTail.getTail().equals("")) {
 						listOfFlightCounts.add(currentTail);
 					}
-					// Reset tail
-					currentTail = new FlightCount(tail, 1, 0);
+					// Reset tail, using lst aid for supa version
+					currentTail = new FlightCount(tail, 1, 0, fr.getAidId());
 					if (fr.isProcessedByAnalytics()) {
 						currentTail.setProcessed(1);
 					}
 
 				} else {
-                	// Increment count of current tail
+					// if the latest/greatest supa version is missing, then use the next latest/greatest version
+					// (until we locate a valid version)
+					if (currentTail.getVersion() == null || currentTail.getVersion().equals("")) {
+						currentTail.setVersion(fr.getAidId());
+					}
+					// Increment count of current tail
                 	currentTail.setCount(currentTail.getCount() + 1);
                 	if (fr.isProcessedByAnalytics()) {
 						currentTail.setProcessed(currentTail.getProcessed() + 1);
@@ -695,6 +707,37 @@ public class FileManagementService {
         }
         return listOfFlightCounts;
     }
+
+	public void setLatestDate(java.time.Instant instant) {
+
+		ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
+		Calendar cFlight = GregorianCalendar.from(zdt);
+		if (cFlight.compareTo(cLatestDate) > 0) {
+			// flight date is newer
+			cLatestDate = cFlight;
+		}
+	}
+
+
+    private String getSupaVersionForTail (FlightRecord flightRecord) {
+
+		String version = "Not Found";
+
+		ZonedDateTime zdt = ZonedDateTime.ofInstant(flightRecord.getFlightDatetime(), ZoneId.systemDefault());
+		Calendar cFlight = GregorianCalendar.from(zdt);
+
+		if (cFlight.compareTo(cLatestDate) > 0) {
+			// flight is newer
+			setLatestDate(flightRecord.getFlightDatetime());
+		}
+
+
+		// lst obtain supa version from analytics if it exists
+		//if (flightCount.getProcessed() > 0) {
+
+		//}
+		return version;
+	}
 
 
     public List<FileManagementMessage> getStatusOfFlightRecords(List<String>flightRecordNames, String authToken) throws FlightRecordException {

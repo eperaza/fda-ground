@@ -4,22 +4,22 @@ import java.util.Arrays;
 
 public class OnsCertificate {
 
-	private String password = "";
+	private String key = "";
 	private byte[] certificate = new byte[0];
 
-	public OnsCertificate(String password, byte[] certificate) {
+	public OnsCertificate(String key, byte[] certificate) {
 
-		this.password = password;
+		this.key = key;
 		this.certificate = certificate;
 
 	}
 
-	public String getPassword() {
-		return password;
+	public String getKey() {
+		return this.key;
 	}
 
-	public void setPassword(String password) {
-		this.password = password;
+	public void setKey(String key) {
+		this.key = key;
 	}
 
 	public byte[] getCertificate() {
@@ -33,8 +33,8 @@ public class OnsCertificate {
 	@Override
 	public String toString() {
 		return "OnsCertificate{" +
-				"password='" + password + '\'' +
-				", certificate=" + Arrays.toString(certificate) +
+				"key='" + this.key + '\'' +
+				", certificate=" + Arrays.toString(this.certificate) +
 				'}';
 	}
 }

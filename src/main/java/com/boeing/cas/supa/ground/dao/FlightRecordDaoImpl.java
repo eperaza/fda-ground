@@ -32,7 +32,7 @@ public class FlightRecordDaoImpl implements FlightRecordDao {
 	private final Logger logger = LoggerFactory.getLogger(FlightRecordDaoImpl.class);
 
 	private static final String GET_FLIGHT_RECORD = "SELECT * FROM flight_records WHERE flight_record_name = :flight_record_name";
-	private static final String GET_FLIGHT_RECORDS = "SELECT * FROM flight_records WHERE airline = :airline ORDER BY create_ts desc";
+	private static final String GET_ALL_FLIGHT_RECORDS = "SELECT * FROM flight_records WHERE airline = :airline ORDER BY storage_path";
 	private static final String INSERT_FLIGHT_RECORD = "INSERT INTO flight_records (flight_record_name, storage_path, file_size_kb, flight_datetime, aid_id, airline, user_id, upload_to_adw) VALUES (:flight_record_name, :storage_path, :file_size_kb, :flight_datetime, :aid_id, :airline, :user_id, :upload_to_adw)";
 	private static final String UPDATE_FLIGHT_RECORD_DELETED_ON_AID = "UPDATE flight_records SET deleted_on_aid = 1 WHERE flight_record_name = :flight_record_name AND deleted_on_aid = 0";
 
@@ -74,7 +74,7 @@ public class FlightRecordDaoImpl implements FlightRecordDao {
 
 		try {
 
-			flightRecords = jdbcTemplate.query(GET_FLIGHT_RECORDS, namedParameters, new FlightRecordRowMapper());
+			flightRecords = jdbcTemplate.query(GET_ALL_FLIGHT_RECORDS, namedParameters, new FlightRecordRowMapper());
 		} catch (DataAccessException dae) {
 			logger.error("Failed to getAllFlightRecords: {}", dae.getMessage(), dae);
 			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_RETRIEVAL_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));

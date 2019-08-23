@@ -14,7 +14,7 @@ public class CosmosDbFlightPlanSource {
 	private static final String USER_NAME = "UserName";
 	private static final String DATABASE_NAME = "DatabaseName";
 	private static final String COLLECTION_NAME = "CollectionName";
-	private static final String PRIMARY_PASSWORD = "PrimaryPassword";
+	private static final String PRIMARY_KEY = "PrimaryPassword";
 
 	private String airline;
 	private String serverName;
@@ -38,7 +38,7 @@ public class CosmosDbFlightPlanSource {
 		this.userName = plist.getString(USER_NAME);
 		this.databaseName = plist.getString(DATABASE_NAME);
 		this.collectionName = plist.getString(COLLECTION_NAME);
-		this.primaryPassword = plist.getString(PRIMARY_PASSWORD);
+		this.primaryPassword = plist.getString(PRIMARY_KEY);
 		logger.debug(this.toString());
 	}
 

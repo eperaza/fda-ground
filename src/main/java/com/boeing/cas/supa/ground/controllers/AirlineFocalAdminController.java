@@ -30,7 +30,8 @@ public class AirlineFocalAdminController {
 
 	private final Logger logger = LoggerFactory.getLogger(AirlineFocalAdminController.class);
 
-	private static final List<String> ALLOWED_USER_ROLES = Arrays.asList(new String[] { "role-airlinefocal", "role-airlinepilot", "role-airlinemaintenance", "role-airlinecheckairman" });
+	private static final List<String> ALLOWED_USER_ROLES = Arrays.asList(
+		new String[] { "role-airlinefocal", "role-airlinepilot", "role-airlinemaintenance", "role-airlinecheckairman", "role-airlineefbadmin" });
 
 	@Autowired
 	private AzureADClientService aadClient;

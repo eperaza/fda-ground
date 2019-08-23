@@ -1,8 +1,14 @@
 package com.boeing.cas.supa.ground.pojos;
 
+import com.boeing.cas.supa.ground.services.FileManagementService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Instant;
 
-public class FlightRecord {
+public class FlightRecord implements Comparable<FlightRecord> {
+
+	private final Logger logger = LoggerFactory.getLogger(FlightRecord.class);
 
 	private String flightRecordName;
 	private String storagePath;
@@ -137,5 +143,30 @@ public class FlightRecord {
 				.append("deletedOnAid=").append(this.deletedOnAid).append(',')
 				.append("processedByAnalytics=").append(this.processedByAnalytics)
 			.toString();
+	}
+
+
+	@Override
+	public int compareTo(FlightRecord that) {
+		// just use airline code and tail number (XXX/XXXXXX/..)
+		// *note index could return -1; if so just use getStorage
+
+		if (this.getStoragePath().indexOf('/', 5) < 0) {
+			return this.storagePath.compareTo(that.storagePath);
+		}
+		if (that.getStoragePath().indexOf('/', 5) < 0) {
+			return this.storagePath.compareTo(that.storagePath);
+		}
+
+		// Sort by airline code and tail; then by flight_datetime
+		// *note return latest date first!
+		if (this.getStoragePath().substring(0,this.getStoragePath().indexOf('/',5))
+			.equalsIgnoreCase(that.getStoragePath().substring(0, that.getStoragePath().indexOf('/', 5))))
+		{
+			return that.getFlightDatetime().compareTo(this.flightDatetime);
+		} else {
+			return this.storagePath.compareTo(that.storagePath);
+		}
+
 	}
 }

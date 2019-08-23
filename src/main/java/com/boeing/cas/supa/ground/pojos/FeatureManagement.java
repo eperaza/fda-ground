@@ -12,6 +12,7 @@ public class FeatureManagement {
 	protected boolean choiceFocal;
 	protected boolean choiceCheckAirman;
 	protected boolean choiceMaintenance;
+	protected boolean choiceEfbAdmin;
 
 	protected String updatedBy;
 	protected String createdDateTime;
@@ -87,6 +88,14 @@ public class FeatureManagement {
 
 	public boolean isChoiceMaintenance() {
 		return choiceMaintenance;
+	}
+
+	public void setChoiceEfbAdmin(boolean bChoiceEfbAdmin) {
+		this.choiceEfbAdmin = bChoiceEfbAdmin;
+	}
+
+	public boolean isChoiceEfbAdmin() {
+		return choiceEfbAdmin;
 	}
 
 	public void setChoiceMaintenance(boolean bChoiceMaintenance) {
