@@ -134,9 +134,10 @@ public class FlightRecordDaoImpl implements FlightRecordDao {
 					resultSet.getString("status"),
 					resultSet.getBoolean("upload_to_adw"),
 					resultSet.getBoolean("deleted_on_aid"),
-					resultSet.getBoolean("processed_by_analytics")
+					resultSet.getBoolean("processed_by_analytics"),
+					OffsetDateTime.parse(resultSet.getString("create_ts"), Constants.DateTimeOffsetFormatterForParse).toInstant(),
+					OffsetDateTime.parse(resultSet.getString("update_ts"), Constants.DateTimeOffsetFormatterForParse).toInstant()
 				);
-
 			return flightRecord;
 		}
 	}

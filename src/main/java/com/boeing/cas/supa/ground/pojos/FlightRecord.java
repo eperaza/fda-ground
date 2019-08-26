@@ -1,6 +1,5 @@
 package com.boeing.cas.supa.ground.pojos;
 
-import com.boeing.cas.supa.ground.services.FileManagementService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,9 +21,12 @@ public class FlightRecord implements Comparable<FlightRecord> {
 	private boolean deletedOnAid;
 	private boolean processedByAnalytics;
 
+	private Instant createTs;
+	private Instant updateTs;
+
 	public FlightRecord(String flightRecordName, String storagePath, long fileSizeKb, Instant flightDatetime,
 			String aidId, String airline, String userId, String status, boolean uploadToAdw, boolean deletedOnAid,
-			boolean processedByAnalytics) {
+			boolean processedByAnalytics, Instant createTs, Instant updateTs) {
 
 		this.flightRecordName = flightRecordName;
 		this.storagePath = storagePath;
@@ -37,6 +39,9 @@ public class FlightRecord implements Comparable<FlightRecord> {
 		this.uploadToAdw = uploadToAdw;
 		this.deletedOnAid = deletedOnAid;
 		this.processedByAnalytics = processedByAnalytics;
+
+		this.createTs = createTs;
+		this.updateTs = updateTs;
 	}
 
 	public String getFlightRecordName() {
@@ -127,6 +132,22 @@ public class FlightRecord implements Comparable<FlightRecord> {
 		this.processedByAnalytics = processedByAnalytics;
 	}
 
+	public Instant getCreateTs() {
+		return createTs;
+	}
+
+	public void setCreateTs(Instant createTs) {
+		this.createTs = createTs;
+	}
+
+	public Instant getUpdateTs() {
+		return updateTs;
+	}
+
+	public void setUpdateTs(Instant updateTs) {
+		this.updateTs = updateTs;
+	}
+
 	@Override
 	public String toString() {
 
@@ -141,7 +162,9 @@ public class FlightRecord implements Comparable<FlightRecord> {
 				.append("status=").append(this.status).append(',')
 				.append("uploadToAdw=").append(this.uploadToAdw).append(',')
 				.append("deletedOnAid=").append(this.deletedOnAid).append(',')
-				.append("processedByAnalytics=").append(this.processedByAnalytics)
+				.append("processedByAnalytics=").append(this.processedByAnalytics).append(',')
+				.append("createTs=").append(this.createTs)
+				.append("updateTs=").append(this.updateTs)
 			.toString();
 	}
 

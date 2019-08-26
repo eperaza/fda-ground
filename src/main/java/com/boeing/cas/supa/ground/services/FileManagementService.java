@@ -48,8 +48,6 @@ public class FileManagementService {
 	private final static String MOBILECONFIG_STORAGE_CONTAINER = "config";
 	private final static String CERTIFICATES_STORAGE_CONTAINER = "certificates";
 
-	private Calendar cLatestDate = null;
-
 	@Autowired
 	private Map<String, String> appProps;
 
@@ -275,7 +273,8 @@ public class FileManagementService {
         // (a) pass to the individual upload threads, so individual attributes can be updates as warranted.
         // (b) persist the flight record, and status, to the database
 		final FlightRecord flightRecord = new FlightRecord(uploadFlightRecord.getOriginalFilename(), storagePath,
-				fileSizeKb, flightDatetime, null, airline, user.getUserPrincipalName(), null, false, false, false);
+				fileSizeKb, flightDatetime, null, airline, user.getUserPrincipalName(),
+				null, false, false, false, null, null);
 
 		// Set up executor pool for performing ADW and Azure uploads concurrently
 		ExecutorService es = Executors.newFixedThreadPool(3);
@@ -664,7 +663,7 @@ public class FileManagementService {
 		// then sort by flight_datetime - using the last record to get the supa version
         Collections.sort(listOfFlightRecords);
 
-		FlightCount currentTail = new FlightCount("", 0, 0, "");
+		FlightCount currentTail = new FlightCount("", 0, 0, "", null, null);
 
 		if (listOfFlightRecords != null && listOfFlightRecords.size() > 0) {
 
@@ -682,7 +681,7 @@ public class FileManagementService {
 						listOfFlightCounts.add(currentTail);
 					}
 					// Reset tail, using lst aid for supa version
-					currentTail = new FlightCount(tail, 1, 0, fr.getAidId());
+					currentTail = new FlightCount(tail, 1, 0, fr.getAidId(), fr.getCreateTs(), fr.getUpdateTs());
 					if (fr.isProcessedByAnalytics()) {
 						currentTail.setProcessed(1);
 					}
@@ -707,37 +706,6 @@ public class FileManagementService {
         }
         return listOfFlightCounts;
     }
-
-	public void setLatestDate(java.time.Instant instant) {
-
-		ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
-		Calendar cFlight = GregorianCalendar.from(zdt);
-		if (cFlight.compareTo(cLatestDate) > 0) {
-			// flight date is newer
-			cLatestDate = cFlight;
-		}
-	}
-
-
-    private String getSupaVersionForTail (FlightRecord flightRecord) {
-
-		String version = "Not Found";
-
-		ZonedDateTime zdt = ZonedDateTime.ofInstant(flightRecord.getFlightDatetime(), ZoneId.systemDefault());
-		Calendar cFlight = GregorianCalendar.from(zdt);
-
-		if (cFlight.compareTo(cLatestDate) > 0) {
-			// flight is newer
-			setLatestDate(flightRecord.getFlightDatetime());
-		}
-
-
-		// lst obtain supa version from analytics if it exists
-		//if (flightCount.getProcessed() > 0) {
-
-		//}
-		return version;
-	}
 
 
     public List<FileManagementMessage> getStatusOfFlightRecords(List<String>flightRecordNames, String authToken) throws FlightRecordException {

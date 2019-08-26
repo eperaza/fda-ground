@@ -137,7 +137,7 @@ public class SupaMgmtController {
 
 		CacheControl cacheControl = CacheControl.maxAge(0, TimeUnit.SECONDS);
 
-		logger.info("get War release: {}", releaseVersion);
+		logger.info("Upload War release: {}", releaseVersion);
 		SupaRelease supaRelease = null;
 		try {
 			supaRelease = supaReleaseMgmtService.getWarRelease(authToken, releaseVersion);

@@ -212,7 +212,7 @@ public class SupaReleaseManagementService {
 
 			progressLog.append("\nRequesting user belongs to single airline group and airline focal role group");
 			// Remove current version (if there)
-			logger.info("Remove Current Supa Version for airline [{}]", version, airline);
+			logger.info("Remove Current Supa Version for airline: [{}]", airline);
 			supaReleaseManagementDao.removeCurrentSupaRelease(airline);
 
 			// Insert current version if not equal to NA
@@ -290,9 +290,11 @@ public class SupaReleaseManagementService {
 		} catch (IOException e) {
 			logger.error("ApiError retrieving WAR release version [{}]: {}", ControllerUtils.sanitizeString(releaseVersion),
 					e.getMessage(), e);
-			throw new SupaReleaseException(new ApiError("SUPA_RELEASE_DOWNLOAD", String.format("Failed to retrieve specified WAR release: %s", ControllerUtils.sanitizeString(releaseVersion)), RequestFailureReason.INTERNAL_SERVER_ERROR));
+			throw new SupaReleaseException(new ApiError("WAR_RELEASE_DOWNLOAD", String.format("Failed to retrieve specified WAR release: %s", ControllerUtils.sanitizeString(releaseVersion)), RequestFailureReason.INTERNAL_SERVER_ERROR));
+		} catch (SupaReleaseException se) {
+			logger.error("SupaRelease Exception: {}", se.getMessage(), se);
+			throw new SupaReleaseException(new ApiError("WAR_RELEASE_DOWNLOAD", String.format("Failed to retrieve specified WAR release: %s", ControllerUtils.sanitizeString(releaseVersion)), RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
-
 		return null;
 	}
 
