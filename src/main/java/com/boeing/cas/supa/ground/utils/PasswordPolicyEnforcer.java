@@ -2,8 +2,8 @@ package com.boeing.cas.supa.ground.utils;
 
 public class PasswordPolicyEnforcer {
 
-	public static final String ERROR_PASSWORD_FAILED_KEY = "INVALID_PASSWORD_FORMAT";
-	public static final String ERROR_PASSWORD_FAILED_DESCRIPTION = new StringBuilder()
+	public static final String ERROR_PSWD_FAILED_KEY = "INVALID_PASSWORD_FORMAT";
+	public static final String ERROR_PSWD_FAILED_DESCRIPTION = new StringBuilder()
 			.append("Password must contain 8 to 16 characters, which must comprise of at least three out of the four character classes:\n")
 			.append("- Uppercase alphabets A to Z\n")
 			.append("- Lowercase alphabets a to z\n")

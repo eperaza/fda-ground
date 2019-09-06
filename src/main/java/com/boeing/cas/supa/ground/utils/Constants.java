@@ -31,7 +31,8 @@ public class Constants {
 
 	public static final String AAD_GROUP_USER_ROLE_PREFIX = "role-";
 
-	public static final List<String> ALLOWED_USER_ROLES = Arrays.asList(new String[] { "role-airlinefocal", "role-airlinepilot", "role-airlinecheckairman","role-airlinemaintenance" });
+	public static final List<String> ALLOWED_USER_ROLES = Arrays.asList(new String[] {
+		"role-airlinefocal", "role-airlinepilot", "role-airlinecheckairman","role-airlinemaintenance","role-airlineefbadmin" });
 
 	public static final DateTimeFormatter FlightRecordDateTimeFormatterForParse = DateTimeFormatter.ofPattern("uuuuMMdd_HHmmssX");
 

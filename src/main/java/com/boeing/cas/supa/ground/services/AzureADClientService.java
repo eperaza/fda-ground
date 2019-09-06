@@ -311,7 +311,7 @@ public class AzureADClientService {
 		// Validate the password
 		else if (StringUtils.isBlank(newUserPayload.getPassword()) || !PasswordPolicyEnforcer.validate(newUserPayload.getPassword())) {
 			logger.error("Missing or invalid password specified in user creation request: {}", ControllerUtils.sanitizeString(newUserPayload.getPassword()));
-			return new ApiError("CREATE_USER_FAILURE", PasswordPolicyEnforcer.ERROR_PASSWORD_FAILED_DESCRIPTION, RequestFailureReason.BAD_REQUEST);
+			return new ApiError("CREATE_USER_FAILURE", PasswordPolicyEnforcer.ERROR_PSWD_FAILED_DESCRIPTION, RequestFailureReason.BAD_REQUEST);
 		}
 		// Validate the first name
 		else if (StringUtils.isBlank(newUserPayload.getGivenName())) {
@@ -971,7 +971,7 @@ public class AzureADClientService {
 		
 		// Validate the password provided by the admin; if invalid, return appropriate error key/description
 		if (!PasswordPolicyEnforcer.validate(userAccountActivation.getPassword())) {
-			return new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", PasswordPolicyEnforcer.ERROR_PASSWORD_FAILED_DESCRIPTION, RequestFailureReason.BAD_REQUEST);
+			return new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", PasswordPolicyEnforcer.ERROR_PSWD_FAILED_DESCRIPTION, RequestFailureReason.BAD_REQUEST);
 		}
 
 		Object resultObj = null;
@@ -1748,9 +1748,11 @@ public class AzureADClientService {
 		emailMessageBody.append("Thank you, ").append("FliteDeck Advisor Support");
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
 
+		BufferedReader reader = null;
+		BufferedWriter writer = null;
 		try {
 			File emailMpAttachment = new ClassPathResource(appProps.get("EmailMpAttachmentLocation")).getFile();
-			BufferedReader reader = new BufferedReader(new FileReader(emailMpAttachment));
+			reader = new BufferedReader(new FileReader(emailMpAttachment));
 			String str;
 			StringBuffer sb = new StringBuffer();
 			while ((str = reader.readLine()) != null)
@@ -1762,7 +1764,7 @@ public class AzureADClientService {
 			String mpFileName = newlyCreatedUser.getDisplayName().replaceAll("\\s+", "_").toLowerCase() + ".mp";
 			Path path = Files.createTempDirectory(StringUtils.EMPTY);
 			File mpFile = new File(path.toString() + File.separator + mpFileName);
-			BufferedWriter writer = new BufferedWriter(new FileWriter(mpFile));
+			writer = new BufferedWriter(new FileWriter(mpFile));
 			writer.write(sb.toString());
 			writer.close();
 			logger.debug("upload mp file to azure blob [{}]", mpFile.getAbsolutePath());
@@ -1772,6 +1774,24 @@ public class AzureADClientService {
 		catch (IOException io) {
 			logger.warn("Failed to read attachment: {}", io.getMessage(), io);
 			throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", "failed to read attachment", RequestFailureReason.INTERNAL_SERVER_ERROR));
+		}
+		finally {
+			if (reader != null) {
+				try {
+					reader.close();
+				}
+				catch (IOException io) {
+					//ignore
+				}
+			}
+			if (writer != null) {
+				try {
+					writer.close();
+				}
+				catch (IOException io) {
+					//ignore
+				}
+			}
 		}
 		logger.info("Registered {} ", newlyCreatedUser.getUserPrincipalName());
 
@@ -1839,6 +1859,13 @@ public class AzureADClientService {
 					}
 				}
 				if (userRole.equals("role-airlinemaintenance")) {
+					if (ap.isChoiceMaintenance()) {
+						preferencesBody.append("<true/>\r\n");
+					} else {
+						preferencesBody.append("<false/>\r\n");
+					}
+				}
+				if (userRole.equals("role-airlineefbadmin")) {
 					if (ap.isChoiceMaintenance()) {
 						preferencesBody.append("<true/>\r\n");
 					} else {
@@ -1984,17 +2011,32 @@ public class AzureADClientService {
 
 		String uploadFolder = tempDirPath.toString();
 
-		BufferedReader reader = new BufferedReader(new FileReader(file));
-		String line;
-		StringBuffer sbtmp = new StringBuffer();
-		while ((line = reader.readLine()) != null) {
-			sbtmp.append(line);
+		BufferedReader reader = null;
+		try {
+			reader = new BufferedReader(new FileReader(file));
+			String line;
+			StringBuffer sbtmp = new StringBuffer();
+			while ((line = reader.readLine()) != null) {
+				sbtmp.append(line);
+			}
+
+			byte[] bytes = sbtmp.toString().getBytes();
+			Path path = Paths.get(uploadFolder + File.separator + file.getName());
+			Files.write(path, bytes);
 		}
-
-		byte[] bytes = sbtmp.toString().getBytes();
-		Path path = Paths.get(uploadFolder + File.separator + file.getName());
-		Files.write(path, bytes);
-
+		catch (IOException io) {
+			throw io;
+		}
+		finally {
+			if (reader != null) {
+				try {
+					reader.close();
+				}
+				catch (IOException io) {
+					//ignore
+				}
+			}
+		}
 		return uploadFolder;
 	}
 

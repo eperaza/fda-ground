@@ -189,8 +189,13 @@ public class FeatureManagementService {
 					else if (userRole.equals("role-airlinemaintenance")) {
 						if (fm.isChoiceMaintenance()) isValid = true;
 					}
+					else if (userRole.equals("role-airlineefbadmin")) {
+						if (fm.isChoiceEfbAdmin()) isValid = true;
+					}
 				}
 			}
+
+			logger.info("fm information: userRole[{}], isValid-> {}", userRole, isValid);
 			// Current user does NOT have permission to change this preference.
 			if (!isValid) {
 				return new ApiError("UPDATE_AIRLINE_PREFERENCES_FAILED", "user role [" + userRole + "] does NOT have permission to update this feature [showConfigAirlinePreferences]", RequestFailureReason.UNAUTHORIZED);
@@ -280,6 +285,9 @@ public class FeatureManagementService {
 					}
 					else if (userRole.equals("role-airlinemaintenance")) {
 						if (fm.isChoiceMaintenance()) isValid = true;
+					}
+					else if (userRole.equals("role-airlineefbadmin")) {
+						if (fm.isChoiceEfbAdmin()) isValid = true;
 					}
 				}
 			}
@@ -393,6 +401,14 @@ public class FeatureManagementService {
 						preferencesBody.append("<false/>\r\n");
 					}
 				}
+				if (userRole.equals("role-airlineefbadmin")) {
+					if (ap.isChoiceEfbAdmin()) {
+						preferencesBody.append("<true/>\r\n");
+					} else {
+						preferencesBody.append("<false/>\r\n");
+					}
+				}
+
 			}
 			if (includeUserPreferences) {
 				logger.debug("include user preferences.");

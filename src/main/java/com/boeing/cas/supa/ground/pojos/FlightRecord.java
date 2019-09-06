@@ -1,8 +1,13 @@
 package com.boeing.cas.supa.ground.pojos;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Instant;
 
-public class FlightRecord {
+public class FlightRecord implements Comparable<FlightRecord> {
+
+	private final Logger logger = LoggerFactory.getLogger(FlightRecord.class);
 
 	private String flightRecordName;
 	private String storagePath;
@@ -16,9 +21,12 @@ public class FlightRecord {
 	private boolean deletedOnAid;
 	private boolean processedByAnalytics;
 
+	private Instant createTs;
+	private Instant updateTs;
+
 	public FlightRecord(String flightRecordName, String storagePath, long fileSizeKb, Instant flightDatetime,
 			String aidId, String airline, String userId, String status, boolean uploadToAdw, boolean deletedOnAid,
-			boolean processedByAnalytics) {
+			boolean processedByAnalytics, Instant createTs, Instant updateTs) {
 
 		this.flightRecordName = flightRecordName;
 		this.storagePath = storagePath;
@@ -31,6 +39,9 @@ public class FlightRecord {
 		this.uploadToAdw = uploadToAdw;
 		this.deletedOnAid = deletedOnAid;
 		this.processedByAnalytics = processedByAnalytics;
+
+		this.createTs = createTs;
+		this.updateTs = updateTs;
 	}
 
 	public String getFlightRecordName() {
@@ -121,6 +132,22 @@ public class FlightRecord {
 		this.processedByAnalytics = processedByAnalytics;
 	}
 
+	public Instant getCreateTs() {
+		return createTs;
+	}
+
+	public void setCreateTs(Instant createTs) {
+		this.createTs = createTs;
+	}
+
+	public Instant getUpdateTs() {
+		return updateTs;
+	}
+
+	public void setUpdateTs(Instant updateTs) {
+		this.updateTs = updateTs;
+	}
+
 	@Override
 	public String toString() {
 
@@ -135,7 +162,34 @@ public class FlightRecord {
 				.append("status=").append(this.status).append(',')
 				.append("uploadToAdw=").append(this.uploadToAdw).append(',')
 				.append("deletedOnAid=").append(this.deletedOnAid).append(',')
-				.append("processedByAnalytics=").append(this.processedByAnalytics)
+				.append("processedByAnalytics=").append(this.processedByAnalytics).append(',')
+				.append("createTs=").append(this.createTs)
+				.append("updateTs=").append(this.updateTs)
 			.toString();
+	}
+
+
+	@Override
+	public int compareTo(FlightRecord that) {
+		// just use airline code and tail number (XXX/XXXXXX/..)
+		// *note index could return -1; if so just use getStorage
+
+		if (this.getStoragePath().indexOf('/', 5) < 0) {
+			return this.storagePath.compareTo(that.storagePath);
+		}
+		if (that.getStoragePath().indexOf('/', 5) < 0) {
+			return this.storagePath.compareTo(that.storagePath);
+		}
+
+		// Sort by airline code and tail; then by flight_datetime
+		// *note return latest date first!
+		if (this.getStoragePath().substring(0,this.getStoragePath().indexOf('/',5))
+			.equalsIgnoreCase(that.getStoragePath().substring(0, that.getStoragePath().indexOf('/', 5))))
+		{
+			return that.getFlightDatetime().compareTo(this.flightDatetime);
+		} else {
+			return this.storagePath.compareTo(that.storagePath);
+		}
+
 	}
 }

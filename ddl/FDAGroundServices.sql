@@ -373,3 +373,114 @@ GO
 
 
 
+
+
+
+/****** Object:  Table [dbo].[war_releases]    Script Date: 9/5/2019 12:40:24 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[war_releases](
+	[supa_release] [nvarchar](64) NOT NULL,
+	[supa_part_number] [nvarchar](64) NOT NULL,
+	[path] [nvarchar](128) NOT NULL,
+	[airline] [nvarchar](64) NOT NULL,
+	[create_ts] [datetimeoffset](7) NOT NULL,
+	[update_ts] [datetimeoffset](7) NULL,
+ CONSTRAINT [PK_war_releases] PRIMARY KEY CLUSTERED 
+(
+	[supa_release] ASC,
+	[airline] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[war_releases] ADD  CONSTRAINT [DF_war_releases_CreateTS]  DEFAULT (sysutcdatetime()) FOR [create_ts]
+GO
+
+
+CREATE UNIQUE NONCLUSTERED INDEX [UNIQ_war_releases_supa_part_number_airline] ON [dbo].[war_releases]
+(
+	[supa_part_number] ASC,
+	[airline] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+GO
+
+CREATE TRIGGER [dbo].[WarReleases_Trigger_UpdateTS]
+ON [dbo].[war_releases]
+AFTER INSERT, UPDATE
+AS BEGIN
+
+       SET NOCOUNT ON;
+
+       UPDATE SR
+              SET SR.update_ts = SYSUTCDATETIME()
+       FROM war_releases AS SR
+              INNER JOIN inserted AS I
+                     ON SR.supa_release = I.supa_release
+                        AND SR.airline = I.airline;
+
+END
+GO
+
+ALTER TABLE [dbo].[war_releases] ENABLE TRIGGER [WarReleases_Trigger_UpdateTS]
+GO
+
+
+
+CREATE TRIGGER [dbo].[WarReleases_Trigger_DeleteEntry] 
+ON [dbo].[war_releases]
+FOR DELETE
+AS BEGIN
+	SET NOCOUNT ON;
+
+	Delete FROM [dbo].[current_supa_releases] 
+	WHERE Exists (SELECT 1 
+              FROM deleted del
+              WHERE del.airline = current_supa_releases.airline 
+			  AND del.supa_release = current_supa_releases.release)             
+
+END
+
+ALTER TABLE [dbo].[war_releases] ENABLE TRIGGER [WarReleases_Trigger_DeleteEntry]
+GO
+
+
+
+-------
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[current_supa_releases](
+	[id] [int] NOT NULL IDENTITY(1,1),
+	[airline] [nvarchar](50) NOT NULL,
+	[release] [nvarchar](220) NOT NULL,
+	[description] [text] NOT NULL,
+	[release_date] [datetime] NOT NULL,
+	[updated_by] [nvarchar](220) NOT NULL,
+	[create_ts] [datetime] NOT NULL,
+	
+PRIMARY KEY  
+(
+	[id] ASC
+)) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[current_supa_releases] ADD CONSTRAINT [DF_current_supa_releases_create_ts]  DEFAULT (getdate()) FOR [create_ts]
+GO
+
+ALTER TABLE [dbo].[current_supa_releases] ADD CONSTRAINT [DF_current_supa_releases_release_date]  DEFAULT (getdate()) FOR [release_date]
+GO
+
+CREATE INDEX supa_airline1 ON current_supa_releases (airline);
+GO
+CREATE UNIQUE INDEX supakey1 ON current_supa_releases (airline, release);
+GO
+
