@@ -43,7 +43,7 @@ public class FlightRecordDaoImpl implements FlightRecordDao {
 	// finally obtain the supa version, using the aid_id associated with the most recent (MAX) flight_datetime
 	private static final String GET_FLIGHT_COUNTS = "SELECT (CASE WHEN tail = '' THEN 'UNRESOLVED' ELSE tail END) AS tailNumber,"
 		+ " COUNT(airline) AS uploaded_by_fda, SUM(analytics) AS processed_by_analytics,"
-		+ " MAX(supa) AS supa_version FROM"
+		+ " SUBSTRING(MAX(supa),36,50) AS supa_version FROM"
 		+ " (SELECT airline, CONCAT(flight_datetime,'~',aid_id) AS supa,"
 		+ " SUBSTRING(LEFT (storage_path, CHARINDEX('/', storage_path, 7)), 5, 20) AS tail,"
 		+ " (CASE WHEN processed_by_analytics=1 THEN 1 ELSE 0 END) AS analytics"
@@ -186,15 +186,9 @@ public class FlightRecordDaoImpl implements FlightRecordDao {
 			}
 			int uploaded = resultSet.getInt("UPLOADED_BY_FDA");
 			int processed = resultSet.getInt("PROCESSED_BY_ANALYTICS");
-			String supaVersion = "unknown";
-			String tmp = resultSet.getString("SUPA_VERSION");
-			if (tmp != null) {
-				String[] parts = tmp.split("~");
-				if (parts.length > 1) {
-					if (!parts[1].equals("")) {
-						supaVersion = parts[1];
-					}
-				}
+			String supaVersion = resultSet.getString("SUPA_VERSION");
+			if (supaVersion == null || supaVersion.equals("")) {
+				supaVersion = "unknown";
 			}
 			FlightCount flightCount = new FlightCount( tailNumber, uploaded, processed, supaVersion);
 			return flightCount;
