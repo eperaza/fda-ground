@@ -273,7 +273,7 @@ public class FileManagementService {
         // (a) pass to the individual upload threads, so individual attributes can be updates as warranted.
         // (b) persist the flight record, and status, to the database
 		final FlightRecord flightRecord = new FlightRecord(uploadFlightRecord.getOriginalFilename(), storagePath,
-				fileSizeKb, flightDatetime, null, airline, user.getUserPrincipalName(),
+				fileSizeKb, flightDatetime, "pending", airline, user.getUserPrincipalName(),
 				null, false, false, false, null, null);
 
 		// Set up executor pool for performing ADW and Azure uploads concurrently
