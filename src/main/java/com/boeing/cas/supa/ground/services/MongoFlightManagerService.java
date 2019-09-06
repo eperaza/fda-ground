@@ -148,24 +148,26 @@ public class MongoFlightManagerService {
         StringBuilder response = new StringBuilder();
         response.append("{\"data\":{\"perfectFlights\":[");
 
-        MongoClientURI uri = new MongoClientURI(cosmosDbUrl.toString());
-
         MongoClient mongoClient = null;
-
-        mongoClient = new MongoClient(uri);
-        MongoDatabase database = mongoClient.getDatabase(source.getDatabaseName());
-        MongoCollection<Document> collection = database.getCollection(source.getCollectionName());
-        BasicDBObject searchQuery = new BasicDBObject();
-
-        for (Map.Entry<String, String> entry : query.entrySet()) {
-            searchQuery.put(entry.getKey(), entry.getValue());
-        }
-
-        logger.info("MongoDb: sort by estDepartureTime");
-        //MongoCursor<Document> cursor = collection.find(searchQuery).projection(searchLabels).iterator();
-        MongoCursor<Document> cursor = collection.find(searchQuery).projection(searchLabels).sort(sortLabels).iterator();
-
+        MongoCursor<Document> cursor = null;
         try {
+            MongoClientURI uri = new MongoClientURI(cosmosDbUrl.toString());
+            mongoClient = new MongoClient(uri);
+            MongoDatabase database = mongoClient.getDatabase(source.getDatabaseName());
+
+            MongoCollection<Document> collection = database.getCollection(source.getCollectionName());
+
+            BasicDBObject searchQuery = new BasicDBObject();
+
+
+            for (Map.Entry<String, String> entry : query.entrySet()) {
+                searchQuery.put(entry.getKey(), entry.getValue());
+            }
+
+            logger.info("MongoDb: sort by estDepartureTime");
+            //MongoCursor<Document> cursor = collection.find(searchQuery).projection(searchLabels).iterator();
+            cursor = collection.find(searchQuery).projection(searchLabels).sort(sortLabels).iterator();
+
             while (cursor.hasNext()) {
                 Document dbo = cursor.next();
                 if (dbo.containsKey("_id")) {
@@ -176,6 +178,7 @@ public class MongoFlightManagerService {
 
         } finally {
             cursor.close();
+            mongoClient.close();
         }
         // need to strip-off last comma, if there is one.
         if (response.toString().endsWith(",")) {
@@ -221,21 +224,21 @@ public class MongoFlightManagerService {
         StringBuilder response = new StringBuilder();
         response.append("{\"data\":{\"perfectFlight\":{\"version\":0,\"id\":\"" + id + "\",\"flight\":{");
 
-        MongoClientURI uri = new MongoClientURI(cosmosDbUrl.toString());
-
         MongoClient mongoClient = null;
-
-        mongoClient = new MongoClient(uri);
-        MongoDatabase database = mongoClient.getDatabase(source.getDatabaseName());
-        MongoCollection<Document> collection = database.getCollection(source.getCollectionName());
-        BasicDBObject searchQuery = new BasicDBObject();
-
-        for (Map.Entry<String, String> entry : query.entrySet()) {
-            searchQuery.put(entry.getKey(), entry.getValue());
-        }
-
-        MongoCursor<Document> cursor = collection.find(searchQuery).projection(searchLabels).iterator();
+        MongoCursor<Document> cursor = null;
         try {
+            MongoClientURI uri = new MongoClientURI(cosmosDbUrl.toString());
+            mongoClient = new MongoClient(uri);
+            MongoDatabase database = mongoClient.getDatabase(source.getDatabaseName());
+
+            MongoCollection<Document> collection = database.getCollection(source.getCollectionName());
+            BasicDBObject searchQuery = new BasicDBObject();
+
+            for (Map.Entry<String, String> entry : query.entrySet()) {
+                searchQuery.put(entry.getKey(), entry.getValue());
+            }
+
+            cursor = collection.find(searchQuery).projection(searchLabels).iterator();
             StringBuffer sbFlightInfo = new StringBuffer();
             StringBuffer sbMetaData = new StringBuffer();
 
@@ -262,6 +265,7 @@ public class MongoFlightManagerService {
 
         } finally {
             cursor.close();
+            mongoClient.close();
         }
         return response.toString();
     }
@@ -294,28 +298,29 @@ public class MongoFlightManagerService {
         StringBuilder response = new StringBuilder();
         response.append("{\"data\":{\"flightPlan\":{\"file\":");
 
-        MongoClientURI uri = new MongoClientURI(cosmosDbUrl.toString());
-
         MongoClient mongoClient = null;
-
-        mongoClient = new MongoClient(uri);
-        MongoDatabase database = mongoClient.getDatabase(source.getDatabaseName());
-        MongoCollection<Document> collection = database.getCollection(source.getCollectionName());
-        BasicDBObject searchQuery = new BasicDBObject();
-
-        for (Map.Entry<String, String> entry : query.entrySet()) {
-            searchQuery.put(entry.getKey(), entry.getValue());
-        }
-
-        MongoCursor<Document> cursor = collection.find(searchQuery).projection(searchLabels).iterator();
+        MongoCursor<Document> cursor = null;
         StringBuffer sbtmp = new StringBuffer();
         try {
+            MongoClientURI uri = new MongoClientURI(cosmosDbUrl.toString());
+            mongoClient = new MongoClient(uri);
+            MongoDatabase database = mongoClient.getDatabase(source.getDatabaseName());
+
+            MongoCollection<Document> collection = database.getCollection(source.getCollectionName());
+            BasicDBObject searchQuery = new BasicDBObject();
+
+            for (Map.Entry<String, String> entry : query.entrySet()) {
+                searchQuery.put(entry.getKey(), entry.getValue());
+            }
+
+            cursor = collection.find(searchQuery).projection(searchLabels).iterator();
             while (cursor.hasNext()) {
                 Document dbo = cursor.next();
                 sbtmp.append(dbo.toJson());
             }
         } finally {
             cursor.close();
+            mongoClient.close();
         }
         int startHere = 0;
         startHere = sbtmp.toString().indexOf("\"flightPlan\" :");

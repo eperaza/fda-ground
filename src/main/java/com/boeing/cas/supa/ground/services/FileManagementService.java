@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -55,6 +56,7 @@ public class FileManagementService {
 
 	@Autowired
 	private FlightRecordDao flightRecordDao;
+
 
 	public byte[] getFileFromStorage(String file, String type, String authToken) throws FileDownloadException {
 
@@ -153,6 +155,7 @@ public class FileManagementService {
 			String role = "na";
 			if (userRole.equalsIgnoreCase("airlinepilot")) { role = "fc"; file = "fc_exp2022_04_15.pfx"; }
 			if (userRole.equalsIgnoreCase("airlinefocal")) { role = "fc"; file = "fc_exp2022_04_15.pfx"; }
+			if (userRole.equalsIgnoreCase("airlineefbadmin")) { role = "fc"; file = "fc_exp2022_04_15.pfx"; }
 			if (userRole.equalsIgnoreCase("airlinemaintenance")) { role = "mc"; file = "mc_exp2022_04_14.pfx"; }
 			if (userRole.equalsIgnoreCase("airlinecheckairman")) { role = "mc"; file = "mc_exp2022_04_14.pfx"; }
 			String filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/').append(role)
@@ -175,9 +178,9 @@ public class FileManagementService {
 			logger.error("Error accessing Azure Storage: {}", ioe.getMessage(), ioe);
 			throw new OnsCertificateException(new ApiError("FILE_DOWNLOAD_FAILURE", "Error retrieving Ons Certificate", RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
-		String password = "p@ssword";
+		String key = "p@ssword";
 
-		String base64EncodedPayload = Base64.getEncoder().encodeToString(password.getBytes());
+		String base64EncodedPayload = Base64.getEncoder().encodeToString(key.getBytes());
 		OnsCertificate onsCertificate = new OnsCertificate(base64EncodedPayload, fileInBytes);
 		certificates.add(onsCertificate);
 		return certificates;
@@ -270,7 +273,8 @@ public class FileManagementService {
         // (a) pass to the individual upload threads, so individual attributes can be updates as warranted.
         // (b) persist the flight record, and status, to the database
 		final FlightRecord flightRecord = new FlightRecord(uploadFlightRecord.getOriginalFilename(), storagePath,
-				fileSizeKb, flightDatetime, null, airline, user.getUserPrincipalName(), null, false, false, false);
+				fileSizeKb, flightDatetime, null, airline, user.getUserPrincipalName(),
+				null, false, false, false, null, null);
 
 		// Set up executor pool for performing ADW and Azure uploads concurrently
 		ExecutorService es = Executors.newFixedThreadPool(3);
@@ -640,64 +644,23 @@ public class FileManagementService {
 		return listOfFlightMgmtMessages;
 	}
 
-    public List<FlightCount> countFlightRecords(String authToken) throws FlightRecordException {
 
-        List<FlightCount> listOfFlightCounts = new ArrayList<>();
+	public List<FlightCount> countFlightRecords(String authToken) throws FlightRecordException {
 
-        // Determine the airline from the user's membership.
-        final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
-        List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
-        if (airlineGroups.size() != 1) {
-            throw new FlightRecordException(new ApiError("FLIGHT_RECORD_RETRIEVAL_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
-        }
-        String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+		// Determine the airline from the user's membership.
+		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
+		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+		if (airlineGroups.size() != 1) {
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_RETRIEVAL_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
+		}
+		String airline = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
 
-        List<FlightRecord> listOfFlightRecords = this.flightRecordDao.getAllFlightRecords(airlineGroup);
-
-		// Sort via storage path in order to group tails together
-        Collections.sort(listOfFlightRecords,Comparator.comparing(FlightRecord :: getStoragePath));
-
-		FlightCount currentTail = new FlightCount("", 0, 0);
-
-		if (listOfFlightRecords != null && listOfFlightRecords.size() > 0) {
-
-            for (FlightRecord fr : listOfFlightRecords) {
-				// Get tail from storage path: AMX/tail/
-				int endIndex = fr.getStoragePath().indexOf("/", 5);
-				// Tail could be AMX/UNRESOLVED
-				String tail = fr.getStoragePath().substring(4);
-				if (endIndex > 0)
-                	tail = fr.getStoragePath().substring(4, endIndex);
-
-                if (!tail.equals(currentTail.getTail())) {
-                	// We have a new tail!
-					if (!currentTail.getTail().equals("")) {
-						listOfFlightCounts.add(currentTail);
-					}
-					// Reset tail
-					currentTail = new FlightCount(tail, 1, 0);
-					if (fr.isProcessedByAnalytics()) {
-						currentTail.setProcessed(1);
-					}
-
-				} else {
-                	// Increment count of current tail
-                	currentTail.setCount(currentTail.getCount() + 1);
-                	if (fr.isProcessedByAnalytics()) {
-						currentTail.setProcessed(currentTail.getProcessed() + 1);
-					}
-				}
-            }
-            // Add last record
-			if (!currentTail.getTail().equals("")) {
-				listOfFlightCounts.add(currentTail);
-			}
-        }
-        return listOfFlightCounts;
-    }
+		List<FlightCount> flightCountList = this.flightRecordDao.getAllFlightCounts(airline);
+		return flightCountList;
+	}
 
 
-    public List<FileManagementMessage> getStatusOfFlightRecords(List<String>flightRecordNames, String authToken) throws FlightRecordException {
+	public List<FileManagementMessage> getStatusOfFlightRecords(List<String>flightRecordNames, String authToken) throws FlightRecordException {
 		
 		List<FileManagementMessage> listOfFlightMgmtMessages = new ArrayList<>();
 
