@@ -429,6 +429,27 @@ GO
 ALTER TABLE [dbo].[war_releases] ENABLE TRIGGER [WarReleases_Trigger_UpdateTS]
 GO
 
+
+
+CREATE TRIGGER [dbo].[WarReleases_Trigger_DeleteEntry] 
+ON [dbo].[war_releases]
+FOR DELETE
+AS BEGIN
+	SET NOCOUNT ON;
+
+	Delete FROM [dbo].[current_supa_releases] 
+	WHERE Exists (SELECT 1 
+              FROM deleted del
+              WHERE del.airline = current_supa_releases.airline 
+			  AND del.supa_release = current_supa_releases.release)             
+
+END
+
+ALTER TABLE [dbo].[war_releases] ENABLE TRIGGER [WarReleases_Trigger_DeleteEntry]
+GO
+
+
+
 -------
 
 SET ANSI_NULLS ON

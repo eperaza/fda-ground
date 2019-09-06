@@ -149,16 +149,14 @@ public class SupaReleaseManagementService {
 			airline = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
 
 			// Obtain Current Supa version for airline
-			logger.info("Obtain Current Supa Version for airline: " + airline);
 			List<CurrentSupaRelease> currentSupaReleaseList = supaReleaseManagementDao.getCurrentSupaRelease(airline);
 
-			logger.info("Current Supa Version is [{}]" , currentSupaReleaseList.size());
+			logger.info("Current Supa Release for airline [{}] is [{}]",
+				airline, currentSupaReleaseList.size()>0 ? currentSupaReleaseList.get(0).getRelease() : "empty");
 
 			ObjectMapper mapper = new ObjectMapper()
 					.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 					.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-
-			logger.info("returned Current Supa Release[{}] for Airline[{}]", currentSupaReleaseList.size(), airline);
 
 			resultObj = mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL).setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
 					.writeValueAsString(currentSupaReleaseList);
@@ -201,7 +199,6 @@ public class SupaReleaseManagementService {
 			airline = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
 
 			// Check to see if release exists in war release table for airline
-			logger.info("Check to see if supa.war version [{}] exists for airline: {}", version, airline);
 			// note: use NA to remove all version
 			if (!version.equalsIgnoreCase("NA")) {
 				SupaRelease warRelease = supaReleaseManagementDao.getWarReleaseByRelease(version, airline);
@@ -229,7 +226,8 @@ public class SupaReleaseManagementService {
 					.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 					.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
-			logger.info("returned Current Supa Release[{}] for Airline[{}]", currentSupaReleaseList.size(), airline);
+			logger.info("Set Current Supa Release for airline [{}] is [{}]",
+					airline, currentSupaReleaseList.size()>0 ? currentSupaReleaseList.get(0).getRelease() : "empty");
 
 			resultObj = mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL).setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
 					.writeValueAsString(currentSupaReleaseList);

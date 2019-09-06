@@ -645,70 +645,22 @@ public class FileManagementService {
 	}
 
 
-    public List<FlightCount> countFlightRecords(String authToken) throws FlightRecordException {
+	public List<FlightCount> countFlightRecords(String authToken) throws FlightRecordException {
 
-        List<FlightCount> listOfFlightCounts = new ArrayList<>();
+		// Determine the airline from the user's membership.
+		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
+		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+		if (airlineGroups.size() != 1) {
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_RETRIEVAL_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
+		}
+		String airline = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
 
-        // Determine the airline from the user's membership.
-        final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
-        List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
-        if (airlineGroups.size() != 1) {
-            throw new FlightRecordException(new ApiError("FLIGHT_RECORD_RETRIEVAL_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
-        }
-        String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
-
-        List<FlightRecord> listOfFlightRecords = this.flightRecordDao.getAllFlightRecords(airlineGroup);
-
-		// Sort via storage path (airline/tail only) in order to group tails together,
-		// then sort by flight_datetime - using the last record to get the supa version
-        Collections.sort(listOfFlightRecords);
-
-		FlightCount currentTail = new FlightCount("", 0, 0, "", null, null);
-
-		if (listOfFlightRecords != null && listOfFlightRecords.size() > 0) {
-
-            for (FlightRecord fr : listOfFlightRecords) {
-				// Get tail from storage path: AMX/tail/
-				int endIndex = fr.getStoragePath().indexOf("/", 5);
-				// Tail could be AMX/UNRESOLVED
-				String tail = fr.getStoragePath().substring(4);
-				if (endIndex > 0)
-                	tail = fr.getStoragePath().substring(4, endIndex);
-
-				if (!tail.equals(currentTail.getTail())) {
-                	// We have a new tail!
-					if (!currentTail.getTail().equals("")) {
-						listOfFlightCounts.add(currentTail);
-					}
-					// Reset tail, using lst aid for supa version
-					currentTail = new FlightCount(tail, 1, 0, fr.getAidId(), fr.getCreateTs(), fr.getUpdateTs());
-					if (fr.isProcessedByAnalytics()) {
-						currentTail.setProcessed(1);
-					}
-
-				} else {
-					// if the latest/greatest supa version is missing, then use the next latest/greatest version
-					// (until we locate a valid version)
-					if (currentTail.getVersion() == null || currentTail.getVersion().equals("")) {
-						currentTail.setVersion(fr.getAidId());
-					}
-					// Increment count of current tail
-                	currentTail.setCount(currentTail.getCount() + 1);
-                	if (fr.isProcessedByAnalytics()) {
-						currentTail.setProcessed(currentTail.getProcessed() + 1);
-					}
-				}
-            }
-            // Add last record
-			if (!currentTail.getTail().equals("")) {
-				listOfFlightCounts.add(currentTail);
-			}
-        }
-        return listOfFlightCounts;
-    }
+		List<FlightCount> flightCountList = this.flightRecordDao.getAllFlightCounts(airline);
+		return flightCountList;
+	}
 
 
-    public List<FileManagementMessage> getStatusOfFlightRecords(List<String>flightRecordNames, String authToken) throws FlightRecordException {
+	public List<FileManagementMessage> getStatusOfFlightRecords(List<String>flightRecordNames, String authToken) throws FlightRecordException {
 		
 		List<FileManagementMessage> listOfFlightMgmtMessages = new ArrayList<>();
 

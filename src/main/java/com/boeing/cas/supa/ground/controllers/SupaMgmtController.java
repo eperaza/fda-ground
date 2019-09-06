@@ -45,14 +45,14 @@ public class SupaMgmtController {
 	@RequestMapping(path="/list", method = { RequestMethod.GET }, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> listSupaReleases(@RequestHeader("Authorization") String authToken,
 												   @RequestParam short versions,
-												   @RequestParam Optional<String> fileType) {
+												   @RequestParam Optional<String> filetype) {
 
 		CacheControl cacheControl = CacheControl.maxAge(0, TimeUnit.SECONDS);
 		logger.info("Number of versions to return [{}]", versions);
-		logger.info("Filetype is present? [{}]", fileType.isPresent());
+		logger.info("filetype is present? [{}]", filetype.isPresent());
 		try {
 			List<SupaRelease> releases = null;
-			if (fileType.isPresent()) {
+			if (filetype.isPresent()) {
 				//if present, return war file
 				releases = this.supaReleaseMgmtService.listWarReleases(authToken, versions);
 			} else {
@@ -109,7 +109,8 @@ public class SupaMgmtController {
 			HttpServletResponse response) {
 
 		CacheControl cacheControl = CacheControl.maxAge(0, TimeUnit.SECONDS);
-		
+
+		logger.info("Download Supa release: {}", releaseVersion);
 		SupaRelease supaRelease = null;
 		try {
 			supaRelease = supaReleaseMgmtService.getSupaRelease(authToken, releaseVersion);
@@ -137,7 +138,7 @@ public class SupaMgmtController {
 
 		CacheControl cacheControl = CacheControl.maxAge(0, TimeUnit.SECONDS);
 
-		logger.info("Upload War release: {}", releaseVersion);
+		logger.info("Download War release: {}", releaseVersion);
 		SupaRelease supaRelease = null;
 		try {
 			supaRelease = supaReleaseMgmtService.getWarRelease(authToken, releaseVersion);

@@ -19,7 +19,13 @@ public class CurrentSupaRelease {
 	public CurrentSupaRelease(String release, String description, String releaseDate, String updatedBy, String airline) {
 		this.release = release;
 		this.description = description;
-		this.releaseDate = releaseDate;
+		// remove everything following the dot within the seconds (after 20): 2019-09-02 07:06:20.81
+		int dot = releaseDate.indexOf('.');
+		if (dot > 0) {
+			this.releaseDate = releaseDate.substring(0, dot);
+		} else {
+			this.releaseDate = releaseDate;
+		}
 		this.updatedBy = updatedBy;
 		this.airline = airline;
 	}

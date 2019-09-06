@@ -1,10 +1,5 @@
 package com.boeing.cas.supa.ground.pojos;
 
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
-import java.util.Locale;
 
 public class FlightCount {
 
@@ -12,8 +7,6 @@ public class FlightCount {
 	private int count = 0;
 	private int processed = 0;
 	private String version;
-    private Instant createTs;
-    private Instant updateTs;
 
 	public FlightCount(String tail) {
 		this.tail = tail;
@@ -25,18 +18,12 @@ public class FlightCount {
 		this.count = count;
 	}
 
-	public FlightCount(String tail, int count, int processed, String version, Instant createTs, Instant updateTs) {
+	public FlightCount(String tailnumber, int count, int processed, String version) {
 
-		this.tail = tail;
+		this.tail = tailnumber;
 		this.count = count;
 		this.processed = processed;
-		if (version == null || version.equals("")) {
-			this.version = "unknown";
-		} else {
-			this.version = version;
-		}
-		this.createTs = createTs;
-		this.updateTs = updateTs;
+		this.version = version;
 	}
 
 	public String getTail() {
@@ -52,11 +39,7 @@ public class FlightCount {
 	}
 
 	public void setVersion(String version) {
-		if (version == null || version.equals("")) {
-			this.version = "unknown";
-		} else {
-			this.version = version;
-		}
+		this.version = version;
 	}
 
 	public int getCount() {
@@ -74,32 +57,5 @@ public class FlightCount {
 	public void setProcessed(int processed) {
 		this.processed = processed;
 	}
-
-	public String getCreateTs() {
-		DateTimeFormatter formatter =
-				DateTimeFormatter.ofLocalizedDateTime( FormatStyle.SHORT )
-						.withLocale( Locale.US )
-						.withZone( ZoneId.systemDefault() );
-
-		return formatter.format(this.createTs);
-	}
-
-	public void setCreateTs(Instant createTs) {
-		this.createTs = createTs;
-	}
-
-    public String getUpdateTs() {
-        DateTimeFormatter formatter =
-                DateTimeFormatter.ofLocalizedDateTime( FormatStyle.SHORT )
-                        .withLocale( Locale.US )
-                        .withZone( ZoneId.systemDefault() );
-
-        return formatter.format(this.updateTs);
-    }
-
-    public void setUpdateTs(Instant updateTs) {
-        this.updateTs = updateTs;
-    }
-
 }
 

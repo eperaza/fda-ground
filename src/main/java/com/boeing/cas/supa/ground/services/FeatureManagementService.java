@@ -402,7 +402,7 @@ public class FeatureManagementService {
 					}
 				}
 				if (userRole.equals("role-airlineefbadmin")) {
-					if (ap.isChoiceMaintenance()) {
+					if (ap.isChoiceEfbAdmin()) {
 						preferencesBody.append("<true/>\r\n");
 					} else {
 						preferencesBody.append("<false/>\r\n");
