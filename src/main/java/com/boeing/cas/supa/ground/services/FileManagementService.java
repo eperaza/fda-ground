@@ -269,11 +269,13 @@ public class FileManagementService {
 		// If flight date and time is absent in flight record name, default it to the minimum supported Instant
         final Instant flightDatetime = _flightDatetime != null ? _flightDatetime : OffsetDateTime.parse("19700101_000000Z", Constants.FlightRecordDateTimeFormatterForParse).toInstant();
 
+        final String aid_id = flightRecordDao.getLatestSupaVersion(airline, _airline + "/" + _tail + "/");
+
         // Prepare a final FlightRecord instance to:
         // (a) pass to the individual upload threads, so individual attributes can be updates as warranted.
         // (b) persist the flight record, and status, to the database
 		final FlightRecord flightRecord = new FlightRecord(uploadFlightRecord.getOriginalFilename(), storagePath,
-				fileSizeKb, flightDatetime, "pending", airline, user.getUserPrincipalName(),
+				fileSizeKb, flightDatetime, aid_id, airline, user.getUserPrincipalName(),
 				null, false, false, false, null, null);
 
 		// Set up executor pool for performing ADW and Azure uploads concurrently
