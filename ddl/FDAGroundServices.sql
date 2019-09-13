@@ -253,6 +253,7 @@ CREATE TABLE [dbo].[feature_management](
 	[choice_focal] [bit] NOT NULL,
 	[choice_check_airman] [bit] NOT NULL,
 	[choice_maintenance] [bit] NOT NULL,
+	[choice_efbadmin] [bit] NOT NULL,
 	[updated_by] [nvarchar](220) NOT NULL,
 	[create_ts] [datetime] NOT NULL,
 	
@@ -302,6 +303,7 @@ CREATE TABLE [dbo].[airline_preferences](
 	[choice_focal] [bit] NOT NULL,
 	[choice_check_airman] [bit] NOT NULL,
 	[choice_maintenance] [bit] NOT NULL,
+	[choice_efbadmin] [bit] NOT NULL,
 	[updated_by] [nvarchar](220) NOT NULL,
 	[create_ts] [datetime] NOT NULL,
 	
