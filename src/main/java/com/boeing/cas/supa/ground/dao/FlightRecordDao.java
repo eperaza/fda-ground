@@ -12,6 +12,8 @@ public interface FlightRecordDao {
 
 	public List<FlightRecord> getAllFlightRecords(String airline) throws FlightRecordException;
 
+	public String getLatestSupaVersion(String airline, String airlineTail);
+
 	public List<FlightCount> getAllFlightCounts(String airline) throws FlightRecordException;
 
 	public FlightRecord getFlightRecord(String flightRecordName) throws FlightRecordException;

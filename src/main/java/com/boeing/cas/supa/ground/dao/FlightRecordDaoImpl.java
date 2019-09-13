@@ -49,6 +49,12 @@ public class FlightRecordDaoImpl implements FlightRecordDao {
 		+ " (CASE WHEN processed_by_analytics=1 THEN 1 ELSE 0 END) AS analytics"
 		+ " FROM flight_records WHERE airline = :airline) info GROUP BY tail ORDER BY tailNumber";
 
+	private static final String GET_LATEST_EXISTING_SUPA_VERSION = "SELECT SUBSTRING(MAX(supa),36,50) AS supa_version"
+		+ " FROM (SELECT CONCAT(flight_datetime,'~',aid_id) AS supa,"
+		+ " (LEFT (storage_path, CHARINDEX('/', storage_path, 7))) AS airlinetail"
+		+ " FROM flight_records WHERE aid_id != 'pending' AND airline = :airline ) info"
+		+ " WHERE airlinetail = :airline_tail GROUP BY airlinetail";
+
 	@Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;
 
@@ -96,6 +102,31 @@ public class FlightRecordDaoImpl implements FlightRecordDao {
 		return flightRecords;
 	}
 
+
+	@Override
+	public String getLatestSupaVersion(String airline, String airlineTail) {
+
+		String supaVersion = "unknown";
+		List<FlightRecord> flightRecords = new ArrayList<>();
+		Map<String,Object> namedParameters = new HashMap<>();
+		namedParameters.put("airline", airline);
+		namedParameters.put("airline_tail", airlineTail);
+
+		try {
+			List<String> versions = jdbcTemplate.query(GET_LATEST_EXISTING_SUPA_VERSION, namedParameters, new SupaVersionRowMapper());
+
+			logger.info("obtained Supa Version: {}", versions.size());
+
+			supaVersion = versions.size() > 0 ? versions.get(0) : "pending";
+
+		} catch (EmptyResultDataAccessException edb) {
+			logger.error("Failed to getLatestSupaVersion: <not found> {}", edb.getMessage());
+		} catch (DataAccessException dae) {
+			logger.error("Failed to getLatestSupaVersion: {}", dae.getMessage(), dae);
+			//throw new FlightRecordException(new ApiError("SUPA_VERSION_RETRIEVAL_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
+		}
+		return supaVersion;
+	}
 
 	@Override
 	public List<FlightCount> getAllFlightCounts(String airline) throws FlightRecordException {
@@ -194,5 +225,19 @@ public class FlightRecordDaoImpl implements FlightRecordDao {
 			return flightCount;
 		}
 	}
+
+	private static final class SupaVersionRowMapper implements RowMapper<String> {
+
+		@Override
+		public String mapRow(ResultSet resultSet, int rowNum) throws SQLException {
+
+			String supaVersion = resultSet.getString("SUPA_VERSION");
+			if (supaVersion == null || supaVersion.equals("")) {
+				supaVersion = "unknown";
+			}
+			return supaVersion;
+		}
+	}
+
 
 }
