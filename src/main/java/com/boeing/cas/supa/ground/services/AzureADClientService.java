@@ -14,6 +14,7 @@ import javax.mail.internet.MimeMessage;
 import javax.net.ssl.HttpsURLConnection;
 
 import com.boeing.cas.supa.ground.dao.FeatureManagementDao;
+import com.boeing.cas.supa.ground.dao.PowerBiInformationDao;
 import com.boeing.cas.supa.ground.exceptions.*;
 import com.boeing.cas.supa.ground.pojos.*;
 import com.microsoft.azure.storage.StorageException;
@@ -82,6 +83,9 @@ public class AzureADClientService {
 
 	@Autowired
 	private FeatureManagementDao featureManagementDao;
+
+	@Autowired
+	private PowerBiInformationDao powerBiInformationDao;
 
 	public Object getAccessTokenFromUserCredentials(String username, String password, String authority, String clientId) {
 
@@ -612,6 +616,48 @@ public class AzureADClientService {
 		
 		return resultObj;
 	}
+
+
+	public Object getPowerBiReport(String accessTokenInRequest) {
+
+		Object resultObj = null;
+
+		try {
+			User currentUser = getUserInfoFromJwtAccessToken(accessTokenInRequest);
+			String airline = "unknown";
+
+			// Validate user privileges by checking group membership. Must belong to Role-AirlineFocal group and a single Airline group.
+			List<Group> airlineGroups = currentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+			if (airlineGroups.size() != 1) {
+				return new ApiError("SUPA_RELEASE_MGMT", "User membership is ambiguous, airlines[" + airlineGroups.size() + "]", RequestFailureReason.UNAUTHORIZED);
+			}
+			airline = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+			logger.info("Obtain PowerBi Reports for airline:[{}]", airline);
+
+			User airlineFocalCurrentUser = getUserInfoFromJwtAccessToken(accessTokenInRequest);
+			StringBuilder sb = new StringBuilder();
+
+			List<PowerBiInformation> powerBiInformationList = powerBiInformationDao.getPowerBiInformation(airline);
+			if (!powerBiInformationList.isEmpty()){
+				sb.append("<html><center>FliteDeck Advisor Power BI Reports</center>");
+				sb.append("<br><br>");
+				sb.append("<center>Embedded Token:" + powerBiInformationList.get(0).getAccessToken() + "</center>");
+				sb.append("<br><br>");
+				sb.append("<center>WorkspaceId:" + powerBiInformationList.get(0).getWorkspaceId() + "</center>");
+				sb.append("<br><br>");
+				sb.append("<center>ReportId:" + powerBiInformationList.get(0).getReportId() + "</center>");
+				sb.append("</html>");
+			}
+
+			resultObj = sb.toString();
+		}
+		catch (Exception e) {
+			logger.error("Failed to query groups: {}", e.getMessage(), e);
+		}
+		return resultObj;
+	}
+
+
 
 
 	public Object getRoles(String accessTokenInRequest) {

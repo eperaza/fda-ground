@@ -6,7 +6,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.boeing.cas.supa.ground.pojos.CurrentSupaRelease;
 import com.boeing.cas.supa.ground.utils.Constants;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -24,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Controller;
 
 import com.boeing.cas.supa.ground.exceptions.SupaReleaseException;
 import com.boeing.cas.supa.ground.pojos.ApiError;
@@ -33,7 +32,7 @@ import com.boeing.cas.supa.ground.services.SupaReleaseManagementService;
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
 
-@RestController
+@Controller
 @RequestMapping(path="/supa-release-mgmt")
 public class SupaMgmtController {
 
@@ -125,13 +124,13 @@ public class SupaMgmtController {
 			// Throw exception if this point is reached
 			throw new SupaReleaseException(new ApiError("SUPA_RELEASE_DOWNLOAD", "Missing or invalid SUPA release", RequestFailureReason.BAD_REQUEST));
 		} catch (SupaReleaseException sre) {
-
 			logger.error("Failed to retrieve specified SUPA release [{}]: {}", ControllerUtils.sanitizeString(releaseVersion), sre.getMessage(), sre);
-			return new ResponseEntity<>(sre.getError(), ControllerUtils.translateRequestFailureReasonToHttpErrorCode(sre.getError().getFailureReason()));
+			//return new ResponseEntity<>(sre.getError(), ControllerUtils.translateRequestFailureReasonToHttpErrorCode(sre.getError().getFailureReason()));
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(sre.getError().getErrorDescription());
 		}
 	}
 
-	@GetMapping(value = "/getWarRelease/{version:.+}")
+	@RequestMapping(value = "/getWarRelease/{version:.+}", method = RequestMethod.GET)
 	public ResponseEntity<Object> getWarRelease(@RequestHeader("Authorization") String authToken,
 											 @PathVariable("version") String releaseVersion,
 											 HttpServletResponse response) {
@@ -153,9 +152,9 @@ public class SupaMgmtController {
 			// Throw exception if this point is reached
 			throw new SupaReleaseException(new ApiError("SUPA_RELEASE_DOWNLOAD", "Missing or invalid WAR release", RequestFailureReason.BAD_REQUEST));
 		} catch (SupaReleaseException sre) {
-
 			logger.error("Failed to retrieve specified WAR release [{}]: {}", ControllerUtils.sanitizeString(releaseVersion), sre.getMessage(), sre);
-			return new ResponseEntity<>(sre.getError(), ControllerUtils.translateRequestFailureReasonToHttpErrorCode(sre.getError().getFailureReason()));
+			//return new ResponseEntity<>(sre.getError(), ControllerUtils.translateRequestFailureReasonToHttpErrorCode(sre.getError().getFailureReason()));
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(sre.getError().getErrorDescription());
 		}
 	}
 
