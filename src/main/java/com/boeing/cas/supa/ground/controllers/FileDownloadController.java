@@ -5,7 +5,6 @@ import java.util.concurrent.TimeUnit;
 import javax.servlet.http.HttpServletResponse;
 
 import com.boeing.cas.supa.ground.exceptions.FeatureManagementException;
-import com.boeing.cas.supa.ground.pojos.AirlinePreferences;
 import com.boeing.cas.supa.ground.services.FeatureManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.CacheControl;
