@@ -94,6 +94,21 @@ public class RegistrationController {
 	}
 
 
+	@RequestMapping(path="/powerbi", method = { RequestMethod.GET })
+	public ResponseEntity<Object> getPowerBiReport(@RequestHeader("Authorization") String authToken) {
+
+		// Extract the access token from the authorization request header
+		String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
+
+		Object result = aadClient.getPowerBiReport(accessTokenInRequest);
+
+		if (result instanceof ApiError) {
+			return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
+		}
+
+		return new ResponseEntity<>(result, HttpStatus.OK);
+	}
+
 
 	@RequestMapping(path="/registeruser", method = { RequestMethod.POST })
 	public ResponseEntity<Object> registerUserAccount(@RequestBody UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {
