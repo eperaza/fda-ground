@@ -563,6 +563,95 @@ public class AzureADClientService {
 		return resultObj;
 	}
 
+	public Object getPowerBiReport(String accessTokenInRequest) {
+
+		Object resultObj = null;
+		try {
+			// Get group membership of user issuing request. Ensure that user belongs to role-airlinefocal group
+			// and one and only one airline group.
+			User airlineFocalCurrentUser = getUserInfoFromJwtAccessToken(accessTokenInRequest);
+
+			String airline = "unknown";
+
+			// Validate user privileges by checking group membership. Must belong to Role-AirlineFocal group and a single Airline group.
+			List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
+			if (airlineGroups.size() != 1) {
+				return new ApiError("USERS_LIST_FAILED", "User membership is ambiguous, airlines[" + airlineGroups.size() + "]", RequestFailureReason.UNAUTHORIZED);
+			} else {
+				airline = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+			}
+			logger.info("Obtain Power Bi Report for airline [{}]", airline);
+			PowerBiInformation powerBiInformation = powerBiInformationDao.getPowerBiInformation(airline);
+
+			StringBuilder sb = new StringBuilder();
+//			StringBuilder sbJavaScript = new StringBuilder();
+//			try {
+//				File powerBiJavaScriptFile = new ClassPathResource("powerbi/powerbi.js").getFile();
+//				BufferedReader reader = new BufferedReader(new FileReader(powerBiJavaScriptFile));
+//				String str;
+//				while ((str = reader.readLine()) != null)
+//				{
+//					sbJavaScript.append(str + "\n");
+//				}
+//				reader.close();
+//			} catch (IOException io) {
+//				logger.warn(io.getMessage());
+//			}
+			sb.append("<html>");
+			sb.append("<script language=\"javascript\"  type=\"application/javascript\" src=\"https://microsoft.github.io/PowerBI-JavaScript/demo/node_modules/jquery/dist/jquery.js\"></script>");
+			sb.append("<script language=\"javascript\"  type=\"application/javascript\" src=\"https://microsoft.github.io/PowerBI-JavaScript/demo/node_modules/powerbi-client/dist/powerbi.js\"></script>");
+			sb.append("<script language=\"javascript\">");
+			//note: embedded tokens start with H4sI
+//			sb.append("/*! --- start of powerbi.js code --- */");
+//			sb.append(sbJavaScript.toString());
+//			sb.append("/*! --- end of powerbi.js code --- */");
+			sb.append("");
+			sb.append("window.onload = function() {");
+			sb.append("var AccessToken = '" + powerBiInformation.getEmbeddedToken() + "';");
+			sb.append("var EmbedUrl = 'https://app.powerbi.com/reportEmbed?reportId=" + powerBiInformation.getReportId()
+				+ "&groupId=" + powerBiInformation.getWorkspaceId()  + "';");
+				//+ "&config=eyJjbHVzdGVyVXJsIjoiaHR0cHM6Ly9XQUJJLVVTLU5PUlRILUNFTlRSQUwtcmVkaXJlY3QuYW5hbHlzaXMud2luZG93cy5uZXQifQ%3d%3d';");
+			sb.append("var EmbedReportId = '" + powerBiInformation.getReportId() + "';");
+			//sb.append("console.log('AccessToken:', AccessToken);");
+			//sb.append("console.log('EmbedUrl:', EmbedUrl);");
+			//sb.append("console.log('EmbedReportId:', EmbedReportId);");
+
+			sb.append("var models = window['powerbi-client'].models;");
+			//sb.append("console.log('Models:', models);");
+
+			sb.append("var embedConfiguration  = {");
+			sb.append("    type: 'report',");
+			sb.append("    tokenType: models.TokenType.Embed,");
+			sb.append("    accessToken: AccessToken,");
+			sb.append("    embedUrl: EmbedUrl,");
+			sb.append("    id: EmbedReportId,");
+			sb.append("    permissions: models.Permissions.All,");
+			sb.append("    settings: {");
+			sb.append("        filterPaneEnabled: true,");
+			sb.append("        navContentPaneEnabled: true");
+			sb.append("    }");
+			sb.append("};");
+			sb.append("var $reportContainer = $('#dashboardContainer');");
+			sb.append("var report = powerbi.embed($reportContainer.get(0), embedConfiguration);");
+			sb.append("}");
+			sb.append("</script>");
+			sb.append("<div id=\"dashboardContainer\"></div>");
+			sb.append("</html>");
+			resultObj = sb.toString();
+
+		} catch (PowerBiInformationException jpe) {
+			logger.error("PowerBiInformationException: {}", jpe.getMessage(), jpe);
+			resultObj = new ApiError("POWER_BI_INFORMATION_FAILED", "Failed to retrieve Power Bi Information.");
+		} finally {
+
+			if (resultObj instanceof ApiError) {
+				logger.error("Failed to retrieve Power Bi Information  {}");
+			}
+		}
+
+		return resultObj;
+	}
+
 
 	public Object getUsers(String accessTokenInRequest) {
 
@@ -613,51 +702,8 @@ public class AzureADClientService {
 				logger.error("FDAGndSvcLog> {}", ControllerUtils.sanitizeString(progressLog.toString()));
 			}
 		}
-		
 		return resultObj;
 	}
-
-
-	public Object getPowerBiReport(String accessTokenInRequest) {
-
-		Object resultObj = null;
-
-		try {
-			User currentUser = getUserInfoFromJwtAccessToken(accessTokenInRequest);
-			String airline = "unknown";
-
-			// Validate user privileges by checking group membership. Must belong to Role-AirlineFocal group and a single Airline group.
-			List<Group> airlineGroups = currentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
-			if (airlineGroups.size() != 1) {
-				return new ApiError("SUPA_RELEASE_MGMT", "User membership is ambiguous, airlines[" + airlineGroups.size() + "]", RequestFailureReason.UNAUTHORIZED);
-			}
-			airline = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
-			logger.info("Obtain PowerBi Reports for airline:[{}]", airline);
-
-			User airlineFocalCurrentUser = getUserInfoFromJwtAccessToken(accessTokenInRequest);
-			StringBuilder sb = new StringBuilder();
-
-			List<PowerBiInformation> powerBiInformationList = powerBiInformationDao.getPowerBiInformation(airline);
-			if (!powerBiInformationList.isEmpty()){
-				sb.append("<html><center>FliteDeck Advisor Power BI Reports</center>");
-				sb.append("<br><br>");
-				sb.append("<center>Embedded Token:" + powerBiInformationList.get(0).getAccessToken() + "</center>");
-				sb.append("<br><br>");
-				sb.append("<center>WorkspaceId:" + powerBiInformationList.get(0).getWorkspaceId() + "</center>");
-				sb.append("<br><br>");
-				sb.append("<center>ReportId:" + powerBiInformationList.get(0).getReportId() + "</center>");
-				sb.append("</html>");
-			}
-
-			resultObj = sb.toString();
-		}
-		catch (Exception e) {
-			logger.error("Failed to query groups: {}", e.getMessage(), e);
-		}
-		return resultObj;
-	}
-
-
 
 
 	public Object getRoles(String accessTokenInRequest) {
