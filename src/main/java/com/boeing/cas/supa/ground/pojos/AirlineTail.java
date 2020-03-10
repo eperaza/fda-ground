@@ -66,4 +66,15 @@ public class AirlineTail extends BaseEntity {
 	public void setTsps(Set<Tsp> tsps) {
 		this.tsps = tsps;
 	}
+	
+	@JsonIgnore
+	public Tsp getActiveTsp() {
+		for (Tsp tsp: getTsps()) {
+			if (tsp.getActiveTsp() != null) {
+				return tsp;
+			}
+		}
+		
+		return null;
+	}
 }

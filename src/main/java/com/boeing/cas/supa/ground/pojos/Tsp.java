@@ -2,6 +2,7 @@ package com.boeing.cas.supa.ground.pojos;
 
 import java.sql.Timestamp;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -10,22 +11,21 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "TSP")
 @NamedQueries({
-@NamedQuery(name = "getTspListByAirline", query = "SELECT tsp FROM Tsp tsp WHERE tsp.airlineTail.airline.name = :airlineName ORDER BY tsp.airlineTail.tailNumber ASC, tsp.version DESC"),
-@NamedQuery(name = "getTspListByAirlineAndTailNumber", query = "SELECT tsp FROM Tsp tsp WHERE tsp.airlineTail.airline.name = :airlineName AND tsp.airlineTail.tailNumber = :tailNumber"),
-@NamedQuery(name = "getActiveTspByAirlineAndTailNumberAndStage", query = "SELECT tsp FROM Tsp tsp "
-		+ "WHERE tsp.airlineTail.airline.name = :airlineName AND tsp.airlineTail.tailNumber = :tailNumber AND tsp.stage = :stage "
-		+ "ORDER BY tsp.tspModifiedDate DESC"),
-@NamedQuery(name = "getTspByAirlineAndTailNumberAndModifiedDateAndEffectiveDateAndStage", query = "SELECT tsp FROM Tsp tsp "
-		+ "WHERE tsp.airlineTail.airline.name = :airlineName AND tsp.airlineTail.tailNumber = :tailNumber AND tsp.tspModifiedDate = :modifiedDate "
-		+ "AND (:effectiveDate IS NULL OR tsp.effectiveDate = :effectiveDate) AND tsp.stage = :stage"),
-@NamedQuery(name = "getTspByAirlineAndTailNumberAndVersionAndStage", query = "SELECT tsp FROM Tsp tsp "
-		+ "WHERE tsp.airlineTail.airline.name = :airlineName AND tsp.airlineTail.tailNumber = :tailNumber AND tsp.version = :version "
-		+ "AND tsp.stage = :stage")
+	@NamedQuery(name = "getTspListByAirline", query = "SELECT tsp FROM Tsp tsp WHERE tsp.airlineTail.airline.name = :airlineName ORDER BY tsp.airlineTail.tailNumber ASC, tsp.version DESC"),
+	@NamedQuery(name = "getTspListByAirlineAndTailNumber", query = "SELECT tsp FROM Tsp tsp WHERE tsp.airlineTail.airline.name = :airlineName AND tsp.airlineTail.tailNumber = :tailNumber"),
+	@NamedQuery(name = "getTspListByAirlineAndTailNumberAndStage", query = "SELECT tsp FROM Tsp tsp "
+			+ "WHERE tsp.airlineTail.airline.name = :airlineName AND tsp.airlineTail.tailNumber = :tailNumber AND tsp.stage = :stage"),
+	@NamedQuery(name = "getActiveTspByAirlineAndTailNumberAndStage", query = "SELECT tsp FROM Tsp tsp "
+			+ "WHERE tsp.airlineTail.airline.name = :airlineName AND tsp.airlineTail.tailNumber = :tailNumber AND tsp.stage = :stage AND tsp.activeTsp != null"),
+	@NamedQuery(name = "getTspByAirlineAndTailNumberAndVersionAndStage", query = "SELECT tsp FROM Tsp tsp "
+			+ "WHERE tsp.airlineTail.airline.name = :airlineName AND tsp.airlineTail.tailNumber = :tailNumber AND tsp.version = :version "
+			+ "AND tsp.stage = :stage")
 })
 public class Tsp extends BaseEntity {
 	public enum Stage {
@@ -40,7 +40,10 @@ public class Tsp extends BaseEntity {
 	
 	private String tspContent;
 	private String version;
-	private Timestamp tspModifiedDate;
+	
+	@OneToOne(mappedBy = "tsp", fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
+	private ActiveTsp activeTsp;
+	
 	private Timestamp effectiveDate;
 	
 	@Enumerated(EnumType.STRING)
@@ -70,12 +73,12 @@ public class Tsp extends BaseEntity {
 		this.version = version;
 	}
 	
-	public Timestamp getTspModifiedDate() {
-		return tspModifiedDate;
+	public ActiveTsp getActiveTsp() {
+		return this.activeTsp;
 	}
 	
-	public void setTspModifiedDate(Timestamp tspModifiedDate) {
-		this.tspModifiedDate = tspModifiedDate;
+	public void setActiveTsp(ActiveTsp activeTsp) {
+		this.activeTsp = activeTsp;
 	}
 	
 	public Timestamp getEffectiveDate() {

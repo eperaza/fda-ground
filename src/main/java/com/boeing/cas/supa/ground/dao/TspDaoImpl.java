@@ -5,12 +5,12 @@ import com.boeing.cas.supa.ground.pojos.Tsp;
 import org.hibernate.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.Date;
 import java.util.List;
 import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
 @Repository
-@Transactional
+@Transactional(value = TxType.REQUIRES_NEW)
 public class TspDaoImpl extends BaseDaoImpl implements TspDao {
 
 	@Override
@@ -43,6 +43,17 @@ public class TspDaoImpl extends BaseDaoImpl implements TspDao {
 		
 		return query.list();
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<Tsp> getTspListByAirlineAndTailNumberAndStage(String airlineName, String tailNumber, Tsp.Stage stage) {
+		Query query = getSession().getNamedQuery("getTspListByAirlineAndTailNumberAndStage");
+		query.setParameter("airlineName", airlineName);
+		query.setParameter("tailNumber", tailNumber);
+		query.setParameter("stage", stage);
+		
+		return query.list();
+	}
 
 	@Override
 	public Tsp getTspById(int id) {
@@ -57,19 +68,6 @@ public class TspDaoImpl extends BaseDaoImpl implements TspDao {
 		query.setParameter("stage", stage);
 		
 		query.setMaxResults(1); // get the first record
-		
-		return (Tsp)query.uniqueResult();
-	}
-
-	@Override
-	public Tsp getTspByAirlineAndTailNumberAndModifiedDateAndEffectiveDateAndStage(String airlineName,
-			String tailNumber, Date modifiedDate, Date effectiveDate, Tsp.Stage stage) {
-		Query query = getSession().getNamedQuery("getTspByAirlineAndTailNumberAndModifiedDateAndEffectiveDateAndStage");
-		query.setParameter("airlineName", airlineName);
-		query.setParameter("tailNumber", tailNumber);
-		query.setParameter("modifiedDate", modifiedDate);
-		query.setParameter("effectiveDate", effectiveDate);
-		query.setParameter("stage", stage);
 		
 		return (Tsp)query.uniqueResult();
 	}

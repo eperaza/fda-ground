@@ -8,10 +8,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.boeing.cas.supa.ground.exceptions.SupaSystemLogException;
 import org.apache.commons.lang3.StringUtils;
@@ -33,7 +34,9 @@ import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.BlobRequestOptions;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
+import com.microsoft.azure.storage.blob.CloudBlobDirectory;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
+import com.microsoft.azure.storage.blob.ListBlobItem;
 import com.microsoft.azure.storage.queue.CloudQueue;
 import com.microsoft.azure.storage.queue.CloudQueueClient;
 import com.microsoft.azure.storage.queue.CloudQueueMessage;
@@ -321,4 +324,36 @@ public class AzureStorageUtil {
         	throw new IllegalArgumentException();
         }
     }
+	
+	public List<String> getAllBlobNamesInTheContainer(String containerName, String prefix) {
+		List<String> blobNames = new ArrayList<String>();
+		CloudBlobClient cloudBlobClient = this.storageAccount.createCloudBlobClient();
+		try {
+			CloudBlobContainer container = cloudBlobClient.getContainerReference(containerName);
+			Iterable<ListBlobItem> items;
+			if (prefix == null) {
+				items = container.listBlobs();
+			} else {
+				items = container.listBlobs(prefix);
+			}
+			
+			for (ListBlobItem item : items) {
+				if (item instanceof CloudBlobDirectory) {
+					blobNames.addAll(getAllBlobNamesInTheContainer(containerName, ((CloudBlobDirectory)item).getPrefix()));
+				} else {
+					String itemUrl = item.getUri().toString();
+					String itemName = itemUrl.substring(itemUrl.lastIndexOf("/") + 1);
+					if (prefix == null) {
+						blobNames.add(itemName);
+					} else {
+						blobNames.add(String.format("%s%s", prefix, itemName));
+					}
+				}
+			}
+		} catch (Exception e) {
+			logger.error("Failed to list the blobs in a container " + containerName);
+		}
+		
+		return blobNames;
+	}
 }

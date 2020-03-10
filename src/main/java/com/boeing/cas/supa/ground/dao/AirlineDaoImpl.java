@@ -2,12 +2,14 @@ package com.boeing.cas.supa.ground.dao;
 
 import java.util.List;
 import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
+
 import org.hibernate.Query;
 import org.springframework.stereotype.Repository;
 import com.boeing.cas.supa.ground.pojos.Airline;
 
 @Repository
-@Transactional
+@Transactional(value = TxType.REQUIRES_NEW)
 public class AirlineDaoImpl extends BaseDaoImpl implements AirlineDao {
 
 	@Override
