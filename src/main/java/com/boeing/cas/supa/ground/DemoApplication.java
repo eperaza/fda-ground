@@ -184,20 +184,7 @@ public class DemoApplication {
 
 		return javaMailSender;
 	}
-
-	@Bean
-	public DataSource dataSource(KeyVaultRetriever keyVaultRetriever) {
-
-		DataSourceBuilder factory = DataSourceBuilder.create()
-				.driverClassName(keyVaultRetriever.getSecretByKey("SQLDriverClassName"))
-				.type(BasicDataSource.class)
-				.url(keyVaultRetriever.getSecretByKey("SQLDatabaseUrl"))
-				.username(keyVaultRetriever.getSecretByKey("SQLDatabaseUsername"))
-				.password(keyVaultRetriever.getSecretByKey("SQLDatabasePassword"));
-
-		return factory.build();
-	}
-
+	
 	@RequestMapping("/")
 	public ResponseEntity<Map<String, String>> getGreeting(HttpServletRequest httpRequest) {
 

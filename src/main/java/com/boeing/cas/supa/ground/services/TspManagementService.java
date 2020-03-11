@@ -137,11 +137,11 @@ public class TspManagementService {
 					String.valueOf(version), Tsp.Stage.valueOf(stage.toUpperCase()));	
 			
 			if (tspObject == null) {
+				LOG.info("No TSP to activate");
 				return false;
 			}
 			
 			success = this.activateTsp(tspObject.getId(), userId);
-			
 		} catch (Exception ex) {
 			LOG.error("Failed to activate a TSP. Error: " + ex);
 			success = false;
@@ -158,6 +158,7 @@ public class TspManagementService {
 			Tsp tspObject = this.tspDao.getTspById(id);			
 			
 			if (tspObject == null) {
+				LOG.info("No TSP to activate");
 				return false;
 			}
 			
@@ -189,6 +190,7 @@ public class TspManagementService {
 			Tsp tspObject = this.tspDao.getTspById(id);			
 			
 			if (tspObject == null) {
+				LOG.info("No TSP to deactivate");
 				return false;
 			}
 			

@@ -1,10 +1,7 @@
 package com.boeing.cas.supa.ground;
 
 import java.util.Properties;
-
 import javax.sql.DataSource;
-
-import org.apache.commons.dbcp2.BasicDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
@@ -14,7 +11,6 @@ import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import com.boeing.cas.supa.ground.pojos.KeyVaultProperties;
 import com.boeing.cas.supa.ground.utils.KeyVaultRetriever;
 
 @Configuration
@@ -22,7 +18,7 @@ import com.boeing.cas.supa.ground.utils.KeyVaultRetriever;
 public class DbConfiguration {
 	
 	@Autowired
-	private KeyVaultProperties keyVaultProperties;
+	private KeyVaultRetriever keyVaultRetriever;
 	
 	@Value("${hibernate.dialect}")
     private String hibernateDialect;
@@ -33,30 +29,14 @@ public class DbConfiguration {
     @Value("${hibernate.hbm2ddl.auto}")
     private String hibernateHbm2ddlAuto;
     
-    /*
     @Bean
-	public DataSource dataSource(KeyVaultRetriever keyVaultRetriever) {
-
+	public DataSource dataSource() {
 		DataSourceBuilder factory = DataSourceBuilder.create()
-				.driverClassName(keyVaultRetriever.getSecretByKey("SQLDriverClassName"))
-				.type(BasicDataSource.class)
 				.url(keyVaultRetriever.getSecretByKey("SQLDatabaseUrl"))
 				.username(keyVaultRetriever.getSecretByKey("SQLDatabaseUsername"))
 				.password(keyVaultRetriever.getSecretByKey("SQLDatabasePassword"));
 
 		return factory.build();
-	}
-    */	
-    
-	@Bean
-	public DataSource dataSource() {
-		DataSourceBuilder builder = DataSourceBuilder.create()
-				//.type(BasicDataSource.class)
-				.url("jdbc:sqlserver://localhost:1433;database=FDAGroundServices")
-				.username("sa")
-				.password("MyPa$$w0rd168914");
-		
-		return builder.build();
 	}
 	
 	@Bean

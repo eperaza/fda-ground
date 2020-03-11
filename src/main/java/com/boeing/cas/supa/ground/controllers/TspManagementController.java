@@ -1,13 +1,11 @@
 package com.boeing.cas.supa.ground.controllers;
 
-import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.Tsp;
 import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
 import com.boeing.cas.supa.ground.services.TspManagementService;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
-import com.boeing.cas.supa.ground.utils.ControllerUtils;
 import com.google.common.base.Strings;
 
 import java.io.ByteArrayOutputStream;
@@ -49,10 +47,6 @@ public class TspManagementController {
         	result = tspManagementService.getTspListByAirlineAndTailNumberAndStage(airlineName, tailNumber, stage);
         }
 
-        if (result instanceof ApiError) {
-            return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
-        }
-
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
@@ -63,11 +57,6 @@ public class TspManagementController {
     		@RequestHeader(name = "stage", required = false, defaultValue = "PROD") String stage) {
 
         Object result = tspManagementService.getActiveTspByAirlineAndTailNumberAndStage(airlineName, tailNumber, stage);
-
-        if (result instanceof ApiError) {
-            return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
-        }
-
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
@@ -81,13 +70,13 @@ public class TspManagementController {
 
         String userId = getUserId(authToken);
 
-        Object result = tspManagementService.saveTsp(airlineName, tspContent, stage, effectiveDate, userId, Boolean.TRUE.toString().equalsIgnoreCase(active));
+        boolean result = tspManagementService.saveTsp(airlineName, tspContent, stage, effectiveDate, userId, Boolean.TRUE.toString().equalsIgnoreCase(active));
 
-        if (result instanceof ApiError) {
-            return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
+        if (result == false) {
+        	 return new ResponseEntity<>("Failed to save TSP to database", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return new ResponseEntity<>("success", HttpStatus.OK);
     }
     
     @RequestMapping(path="/activateTsp", method = { RequestMethod.POST })
@@ -99,13 +88,13 @@ public class TspManagementController {
 
     	String userId = getUserId(authToken);
 
-        Object result = tspManagementService.activateTsp(airlineName, tailNumber, version, stage, userId);
+        boolean result = tspManagementService.activateTsp(airlineName, tailNumber, version, stage, userId);
 
-        if (result instanceof ApiError) {
-            return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
+        if (result == false) {
+            return new ResponseEntity<>("Failed to activate TSP to database", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return new ResponseEntity<>("success", HttpStatus.OK);
     }
     
     @RequestMapping(path = "/migrateTspFiles", method = {RequestMethod.GET})
