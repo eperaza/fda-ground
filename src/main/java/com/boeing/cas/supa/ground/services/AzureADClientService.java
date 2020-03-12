@@ -14,6 +14,7 @@ import javax.mail.internet.MimeMessage;
 import javax.net.ssl.HttpsURLConnection;
 
 import com.boeing.cas.supa.ground.dao.FeatureManagementDao;
+import com.boeing.cas.supa.ground.dao.PowerBiInformationDao;
 import com.boeing.cas.supa.ground.exceptions.*;
 import com.boeing.cas.supa.ground.pojos.*;
 import com.microsoft.azure.storage.StorageException;
@@ -82,6 +83,9 @@ public class AzureADClientService {
 
 	@Autowired
 	private FeatureManagementDao featureManagementDao;
+
+	@Autowired
+	private PowerBiInformationDao powerBiInformationDao;
 
 	public Object getAccessTokenFromUserCredentials(String username, String password, String authority, String clientId) {
 
@@ -311,7 +315,7 @@ public class AzureADClientService {
 		// Validate the password
 		else if (StringUtils.isBlank(newUserPayload.getPassword()) || !PasswordPolicyEnforcer.validate(newUserPayload.getPassword())) {
 			logger.error("Missing or invalid password specified in user creation request: {}", ControllerUtils.sanitizeString(newUserPayload.getPassword()));
-			return new ApiError("CREATE_USER_FAILURE", PasswordPolicyEnforcer.ERROR_PASSWORD_FAILED_DESCRIPTION, RequestFailureReason.BAD_REQUEST);
+			return new ApiError("CREATE_USER_FAILURE", PasswordPolicyEnforcer.ERROR_PSWD_FAILED_DESCRIPTION, RequestFailureReason.BAD_REQUEST);
 		}
 		// Validate the first name
 		else if (StringUtils.isBlank(newUserPayload.getGivenName())) {
@@ -559,6 +563,95 @@ public class AzureADClientService {
 		return resultObj;
 	}
 
+	public Object getPowerBiReport(String accessTokenInRequest) {
+
+		Object resultObj = null;
+		try {
+			// Get group membership of user issuing request. Ensure that user belongs to role-airlinefocal group
+			// and one and only one airline group.
+			User airlineFocalCurrentUser = getUserInfoFromJwtAccessToken(accessTokenInRequest);
+
+			String airline = "unknown";
+
+			// Validate user privileges by checking group membership. Must belong to Role-AirlineFocal group and a single Airline group.
+			List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
+			if (airlineGroups.size() != 1) {
+				return new ApiError("USERS_LIST_FAILED", "User membership is ambiguous, airlines[" + airlineGroups.size() + "]", RequestFailureReason.UNAUTHORIZED);
+			} else {
+				airline = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+			}
+			logger.info("Obtain Power Bi Report for airline [{}]", airline);
+			PowerBiInformation powerBiInformation = powerBiInformationDao.getPowerBiInformation(airline);
+
+			StringBuilder sb = new StringBuilder();
+//			StringBuilder sbJavaScript = new StringBuilder();
+//			try {
+//				File powerBiJavaScriptFile = new ClassPathResource("powerbi/powerbi.js").getFile();
+//				BufferedReader reader = new BufferedReader(new FileReader(powerBiJavaScriptFile));
+//				String str;
+//				while ((str = reader.readLine()) != null)
+//				{
+//					sbJavaScript.append(str + "\n");
+//				}
+//				reader.close();
+//			} catch (IOException io) {
+//				logger.warn(io.getMessage());
+//			}
+			sb.append("<html>");
+			sb.append("<script language=\"javascript\"  type=\"application/javascript\" src=\"https://microsoft.github.io/PowerBI-JavaScript/demo/node_modules/jquery/dist/jquery.js\"></script>");
+			sb.append("<script language=\"javascript\"  type=\"application/javascript\" src=\"https://microsoft.github.io/PowerBI-JavaScript/demo/node_modules/powerbi-client/dist/powerbi.js\"></script>");
+			sb.append("<script language=\"javascript\">");
+			//note: embedded tokens start with H4sI
+//			sb.append("/*! --- start of powerbi.js code --- */");
+//			sb.append(sbJavaScript.toString());
+//			sb.append("/*! --- end of powerbi.js code --- */");
+			sb.append("");
+			sb.append("window.onload = function() {");
+			sb.append("var AccessToken = '" + powerBiInformation.getEmbeddedToken() + "';");
+			sb.append("var EmbedUrl = 'https://app.powerbi.com/reportEmbed?reportId=" + powerBiInformation.getReportId()
+				+ "&groupId=" + powerBiInformation.getWorkspaceId()  + "';");
+				//+ "&config=eyJjbHVzdGVyVXJsIjoiaHR0cHM6Ly9XQUJJLVVTLU5PUlRILUNFTlRSQUwtcmVkaXJlY3QuYW5hbHlzaXMud2luZG93cy5uZXQifQ%3d%3d';");
+			sb.append("var EmbedReportId = '" + powerBiInformation.getReportId() + "';");
+			//sb.append("console.log('AccessToken:', AccessToken);");
+			//sb.append("console.log('EmbedUrl:', EmbedUrl);");
+			//sb.append("console.log('EmbedReportId:', EmbedReportId);");
+
+			sb.append("var models = window['powerbi-client'].models;");
+			//sb.append("console.log('Models:', models);");
+
+			sb.append("var embedConfiguration  = {");
+			sb.append("    type: 'report',");
+			sb.append("    tokenType: models.TokenType.Embed,");
+			sb.append("    accessToken: AccessToken,");
+			sb.append("    embedUrl: EmbedUrl,");
+			sb.append("    id: EmbedReportId,");
+			sb.append("    permissions: models.Permissions.All,");
+			sb.append("    settings: {");
+			sb.append("        filterPaneEnabled: true,");
+			sb.append("        navContentPaneEnabled: true");
+			sb.append("    }");
+			sb.append("};");
+			sb.append("var $reportContainer = $('#dashboardContainer');");
+			sb.append("var report = powerbi.embed($reportContainer.get(0), embedConfiguration);");
+			sb.append("}");
+			sb.append("</script>");
+			sb.append("<div id=\"dashboardContainer\"></div>");
+			sb.append("</html>");
+			resultObj = sb.toString();
+
+		} catch (PowerBiInformationException jpe) {
+			logger.error("PowerBiInformationException: {}", jpe.getMessage(), jpe);
+			resultObj = new ApiError("POWER_BI_INFORMATION_FAILED", "Failed to retrieve Power Bi Information.");
+		} finally {
+
+			if (resultObj instanceof ApiError) {
+				logger.error("Failed to retrieve Power Bi Information  {}");
+			}
+		}
+
+		return resultObj;
+	}
+
 
 	public Object getUsers(String accessTokenInRequest) {
 
@@ -609,7 +702,6 @@ public class AzureADClientService {
 				logger.error("FDAGndSvcLog> {}", ControllerUtils.sanitizeString(progressLog.toString()));
 			}
 		}
-		
 		return resultObj;
 	}
 
@@ -971,7 +1063,7 @@ public class AzureADClientService {
 		
 		// Validate the password provided by the admin; if invalid, return appropriate error key/description
 		if (!PasswordPolicyEnforcer.validate(userAccountActivation.getPassword())) {
-			return new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", PasswordPolicyEnforcer.ERROR_PASSWORD_FAILED_DESCRIPTION, RequestFailureReason.BAD_REQUEST);
+			return new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", PasswordPolicyEnforcer.ERROR_PSWD_FAILED_DESCRIPTION, RequestFailureReason.BAD_REQUEST);
 		}
 
 		Object resultObj = null;
@@ -1748,9 +1840,11 @@ public class AzureADClientService {
 		emailMessageBody.append("Thank you, ").append("FliteDeck Advisor Support");
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
 
+		BufferedReader reader = null;
+		BufferedWriter writer = null;
 		try {
 			File emailMpAttachment = new ClassPathResource(appProps.get("EmailMpAttachmentLocation")).getFile();
-			BufferedReader reader = new BufferedReader(new FileReader(emailMpAttachment));
+			reader = new BufferedReader(new FileReader(emailMpAttachment));
 			String str;
 			StringBuffer sb = new StringBuffer();
 			while ((str = reader.readLine()) != null)
@@ -1762,7 +1856,7 @@ public class AzureADClientService {
 			String mpFileName = newlyCreatedUser.getDisplayName().replaceAll("\\s+", "_").toLowerCase() + ".mp";
 			Path path = Files.createTempDirectory(StringUtils.EMPTY);
 			File mpFile = new File(path.toString() + File.separator + mpFileName);
-			BufferedWriter writer = new BufferedWriter(new FileWriter(mpFile));
+			writer = new BufferedWriter(new FileWriter(mpFile));
 			writer.write(sb.toString());
 			writer.close();
 			logger.debug("upload mp file to azure blob [{}]", mpFile.getAbsolutePath());
@@ -1772,6 +1866,24 @@ public class AzureADClientService {
 		catch (IOException io) {
 			logger.warn("Failed to read attachment: {}", io.getMessage(), io);
 			throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", "failed to read attachment", RequestFailureReason.INTERNAL_SERVER_ERROR));
+		}
+		finally {
+			if (reader != null) {
+				try {
+					reader.close();
+				}
+				catch (IOException io) {
+					//ignore
+				}
+			}
+			if (writer != null) {
+				try {
+					writer.close();
+				}
+				catch (IOException io) {
+					//ignore
+				}
+			}
 		}
 		logger.info("Registered {} ", newlyCreatedUser.getUserPrincipalName());
 
@@ -1839,6 +1951,13 @@ public class AzureADClientService {
 					}
 				}
 				if (userRole.equals("role-airlinemaintenance")) {
+					if (ap.isChoiceMaintenance()) {
+						preferencesBody.append("<true/>\r\n");
+					} else {
+						preferencesBody.append("<false/>\r\n");
+					}
+				}
+				if (userRole.equals("role-airlineefbadmin")) {
 					if (ap.isChoiceMaintenance()) {
 						preferencesBody.append("<true/>\r\n");
 					} else {
@@ -1984,17 +2103,32 @@ public class AzureADClientService {
 
 		String uploadFolder = tempDirPath.toString();
 
-		BufferedReader reader = new BufferedReader(new FileReader(file));
-		String line;
-		StringBuffer sbtmp = new StringBuffer();
-		while ((line = reader.readLine()) != null) {
-			sbtmp.append(line);
+		BufferedReader reader = null;
+		try {
+			reader = new BufferedReader(new FileReader(file));
+			String line;
+			StringBuffer sbtmp = new StringBuffer();
+			while ((line = reader.readLine()) != null) {
+				sbtmp.append(line);
+			}
+
+			byte[] bytes = sbtmp.toString().getBytes();
+			Path path = Paths.get(uploadFolder + File.separator + file.getName());
+			Files.write(path, bytes);
 		}
-
-		byte[] bytes = sbtmp.toString().getBytes();
-		Path path = Paths.get(uploadFolder + File.separator + file.getName());
-		Files.write(path, bytes);
-
+		catch (IOException io) {
+			throw io;
+		}
+		finally {
+			if (reader != null) {
+				try {
+					reader.close();
+				}
+				catch (IOException io) {
+					//ignore
+				}
+			}
+		}
 		return uploadFolder;
 	}
 

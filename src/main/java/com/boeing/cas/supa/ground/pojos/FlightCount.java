@@ -1,10 +1,12 @@
 package com.boeing.cas.supa.ground.pojos;
 
+
 public class FlightCount {
 
 	private String tail;
 	private int count = 0;
 	private int processed = 0;
+	private String version;
 
 	public FlightCount(String tail) {
 		this.tail = tail;
@@ -16,11 +18,12 @@ public class FlightCount {
 		this.count = count;
 	}
 
-	public FlightCount(String tail, int count, int processed) {
+	public FlightCount(String tailnumber, int count, int processed, String version) {
 
-		this.tail = tail;
+		this.tail = tailnumber;
 		this.count = count;
 		this.processed = processed;
+		this.version = version;
 	}
 
 	public String getTail() {
@@ -29,6 +32,14 @@ public class FlightCount {
 
 	public void setTail(String tail) {
 		this.tail = tail;
+	}
+
+	public String getVersion() {
+		return version;
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
 	}
 
 	public int getCount() {
@@ -46,6 +57,5 @@ public class FlightCount {
 	public void setProcessed(int processed) {
 		this.processed = processed;
 	}
-
 }
 

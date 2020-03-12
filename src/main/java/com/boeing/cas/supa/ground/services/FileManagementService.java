@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -19,7 +20,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.boeing.cas.supa.ground.exceptions.SupaSystemLogException;
+import com.boeing.cas.supa.ground.exceptions.*;
 import com.boeing.cas.supa.ground.pojos.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -30,8 +31,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.boeing.cas.supa.ground.dao.FlightRecordDao;
-import com.boeing.cas.supa.ground.exceptions.FileDownloadException;
-import com.boeing.cas.supa.ground.exceptions.FlightRecordException;
 import com.boeing.cas.supa.ground.utils.ADWTransferUtil;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
@@ -47,6 +46,7 @@ public class FileManagementService {
 	private final static String SUPA_SYSTEM_LOGS_STORAGE_CONTAINER = "supa-system-logs";
 	private final static String TSP_STORAGE_CONTAINER = "tsp";
 	private final static String MOBILECONFIG_STORAGE_CONTAINER = "config";
+	private final static String CERTIFICATES_STORAGE_CONTAINER = "certificates";
 
 	@Autowired
 	private Map<String, String> appProps;
@@ -59,6 +59,7 @@ public class FileManagementService {
 	
 	@Autowired
 	private TspManagementService tspManagementService;
+
 
 	public byte[] getFileFromStorage(String file, String type, String authToken) throws FileDownloadException {
 
@@ -126,6 +127,64 @@ public class FileManagementService {
 
 		return fileInBytes;
 	}
+
+	public List<OnsCertificate> getOnsCertInfo(String authToken) throws OnsCertificateException {
+
+		byte[] fileInBytes = new byte[0];
+		List<OnsCertificate> certificates = new ArrayList<>();
+
+		try {
+			// Determine the airline from the user's membership; this is specifically for TSP files.
+			final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
+			List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+			if (airlineGroups.size() != 1) {
+				throw new OnsCertificateException(new ApiError("FILE_DOWNLOAD_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
+			}
+			List<Group> roleGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
+			if (roleGroups.size() != 1) {
+				throw new OnsCertificateException(new ApiError("FILE_DOWNLOAD_FAILURE", "Failed to associate user with a role", RequestFailureReason.UNAUTHORIZED));
+			}
+
+			String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+			String userRole = roleGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_USER_ROLE_PREFIX, StringUtils.EMPTY);
+
+			AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
+			logger.debug("user role equals [{}]", userRole);
+			String file = "unknown";
+			String role = "na";
+			if (userRole.equalsIgnoreCase("airlinepilot")) { role = "fc"; file = "fc_exp2022_04_15.pfx"; }
+			if (userRole.equalsIgnoreCase("airlinefocal")) { role = "fc"; file = "fc_exp2022_04_15.pfx"; }
+			if (userRole.equalsIgnoreCase("airlineefbadmin")) { role = "fc"; file = "fc_exp2022_04_15.pfx"; }
+			if (userRole.equalsIgnoreCase("airlinemaintenance")) { role = "mc"; file = "mc_exp2022_04_14.pfx"; }
+			if (userRole.equalsIgnoreCase("airlinecheckairman")) { role = "mc"; file = "mc_exp2022_04_14.pfx"; }
+			String filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/').append(role)
+					.append('/').append(file).toString();
+			logger.debug("filename equals [{}]", filePath);
+
+			try (ByteArrayOutputStream outputStream = asu.downloadFile(CERTIFICATES_STORAGE_CONTAINER, filePath)) {
+
+				if (outputStream == null) {
+					throw new OnsCertificateException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("No file corresponding to specified name %s", file), RequestFailureReason.NOT_FOUND));
+				}
+				outputStream.flush();
+				fileInBytes = outputStream.toByteArray();
+
+			} catch (IOException e) {
+				logger.error("Error retrieving Ons Certificate file [{}]: {}", ControllerUtils.sanitizeString(file), e.getMessage(), e);
+				throw new OnsCertificateException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("Error retrieving Ons Certificate file [%s]: %s", file, e.getMessage()), RequestFailureReason.INTERNAL_SERVER_ERROR));
+			}
+		} catch (IOException ioe) {
+			logger.error("Error accessing Azure Storage: {}", ioe.getMessage(), ioe);
+			throw new OnsCertificateException(new ApiError("FILE_DOWNLOAD_FAILURE", "Error retrieving Ons Certificate", RequestFailureReason.INTERNAL_SERVER_ERROR));
+		}
+		String key = "p@ssword";
+
+		String base64EncodedPayload = Base64.getEncoder().encodeToString(key.getBytes());
+		OnsCertificate onsCertificate = new OnsCertificate(base64EncodedPayload, fileInBytes);
+		certificates.add(onsCertificate);
+		return certificates;
+	}
+
 
 	public FileManagementMessage uploadFlightRecord(final MultipartFile uploadFlightRecord, String authToken) throws FlightRecordException {
 
@@ -209,11 +268,14 @@ public class FileManagementService {
 		// If flight date and time is absent in flight record name, default it to the minimum supported Instant
         final Instant flightDatetime = _flightDatetime != null ? _flightDatetime : OffsetDateTime.parse("19700101_000000Z", Constants.FlightRecordDateTimeFormatterForParse).toInstant();
 
+        final String aid_id = flightRecordDao.getLatestSupaVersion(airline, _airline + "/" + _tail + "/");
+
         // Prepare a final FlightRecord instance to:
         // (a) pass to the individual upload threads, so individual attributes can be updates as warranted.
         // (b) persist the flight record, and status, to the database
 		final FlightRecord flightRecord = new FlightRecord(uploadFlightRecord.getOriginalFilename(), storagePath,
-				fileSizeKb, flightDatetime, null, airline, user.getUserPrincipalName(), null, false, false, false);
+				fileSizeKb, flightDatetime, aid_id, airline, user.getUserPrincipalName(),
+				null, false, false, false, null, null);
 
 		// Set up executor pool for performing ADW and Azure uploads concurrently
 		ExecutorService es = Executors.newFixedThreadPool(3);
@@ -583,64 +645,23 @@ public class FileManagementService {
 		return listOfFlightMgmtMessages;
 	}
 
-    public List<FlightCount> countFlightRecords(String authToken) throws FlightRecordException {
 
-        List<FlightCount> listOfFlightCounts = new ArrayList<>();
+	public List<FlightCount> countFlightRecords(String authToken) throws FlightRecordException {
 
-        // Determine the airline from the user's membership.
-        final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
-        List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
-        if (airlineGroups.size() != 1) {
-            throw new FlightRecordException(new ApiError("FLIGHT_RECORD_RETRIEVAL_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
-        }
-        String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+		// Determine the airline from the user's membership.
+		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
+		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+		if (airlineGroups.size() != 1) {
+			throw new FlightRecordException(new ApiError("FLIGHT_RECORD_RETRIEVAL_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
+		}
+		String airline = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
 
-        List<FlightRecord> listOfFlightRecords = this.flightRecordDao.getAllFlightRecords(airlineGroup);
-
-		// Sort via storage path in order to group tails together
-        Collections.sort(listOfFlightRecords,Comparator.comparing(FlightRecord :: getStoragePath));
-
-		FlightCount currentTail = new FlightCount("", 0, 0);
-
-		if (listOfFlightRecords != null && listOfFlightRecords.size() > 0) {
-
-            for (FlightRecord fr : listOfFlightRecords) {
-				// Get tail from storage path: AMX/tail/
-				int endIndex = fr.getStoragePath().indexOf("/", 5);
-				// Tail could be AMX/UNRESOLVED
-				String tail = fr.getStoragePath().substring(4);
-				if (endIndex > 0)
-                	tail = fr.getStoragePath().substring(4, endIndex);
-
-                if (!tail.equals(currentTail.getTail())) {
-                	// We have a new tail!
-					if (!currentTail.getTail().equals("")) {
-						listOfFlightCounts.add(currentTail);
-					}
-					// Reset tail
-					currentTail = new FlightCount(tail, 1, 0);
-					if (fr.isProcessedByAnalytics()) {
-						currentTail.setProcessed(1);
-					}
-
-				} else {
-                	// Increment count of current tail
-                	currentTail.setCount(currentTail.getCount() + 1);
-                	if (fr.isProcessedByAnalytics()) {
-						currentTail.setProcessed(currentTail.getProcessed() + 1);
-					}
-				}
-            }
-            // Add last record
-			if (!currentTail.getTail().equals("")) {
-				listOfFlightCounts.add(currentTail);
-			}
-        }
-        return listOfFlightCounts;
-    }
+		List<FlightCount> flightCountList = this.flightRecordDao.getAllFlightCounts(airline);
+		return flightCountList;
+	}
 
 
-    public List<FileManagementMessage> getStatusOfFlightRecords(List<String>flightRecordNames, String authToken) throws FlightRecordException {
+	public List<FileManagementMessage> getStatusOfFlightRecords(List<String>flightRecordNames, String authToken) throws FlightRecordException {
 		
 		List<FileManagementMessage> listOfFlightMgmtMessages = new ArrayList<>();
 

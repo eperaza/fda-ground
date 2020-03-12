@@ -1,113 +1,113 @@
 //FEATURE-MANAGEMENT PROD
-insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, updated_by) 
-values ('airline-amx','User Management','showConfigUserManagement',0,'Add a new user, view all registered and pending users, send emails to users.',0,1,0,0,'jwhelan@flitedeckadvisor.com')
+insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, choice_efbadmin, updated_by) 
+values ('airline-amx','User Management','showConfigUserManagement',0,'Add a new user, view all registered and pending users, send emails to users.',0,1,0,0,1,'jwhelan@flitedeckadvisor.com')
 
-insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, updated_by) 
-values ('airline-amx','Airline Preferences','showConfigAirlinePreferences',0,'Configure airline-specific interface settings that cannot be updated per user preferences.',0,1,0,0,'jwhelan@flitedeckadvisor.com')
+insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, choice_efbadmin, updated_by) 
+values ('airline-amx','Airline Preferences','showConfigAirlinePreferences',0,'Configure airline-specific interface settings that cannot be updated per user preferences.',0,1,0,0,1,'jwhelan@flitedeckadvisor.com')
 
-insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, updated_by) 
-values ('airline-amx','Default User Preferences','showConfigUserPreferences',0,'Configure interface settings such as measuring units and notifications. Anyone can update preferences on their own device.',0,1,0,0,'jwhelan@flitedeckadvisor.com')
+insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, choice_efbadmin, updated_by) 
+values ('airline-amx','Default User Preferences','showConfigUserPreferences',0,'Configure interface settings such as measuring units and notifications. Anyone can update preferences on their own device.',0,1,0,0,1,'jwhelan@flitedeckadvisor.com')
 
-insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, updated_by) 
-values ('airline-amx','SUPA Management','showConfigSupaManagement',0,'Configure AID URL, Aircraft properties, TSP, and SUPA versions.',0,1,0,1,'jwhelan@flitedeckadvisor.com')
+insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, choice_efbadmin, updated_by) 
+values ('airline-amx','SUPA Management','showConfigSupaManagement',0,'Configure AID URL, Aircraft properties, TSP, and SUPA versions.',0,1,0,1,1,'jwhelan@flitedeckadvisor.com')
 
-insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, updated_by) 
-values ('airline-amx','SUPA System Messages','showConfigSUPASyetemMessage',0,'Download and upload the latest SUPA system messages.',0,1,0,1,'jwhelan@flitedeckadvisor.com')
+insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, choice_efbadmin, updated_by) 
+values ('airline-amx','SUPA System Messages','showConfigSUPASyetemMessage',0,'Download and upload the latest SUPA system messages.',0,1,0,1,1,'jwhelan@flitedeckadvisor.com')
 
-insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, updated_by) 
-values ('airline-amx','AID Data Files Status','showConfigAidDataPerAircraft',0,'View number of AID data files processed and logged in server.',1,1,1,1,'jwhelan@flitedeckadvisor.com')
+insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, choice_efbadmin, updated_by) 
+values ('airline-amx','AID Data Files Status','showConfigAidDataPerAircraft',0,'View number of AID data files processed and logged in server.',1,1,1,1,1,'jwhelan@flitedeckadvisor.com')
 
 
 //FEATURE-MANAGEMENT TEST
-insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, updated_by) 
-values ('airline-amx','User Management','showConfigUserManagement',0,'Add a new user, view all registered and pending users, send emails to users.',0,1,0,0,'jwhelan@fdacustomertest.onmicrosoft.com')
+insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, choice_efbadmin, updated_by) 
+values ('airline-amx','User Management','showConfigUserManagement',0,'Add a new user, view all registered and pending users, send emails to users.',0,1,0,0,1,'jwhelan@fdacustomertest.onmicrosoft.com')
 
-insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, updated_by) 
-values ('airline-amx','Airline Preferences','showConfigAirlinePreferences',0,'Configure airline-specific interface settings that cannot be updated per user preferences.',0,1,0,0,'jwhelan@fdacustomertest.onmicrosoft.com')
+insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, choice_efbadmin, updated_by) 
+values ('airline-amx','Airline Preferences','showConfigAirlinePreferences',0,'Configure airline-specific interface settings that cannot be updated per user preferences.',0,1,0,0,1,'jwhelan@fdacustomertest.onmicrosoft.com')
 
-insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, updated_by) 
-values ('airline-amx','Default User Preferences','showConfigUserPreferences',0,'Configure interface settings such as measuring units and notifications. Anyone can update preferences on their own device.',0,1,0,0,'jwhelan@fdacustomertest.onmicrosoft.com')
+insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, choice_efbadmin, updated_by) 
+values ('airline-amx','Default User Preferences','showConfigUserPreferences',0,'Configure interface settings such as measuring units and notifications. Anyone can update preferences on their own device.',0,1,0,0,1,'jwhelan@fdacustomertest.onmicrosoft.com')
 
-insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, updated_by) 
-values ('airline-amx','SUPA Management','showConfigSupaManagement',0,'Configure AID URL, Aircraft properties, TSP, and SUPA versions.',0,1,0,1,'jwhelan@fdacustomertest.onmicrosoft.com')
+insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, choice_efbadmin, updated_by) 
+values ('airline-amx','SUPA Management','showConfigSupaManagement',0,'Configure AID URL, Aircraft properties, TSP, and SUPA versions.',0,1,0,1,1,'jwhelan@fdacustomertest.onmicrosoft.com')
 
-insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, updated_by) 
-values ('airline-amx','SUPA System Messages','showConfigSUPASyetemMessage',0,'Download and upload the latest SUPA system messages.',0,1,0,1,'jwhelan@fdacustomertest.onmicrosoft.com')
+insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, choice_efbadmin, updated_by) 
+values ('airline-amx','SUPA System Messages','showConfigSUPASyetemMessage',0,'Download and upload the latest SUPA system messages.',0,1,0,1,1,'jwhelan@fdacustomertest.onmicrosoft.com')
 
-insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, updated_by) 
-values ('airline-amx','AID Data Files Status','showConfigAidDataPerAircraft',0,'View number of AID data files processed and logged in server.',1,1,1,1,'jwhelan@fdacustomertest.onmicrosoft.com')
+insert into feature_management (airline, title, feature_key, enabled, description, choice_pilot, choice_focal,choice_check_airman, choice_maintenance, choice_efbadmin, updated_by) 
+values ('airline-amx','AID Data Files Status','showConfigAidDataPerAircraft',0,'View number of AID data files processed and logged in server.',1,1,1,1,1,'jwhelan@fdacustomertest.onmicrosoft.com')
 
 
 
 //AIRLINE-PREFERENCES - TEST
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','Show Fuel Variance Control','showFuelVarianceControl',0,'Show Fuel Variance Control.',0,0,0,0,0,'jwhelan@fdacustomertest.onmicrosoft.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Show Fuel Variance Control','showFuelVarianceControl',0,'Show Fuel Variance Control.',0,0,0,0,0,0,'jwhelan@fdacustomertest.onmicrosoft.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','Show Completed Flights','showCompletedFlights',0,'Show Completed Flights.',0,0,0,0,0,'jwhelan@fdacustomertest.onmicrosoft.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Show Completed Flights','showCompletedFlights',0,'Show Completed Flights.',0,0,0,0,0,0,'jwhelan@fdacustomertest.onmicrosoft.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','Recommended altitude values','showRecommendedAltitude',0,'Show all Recommended altitude values on Variance from Plan chart.',1,0,0,0,0,'jwhelan@fdacustomertest.onmicrosoft.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Recommended altitude values','showRecommendedAltitude',0,'Show all Recommended altitude values on Variance from Plan chart.',1,0,0,0,0,0,'jwhelan@fdacustomertest.onmicrosoft.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','Only 1 Recommended altitude value','showOneRecommendedAltitude',0,'Show the Recommended altitude value with the least fuel consumption.',1,0,0,0,0,'jwhelan@fdacustomertest.onmicrosoft.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Only 1 Recommended altitude value','showOneRecommendedAltitude',0,'Show the Recommended altitude value with the least fuel consumption.',1,0,0,0,0,0,'jwhelan@fdacustomertest.onmicrosoft.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','Optimal altitude value','showOptimalAltitude',0,'Show Optimal altitude value on Variance from Plan chart.',1,1,1,1,1,'jwhelan@fdacustomertest.onmicrosoft.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Optimal altitude value','showOptimalAltitude',0,'Show Optimal altitude value on Variance from Plan chart.',1,1,1,1,1,1,'jwhelan@fdacustomertest.onmicrosoft.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','Actual value in the center','showActualsInBarChartCenter',0,'Change the placement of Actual and Plan values on Variance from Plan chart.',1,0,0,0,0,'jwhelan@fdacustomertest.onmicrosoft.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Actual value in the center','showActualsInBarChartCenter',0,'Change the placement of Actual and Plan values on Variance from Plan chart.',1,0,0,0,0,0,'jwhelan@fdacustomertest.onmicrosoft.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','"Refresh" button on Flight Plans','showRefreshButton',0,'Display a button that connects to network to get an updated list of Flight Plans.',1,1,1,1,1,'jwhelan@fdacustomertest.onmicrosoft.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','"Refresh" button on Flight Plans','showRefreshButton',0,'Display a button that connects to network to get an updated list of Flight Plans.',1,1,1,1,1,1,'jwhelan@fdacustomertest.onmicrosoft.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','"Show" button on Flight Plans','showFlightPlanShowButton',0,'Display a button that opens the selected Flight Plan.',1,1,1,1,1,'jwhelan@fdacustomertest.onmicrosoft.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','"Show" button on Flight Plans','showFlightPlanShowButton',0,'Display a button that opens the selected Flight Plan.',1,1,1,1,1,1,'jwhelan@fdacustomertest.onmicrosoft.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','Flight Progress Tables','showFlightProgressTables',0,'Display Flight Progress Tables in Settings.',1,1,1,1,1,'jwhelan@fdacustomertest.onmicrosoft.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Flight Progress Tables','showFlightProgressTables',0,'Display Flight Progress Tables in Settings.',1,1,1,1,1,1,'jwhelan@fdacustomertest.onmicrosoft.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','Show Map View','showMapView',0,'Show Map View',0,0,0,0,0,'jwhelan@fdacustomertest.onmicrosoft.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Show Map View','showMapView',0,'Show Map View',0,0,0,0,0,0,'jwhelan@fdacustomertest.onmicrosoft.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','Show Waypoint Sequencing','showWaypointSequencing',0,'Show Waypoint Sequencing',0,0,0,0,0,'jwhelan@fdacustomertest.onmicrosoft.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Show Waypoint Sequencing','showWaypointSequencing',0,'Show Waypoint Sequencing',0,0,0,0,0,0,'jwhelan@fdacustomertest.onmicrosoft.com')
 
 //AIRLINE-PREFERENCES - PROD
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','Show Fuel Variance Control','showFuelVarianceControl',0,'Show Fuel Variance Control.',0,1,1,1,1,'jwhelan@flitedeckadvisor.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Show Fuel Variance Control','showFuelVarianceControl',0,'Show Fuel Variance Control.',0,1,1,1,1,1,'jwhelan@flitedeckadvisor.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','Show Completed Flights','showCompletedFlights',0,'Show Completed Flights.',0,0,0,0,0,'jwhelan@flitedeckadvisor.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Show Completed Flights','showCompletedFlights',0,'Show Completed Flights.',0,0,0,0,0,0,'jwhelan@flitedeckadvisor.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','Recommended altitude values','showRecommendedAltitude',0,'Show 5 Recommended altitude values on Variance from Plan chart.',1,0,0,0,0,'jwhelan@flitedeckadvisor.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Recommended altitude values','showRecommendedAltitude',0,'Show 5 Recommended altitude values on Variance from Plan chart.',1,0,0,0,0,0,'jwhelan@flitedeckadvisor.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','Only 1 Recommended altitude value','showOneRecommendedAltitude',0,'Show 1 Recommended altitude value with the least fuel consumption.',1,0,0,0,0,'jwhelan@flitedeckadvisor.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Only 1 Recommended altitude value','showOneRecommendedAltitude',0,'Show 1 Recommended altitude value with the least fuel consumption.',1,0,0,0,0,0,'jwhelan@flitedeckadvisor.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','Optimal altitude value','showOptimalAltitude',0,'Show Optimal altitude value on Variance from Plan chart.',1,1,1,1,1,'jwhelan@flitedeckadvisor.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Optimal altitude value','showOptimalAltitude',0,'Show Optimal altitude value on Variance from Plan chart.',1,1,1,1,1,1,'jwhelan@flitedeckadvisor.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','Actual value in the center','showActualsInBarChartCenter',0,'Change the placement of Actual and Plan values on Variance from Plan chart.',1,0,0,0,0,'jwhelan@flitedeckadvisor.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Actual value in the center','showActualsInBarChartCenter',0,'Change the placement of Actual and Plan values on Variance from Plan chart.',1,0,0,0,0,0,'jwhelan@flitedeckadvisor.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','"Refresh" button on Flight Plans','showRefreshButton',0,'Display a button that connects to network to get an updated list of Flight Plans.',1,1,1,1,1,'jwhelan@flitedeckadvisor.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','"Refresh" button on Flight Plans','showRefreshButton',0,'Display a button that connects to network to get an updated list of Flight Plans.',1,1,1,1,1,1,'jwhelan@flitedeckadvisor.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','"Show" button on Flight Plans','showFlightPlanShowButton',0,'Display a button that opens the selected Flight Plan.',1,1,1,1,1,'jwhelan@flitedeckadvisor.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','"Show" button on Flight Plans','showFlightPlanShowButton',0,'Display a button that opens the selected Flight Plan.',1,1,1,1,1,1,'jwhelan@flitedeckadvisor.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','Flight Progress Tables','showFlightProgressTables',0,'Display Flight Progress Tables in Settings.',1,1,1,1,1,'jwhelan@flitedeckadvisor.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Flight Progress Tables','showFlightProgressTables',0,'Display Flight Progress Tables in Settings.',1,1,1,1,1,1,'jwhelan@flitedeckadvisor.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
 values ('airline-amx','Show Map View','showMapView',0,'Show Map View',0,0,0,0,0,'jwhelan@flitedeckadvisor.com')
 
-insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance,  choice_check_airman, choice_focal, updated_by) 
-values ('airline-amx','Show Waypoint Sequencing','showWaypointSequencing',0,'Show Waypoint Sequencing',0,0,0,0,0,'jwhelan@flitedeckadvisor.com')
+insert into airline_preferences (airline, preference, airline_key, enabled, description, display, choice_pilot, choice_maintenance, choice_efbadmin,  choice_check_airman, choice_focal, updated_by) 
+values ('airline-amx','Show Waypoint Sequencing','showWaypointSequencing',0,'Show Waypoint Sequencing',0,0,0,0,0,0,'jwhelan@flitedeckadvisor.com')
 
 //USER-PREFERENCES - TEST
  

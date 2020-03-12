@@ -78,7 +78,8 @@ public class PlaybackDemoController {
 		} catch (PlaybackDemoFlightException pdfe) {
 
 			logger.error("Failed to retrieve specified demo flight stream [{}]: {}", ControllerUtils.sanitizeString(flightStreamName), pdfe.getMessage(), pdfe);
-			return new ResponseEntity<>(pdfe.getError(), ControllerUtils.translateRequestFailureReasonToHttpErrorCode(pdfe.getError().getFailureReason()));
+			//return new ResponseEntity<>(pdfe.getError(), ControllerUtils.translateRequestFailureReasonToHttpErrorCode(pdfe.getError().getFailureReason()));
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(pdfe.getError().getErrorDescription());
 		}
 	}
 }

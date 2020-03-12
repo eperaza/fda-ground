@@ -41,26 +41,34 @@ public class FeatureManagementDaoImpl implements FeatureManagementDao {
 		= "UPDATE feature_management SET choice_maintenance = :choice_maintenance, "
 		+ " updated_by = :updated_by WHERE airline = :airline and feature_key = :feature_key";
 
+	private static final String FEATURE_MANAGEMENT_EFBADMIN_UPDATE_SQL
+		= "UPDATE feature_management SET choice_efbadmin = :choice_efbadmin, "
+		+ " updated_by = :updated_by WHERE airline = :airline and feature_key = :feature_key";
+
 
 	private static final String AIRLINE_PREFERENCES_PILOT_UPDATE_SQL
-			= "UPDATE airline_preferences SET choice_pilot = :choice_pilot, "
-			+ " updated_by = :updated_by WHERE airline = :airline and airline_key = :airline_key";
+		= "UPDATE airline_preferences SET choice_pilot = :choice_pilot, "
+		+ " updated_by = :updated_by WHERE airline = :airline and airline_key = :airline_key";
 
 	private static final String AIRLINE_PREFERENCES_FOCAL_UPDATE_SQL
-			= "UPDATE airline_preferences SET choice_focal = :choice_focal, "
-			+ " updated_by = :updated_by WHERE airline = :airline and airline_key = :airline_key";
+		= "UPDATE airline_preferences SET choice_focal = :choice_focal, "
+		+ " updated_by = :updated_by WHERE airline = :airline and airline_key = :airline_key";
 
 	private static final String AIRLINE_PREFERENCES_CHECK_AIRMAN_UPDATE_SQL
-			= "UPDATE airline_preferences SET choice_check_airman = :choice_check_airman, "
-			+ " updated_by = :updated_by WHERE airline = :airline and airline_key = :airline_key";
+		= "UPDATE airline_preferences SET choice_check_airman = :choice_check_airman, "
+		+ " updated_by = :updated_by WHERE airline = :airline and airline_key = :airline_key";
 
 	private static final String AIRLINE_PREFERENCES_MAINTENANCE_UPDATE_SQL
-			= "UPDATE airline_preferences SET choice_maintenance = :choice_maintenance, "
-			+ " updated_by = :updated_by WHERE airline = :airline and airline_key = :airline_key";
+		= "UPDATE airline_preferences SET choice_maintenance = :choice_maintenance, "
+		+ " updated_by = :updated_by WHERE airline = :airline and airline_key = :airline_key";
+
+	private static final String AIRLINE_PREFERENCES_EFBADMIN_UPDATE_SQL
+		= "UPDATE airline_preferences SET choice_efbadmin = :choice_efbadmin, "
+		+ " updated_by = :updated_by WHERE airline = :airline and airline_key = :airline_key";
 
 	private static final String USER_PREFERENCES_UPDATE_SQL
-			= "UPDATE user_preferences SET value = :value, "
-			+ " updated_by = :updated_by WHERE airline = :airline and user_key = :user_key";
+		= "UPDATE user_preferences SET value = :value, "
+		+ " updated_by = :updated_by WHERE airline = :airline and user_key = :user_key";
 
 
 
@@ -104,22 +112,29 @@ public class FeatureManagementDaoImpl implements FeatureManagementDao {
 		Map<String,Object> namedParameters = new HashMap<>();
 		String UPDATE_QUERY = "unknown";
 
+		logger.info("Update information: airline[{}], role[{}], value[{}]",
+			airline, keyValueUpdate.getRole(), keyValueUpdate.getValue());
+
 		namedParameters.put("airline_key", keyValueUpdate.getKey());
-		if (keyValueUpdate.getRole().equals("choiceFocal")) {
+		if (keyValueUpdate.getRole().equalsIgnoreCase("choiceFocal")) {
 			namedParameters.put("choice_focal", keyValueUpdate.getValue());
 			UPDATE_QUERY = AIRLINE_PREFERENCES_FOCAL_UPDATE_SQL;
 		}
-		if (keyValueUpdate.getRole().equals("choicePilot")) {
+		if (keyValueUpdate.getRole().equalsIgnoreCase("choicePilot")) {
 			namedParameters.put("choice_pilot", keyValueUpdate.getValue());
 			UPDATE_QUERY = AIRLINE_PREFERENCES_PILOT_UPDATE_SQL;
 		}
-		if (keyValueUpdate.getRole().equals("choiceCheckAirman")) {
+		if (keyValueUpdate.getRole().equalsIgnoreCase("choiceCheckAirman")) {
 			namedParameters.put("choice_check_airman", keyValueUpdate.getValue());
 			UPDATE_QUERY = AIRLINE_PREFERENCES_CHECK_AIRMAN_UPDATE_SQL;
 		}
-		if (keyValueUpdate.getRole().equals("choiceMaintenance")) {
+		if (keyValueUpdate.getRole().equalsIgnoreCase("choiceMaintenance")) {
 			namedParameters.put("choice_maintenance", keyValueUpdate.getValue());
 			UPDATE_QUERY = AIRLINE_PREFERENCES_MAINTENANCE_UPDATE_SQL;
+		}
+		if (keyValueUpdate.getRole().equalsIgnoreCase("choiceEfbAdmin")) {
+			namedParameters.put("choice_efbadmin", keyValueUpdate.getValue());
+			UPDATE_QUERY = AIRLINE_PREFERENCES_EFBADMIN_UPDATE_SQL;
 		}
 		namedParameters.put("updated_by", updatedBy);
 		namedParameters.put("airline", airline);
@@ -150,21 +165,25 @@ public class FeatureManagementDaoImpl implements FeatureManagementDao {
 		String UPDATE_QUERY = "unknown";
 
 		namedParameters.put("feature_key", keyValueUpdate.getKey());
-		if (keyValueUpdate.getRole().equals("choiceFocal")) {
+		if (keyValueUpdate.getRole().equalsIgnoreCase("choiceFocal")) {
 			namedParameters.put("choice_focal", keyValueUpdate.getValue());
 			UPDATE_QUERY = FEATURE_MANAGEMENT_FOCAL_UPDATE_SQL;
 		}
-		if (keyValueUpdate.getRole().equals("choicePilot")) {
+		if (keyValueUpdate.getRole().equalsIgnoreCase("choicePilot")) {
 			namedParameters.put("choice_pilot", keyValueUpdate.getValue());
 			UPDATE_QUERY = FEATURE_MANAGEMENT_PILOT_UPDATE_SQL;
 		}
-		if (keyValueUpdate.getRole().equals("choiceCheckAirman")) {
+		if (keyValueUpdate.getRole().equalsIgnoreCase("choiceCheckAirman")) {
 			namedParameters.put("choice_check_airman", keyValueUpdate.getValue());
 			UPDATE_QUERY = FEATURE_MANAGEMENT_CHECK_AIRMAN_UPDATE_SQL;
 		}
-		if (keyValueUpdate.getRole().equals("choiceMaintenance")) {
+		if (keyValueUpdate.getRole().equalsIgnoreCase("choiceMaintenance")) {
 			namedParameters.put("choice_maintenance", keyValueUpdate.getValue());
 			UPDATE_QUERY = FEATURE_MANAGEMENT_MAINTENANCE_UPDATE_SQL;
+		}
+		if (keyValueUpdate.getRole().equalsIgnoreCase("choiceEfbAdmin")) {
+			namedParameters.put("choice_efbadmin", keyValueUpdate.getValue());
+			UPDATE_QUERY = FEATURE_MANAGEMENT_EFBADMIN_UPDATE_SQL;
 		}
 		namedParameters.put("updated_by", updatedBy);
 		namedParameters.put("airline", airline);
@@ -254,10 +273,35 @@ public class FeatureManagementDaoImpl implements FeatureManagementDao {
 			featureManagement.setDescription(resultSet.getString("DESCRIPTION"));
 			featureManagement.setFeatureKey(resultSet.getString("FEATURE_KEY"));
 			featureManagement.setEnabled(resultSet.getBoolean("ENABLED"));
-			featureManagement.setChoicePilot(resultSet.getBoolean("CHOICE_PILOT"));
-			featureManagement.setChoiceFocal(resultSet.getBoolean("CHOICE_FOCAL"));
-			featureManagement.setChoiceCheckAirman(resultSet.getBoolean("CHOICE_CHECK_AIRMAN"));
-			featureManagement.setChoiceMaintenance(resultSet.getBoolean("CHOICE_MAINTENANCE"));
+			boolean bPilot = false;
+			try {
+				bPilot = resultSet.getBoolean("CHOICE_PILOT");
+			} catch (SQLException sql) { }
+			featureManagement.setChoicePilot(bPilot);
+
+			boolean bFocal = false;
+			try {
+				bFocal = resultSet.getBoolean("CHOICE_FOCAL");
+			} catch (SQLException sql) { }
+			featureManagement.setChoiceFocal(bFocal);
+
+			boolean bCheck = false;
+			try {
+				bCheck = resultSet.getBoolean("CHOICE_CHECK_AIRMAN");
+			} catch (SQLException sql) { }
+			featureManagement.setChoiceCheckAirman(bCheck);
+
+			boolean bMaintenance = false;
+			try {
+				bMaintenance = resultSet.getBoolean("CHOICE_MAINTENANCE");
+			} catch (SQLException sql) { }
+			featureManagement.setChoiceMaintenance(bMaintenance);
+
+			boolean bAdmin = false;
+			try {
+				bAdmin = resultSet.getBoolean("CHOICE_EFBADMIN");
+			} catch (SQLException sql) { }
+			featureManagement.setChoiceEfbAdmin(bAdmin);
 			featureManagement.setUpdatedBy(resultSet.getString("UPDATED_BY"));
 			featureManagement.setCreatedDateTime(resultSet.getString("CREATE_TS"));
 
@@ -276,10 +320,35 @@ public class FeatureManagementDaoImpl implements FeatureManagementDao {
 			airlinePreferences.setAirlineKey(resultSet.getString("AIRLINE_KEY"));
 			airlinePreferences.setEnabled(resultSet.getBoolean("ENABLED"));
 			airlinePreferences.setDescription(resultSet.getString("DESCRIPTION"));
-			airlinePreferences.setChoicePilot(resultSet.getBoolean("CHOICE_PILOT"));
-			airlinePreferences.setChoiceFocal(resultSet.getBoolean("CHOICE_FOCAL"));
-			airlinePreferences.setChoiceCheckAirman(resultSet.getBoolean("CHOICE_CHECK_AIRMAN"));
-			airlinePreferences.setChoiceMaintenance(resultSet.getBoolean("CHOICE_MAINTENANCE"));
+			boolean bPilot = false;
+			try {
+				bPilot = resultSet.getBoolean("CHOICE_PILOT");
+			} catch (SQLException sql) { }
+			airlinePreferences.setChoicePilot(bPilot);
+
+			boolean bFocal = false;
+			try {
+				bFocal = resultSet.getBoolean("CHOICE_FOCAL");
+			} catch (SQLException sql) { }
+			airlinePreferences.setChoiceFocal(bFocal);
+
+			boolean bCheck = false;
+			try {
+				bCheck = resultSet.getBoolean("CHOICE_CHECK_AIRMAN");
+			} catch (SQLException sql) { }
+			airlinePreferences.setChoiceCheckAirman(bCheck);
+
+			boolean bMaintenance = false;
+			try {
+				bMaintenance = resultSet.getBoolean("CHOICE_MAINTENANCE");
+			} catch (SQLException sql) { }
+			airlinePreferences.setChoiceMaintenance(bMaintenance);
+
+			boolean bAdmin = false;
+			try {
+				bAdmin = resultSet.getBoolean("CHOICE_EFBADMIN");
+			} catch (SQLException sql) { }
+			airlinePreferences.setChoiceEfbAdmin(bAdmin);
 			airlinePreferences.setUpdatedBy(resultSet.getString("UPDATED_BY"));
 			airlinePreferences.setCreatedDateTime(resultSet.getString("CREATE_TS"));
 

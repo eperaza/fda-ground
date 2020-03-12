@@ -12,6 +12,7 @@ public class AirlinePreferences {
 	protected boolean choiceFocal;
 	protected boolean choiceCheckAirman;
 	protected boolean choiceMaintenance;
+	protected boolean choiceEfbAdmin;
 
 	protected String updatedBy;
 	protected String createdDateTime;
@@ -91,6 +92,14 @@ public class AirlinePreferences {
 
 	public void setChoiceMaintenance(boolean bChoiceMaintenance) {
 		this.choiceMaintenance = bChoiceMaintenance;
+	}
+
+	public boolean isChoiceEfbAdmin() {
+		return choiceEfbAdmin;
+	}
+
+	public void setChoiceEfbAdmin(boolean bChoiceEfbAdmin) {
+		this.choiceEfbAdmin = bChoiceEfbAdmin;
 	}
 
 	public String getUpdatedBy() {
