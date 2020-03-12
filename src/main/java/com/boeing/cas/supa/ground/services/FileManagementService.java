@@ -9,7 +9,6 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -68,7 +67,6 @@ public class FileManagementService {
 		try {
 
 			// Determine the airline from the user's membership; this is specifically for TSP files.
-			/*
 			final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
 			List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
 			if (airlineGroups.size() != 1) {
@@ -85,13 +83,12 @@ public class FileManagementService {
 			if (StringUtils.isBlank(file) || StringUtils.isBlank(type)) {
 				throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "Missing or invalid file and/or type", RequestFailureReason.BAD_REQUEST));
 			}
-			*/
 
 			// Resolve the container and file path based on the input arguments.
 			String container = null, filePath = null;
 			// If TSP, then prepend airline as virtual directory to file path
 			if (TSP_STORAGE_CONTAINER.equals(type)) {
-				String airlineName = "AMX";//airlineGroup.toUpperCase();
+				String airlineName = airlineGroup.toUpperCase();
 				String tailNumber = file.substring(0, file.indexOf(".json"));
 				Tsp activeTsp = this.tspManagementService.getActiveTspByAirlineAndTailNumberAndStage(airlineName, tailNumber, Tsp.Stage.PROD.toString());
 				if (activeTsp == null) {
@@ -99,11 +96,9 @@ public class FileManagementService {
 				}
 				
 				fileInBytes = activeTsp.getTspContent().getBytes();
-				
 			} else if (MOBILECONFIG_STORAGE_CONTAINER.equals(type)) {
 				container = MOBILECONFIG_STORAGE_CONTAINER;
 				filePath = file;
-				AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
 				// Once container and file path are established, retrieve the file contents in bytes
 				try (ByteArrayOutputStream outputStream = asu.downloadFile(container, filePath)) {
 
