@@ -15,6 +15,11 @@ public class ActiveTsp extends BaseEntity {
 	@JoinColumn(name = "TspID", nullable = false)
 	@JsonIgnore
 	private Tsp tsp;
+	
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "AircraftInfoID", nullable = false)
+	@JsonIgnore
+	private AircraftInfo aircraftInfo;
 
 	public Tsp getTsp() {
 		return tsp;
@@ -22,5 +27,13 @@ public class ActiveTsp extends BaseEntity {
 
 	public void setTsp(Tsp tsp) {
 		this.tsp = tsp;
+	}
+
+	public AircraftInfo getAircraftInfo() {
+		return aircraftInfo;
+	}
+
+	public void setAircraftInfo(AircraftInfo aircraftInfo) {
+		this.aircraftInfo = aircraftInfo;
 	}
 }

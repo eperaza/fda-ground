@@ -9,8 +9,7 @@ public interface TspDao {
 	public List<Tsp> getAllTsps();
 	public List<Tsp> getTspListByAirline(String airlineName);
 	public List<Tsp> getTspListByAirlineAndTailNumber(String airlineName, String tailNumber);
-	public List<Tsp> getTspListByAirlineAndTailNumberAndStage(String airlineName, String tailNumber, Tsp.Stage stage);
 	public Tsp getTspById(int id);
-	public Tsp getActiveTspByAirlineAndTailNumberAndStage(String airlineName, String tailNumber, Tsp.Stage stage);
-	public Tsp getTspByAirlineAndTailNumberAndVersionAndStage(String airlineName, String tailNumber, String version, Tsp.Stage stage);
+	public Tsp getActiveTspByAirlineAndTailNumber(String airlineName, String tailNumber);
+	public Tsp getTspByAirlineAndTailNumberAndVersion(String airlineName, String tailNumber, String version);
 }

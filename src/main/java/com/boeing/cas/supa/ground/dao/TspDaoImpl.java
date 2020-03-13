@@ -43,17 +43,6 @@ public class TspDaoImpl extends BaseDaoImpl implements TspDao {
 		
 		return query.list();
 	}
-	
-	@SuppressWarnings("unchecked")
-	@Override
-	public List<Tsp> getTspListByAirlineAndTailNumberAndStage(String airlineName, String tailNumber, Tsp.Stage stage) {
-		Query query = getSession().getNamedQuery("getTspListByAirlineAndTailNumberAndStage");
-		query.setParameter("airlineName", airlineName);
-		query.setParameter("tailNumber", tailNumber);
-		query.setParameter("stage", stage);
-		
-		return query.list();
-	}
 
 	@Override
 	public Tsp getTspById(int id) {
@@ -61,23 +50,21 @@ public class TspDaoImpl extends BaseDaoImpl implements TspDao {
 	}
 
 	@Override
-	public Tsp getActiveTspByAirlineAndTailNumberAndStage(String airlineName, String tailNumber, Tsp.Stage stage) {
-		Query query = getSession().getNamedQuery("getActiveTspByAirlineAndTailNumberAndStage");
+	public Tsp getActiveTspByAirlineAndTailNumber(String airlineName, String tailNumber) {
+		Query query = getSession().getNamedQuery("getActiveTspByAirlineAndTailNumber");
 		query.setParameter("airlineName", airlineName);
 		query.setParameter("tailNumber", tailNumber);
-		query.setParameter("stage", stage);
 		
 		query.setMaxResults(1); // get the first record
 		
 		return (Tsp)query.uniqueResult();
 	}
 	
-	public Tsp getTspByAirlineAndTailNumberAndVersionAndStage(String airlineName, String tailNumber, String version, Tsp.Stage stage) {
-		Query query = getSession().getNamedQuery("getTspByAirlineAndTailNumberAndVersionAndStage");
+	public Tsp getTspByAirlineAndTailNumberAndVersion(String airlineName, String tailNumber, String version) {
+		Query query = getSession().getNamedQuery("getTspByAirlineAndTailNumberAndVersion");
 		query.setParameter("airlineName", airlineName);
 		query.setParameter("tailNumber", tailNumber);
 		query.setParameter("version", version);
-		query.setParameter("stage", stage);
 		
 		return (Tsp)query.uniqueResult();
 	}

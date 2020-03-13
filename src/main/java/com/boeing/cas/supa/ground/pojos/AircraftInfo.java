@@ -11,14 +11,15 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@Table(name = "AirlineTail")
-@NamedQuery(name = "getTailByAirlineAndTailNumber", query = "SELECT al FROM AirlineTail al WHERE al.airline.name = :name AND al.tailNumber = :tailNumber")
-public class AirlineTail extends BaseEntity {
+@Table(name = "AircraftInfo")
+@NamedQuery(name = "getTailByAirlineAndTailNumber", query = "SELECT al FROM AircraftInfo al WHERE al.airline.name = :name AND al.tailNumber = :tailNumber")
+public class AircraftInfo extends BaseEntity {
 	private String tailNumber;
 	
 	@Column(name = "Active")
@@ -28,9 +29,12 @@ public class AirlineTail extends BaseEntity {
 	@JoinColumn(name = "AirlineId", nullable = false)
 	private Airline airline;
 	
-	@OneToMany(mappedBy = "airlineTail", fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
+	@OneToMany(mappedBy = "aircraftInfo", fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
 	@JsonIgnore
 	private Set<Tsp> tsps;
+	
+	@OneToOne(mappedBy = "aircraftInfo", fetch = FetchType.LAZY)
+	private ActiveTsp activeTsp;
 	
 	public String getTailNumber() {
 		return tailNumber;
@@ -67,14 +71,16 @@ public class AirlineTail extends BaseEntity {
 		this.tsps = tsps;
 	}
 	
+	public ActiveTsp getActiveTsp() {
+		return this.activeTsp;
+	}
+	
+	public void setActiveTsp(ActiveTsp activeTsp) {
+		this.activeTsp = activeTsp;
+	}
+	
 	@JsonIgnore
-	public Tsp getActiveTsp() {
-		for (Tsp tsp: getTsps()) {
-			if (tsp.getActiveTsp() != null) {
-				return tsp;
-			}
-		}
-		
-		return null;
+	public Tsp getCurrentActiveTsp() {
+		return this.activeTsp == null ? null : this.activeTsp.getTsp();
 	}
 }

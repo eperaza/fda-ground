@@ -15,9 +15,9 @@ BEGIN
 	) ON [PRIMARY]
 END
 
-IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'AirlineTail')
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'AircraftInfo')
 BEGIN
-	CREATE TABLE [dbo].[AirlineTail](
+	CREATE TABLE [dbo].[AircraftInfo](
 		[ID] [int] IDENTITY(1,1) NOT NULL,
 		[AirlineID] [int] NOT NULL,
 		[TailNumber] [nvarchar](20) NOT NULL,
@@ -26,18 +26,18 @@ BEGIN
 		[CreatedBy] [nvarchar](50) NOT NULL DEFAULT ('SYSTEM'),
 		[UpdatedDate] [datetime] NULL,
 		[UpdatedBy] [nvarchar](50) NULL,
-		CONSTRAINT [UC_AirlineTail_AirlineId_TailNumber] UNIQUE([AirlineID], [TailNumber]),
-	 CONSTRAINT [PK_AirlineTail] PRIMARY KEY CLUSTERED 
+		CONSTRAINT [UC_AircraftInfo_AirlineId_TailNumber] UNIQUE([AirlineID], [TailNumber]),
+	 CONSTRAINT [PK_AircraftInfo] PRIMARY KEY CLUSTERED 
 	(
 		[ID] ASC
 	)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 	) ON [PRIMARY]
 
-	ALTER TABLE [dbo].[AirlineTail]  WITH CHECK ADD CONSTRAINT [FK_AirlineTail_Airline] FOREIGN KEY([AirlineID])
+	ALTER TABLE [dbo].[AircraftInfo]  WITH CHECK ADD CONSTRAINT [FK_AircraftInfo_Airline] FOREIGN KEY([AirlineID])
 	REFERENCES [dbo].[Airline] ([ID])
 	ON DELETE CASCADE
 
-	ALTER TABLE [dbo].[AirlineTail] CHECK CONSTRAINT [FK_AirlineTail_Airline]
+	ALTER TABLE [dbo].[AircraftInfo] CHECK CONSTRAINT [FK_AircraftInfo_Airline]
 
 END
 
@@ -45,26 +45,25 @@ IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'TSP')
 BEGIN
 	CREATE TABLE [dbo].[TSP](
 		[ID] [int] IDENTITY(1,1) NOT NULL,
-		[AirlineTailID] [int] NOT NULL,
-		[TspContent] [nvarchar](1000) NOT NULL,
+		[AircraftInfoID] [int] NOT NULL,
+		[TspContent] [nvarchar](4000) NOT NULL,
 		[Version] [varchar](10) NOT NULL,
-		[EffectiveDate] [datetimeoffset] NULL,
-		[Stage] [varchar](10) NOT NULL DEFAULT ('DEV'),
 		[CreatedDate] [datetime] NOT NULL DEFAULT GETDATE(),
 		[CreatedBy] [nvarchar](50) NOT NULL DEFAULT ('SYSTEM'),
 		[UpdatedDate] [datetime] NULL,
 		[UpdatedBy] [nvarchar](50) NULL,
+		CONSTRAINT [UC_TSP_AircraftInfoID_Version] UNIQUE([AircraftInfoID], [Version]),
 	 CONSTRAINT [PK_TSP] PRIMARY KEY CLUSTERED 
 	(
 		[ID] ASC
 	)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 	) ON [PRIMARY]
 
-	ALTER TABLE [dbo].[TSP]  WITH CHECK ADD  CONSTRAINT [FK_TSP_AirlineTail] FOREIGN KEY([AirlineTailID])
-	REFERENCES [dbo].[AirlineTail] ([ID])
+	ALTER TABLE [dbo].[TSP]  WITH CHECK ADD  CONSTRAINT [FK_TSP_AircraftInfo] FOREIGN KEY([AircraftInfoID])
+	REFERENCES [dbo].[AircraftInfo] ([ID])
 	ON DELETE CASCADE
 
-	ALTER TABLE [dbo].[TSP] CHECK CONSTRAINT [FK_TSP_AirlineTail]
+	ALTER TABLE [dbo].[TSP] CHECK CONSTRAINT [FK_TSP_AircraftInfo]
 END
 
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'ActiveTSP')
@@ -72,10 +71,12 @@ BEGIN
 	CREATE TABLE [dbo].[ActiveTSP](
 		[ID] [int] IDENTITY(1,1) NOT NULL,
 		[TspID] [int] NOT NULL,
+		[AircraftInfoID] int NOT NULL,
 		[CreatedDate] [datetime] NOT NULL DEFAULT GETDATE(),
 		[CreatedBy] [nvarchar](50) NOT NULL DEFAULT ('SYSTEM'),
 		[UpdatedDate] [datetime] NULL,
 		[UpdatedBy] [nvarchar](50) NULL,
+		CONSTRAINT [UC_ActiveTSP_AircraftInfoID] UNIQUE([AircraftInfoID]),
 	 CONSTRAINT [PK_ActiveTSP] PRIMARY KEY CLUSTERED 
 	(
 		[ID] ASC
@@ -85,6 +86,12 @@ BEGIN
 	ALTER TABLE [dbo].[ActiveTSP]  WITH CHECK ADD  CONSTRAINT [FK_ActivTSP_TSP] FOREIGN KEY([TspID])
 	REFERENCES [dbo].[TSP] ([ID])
 	ON DELETE CASCADE
+	
+	ALTER TABLE [dbo].[ActiveTSP]  WITH CHECK ADD  CONSTRAINT [FK_ActivTSP_AircraftInfo] FOREIGN KEY([AircraftInfoID])
+	REFERENCES [dbo].[AircraftInfo] ([ID])
+	ON DELETE NO ACTION
 
 	ALTER TABLE [dbo].[ActiveTSP] CHECK CONSTRAINT [FK_ActivTSP_TSP]
+	
+	ALTER TABLE [dbo].[ActiveTSP] CHECK CONSTRAINT [FK_ActivTSP_AircraftInfo]
 END

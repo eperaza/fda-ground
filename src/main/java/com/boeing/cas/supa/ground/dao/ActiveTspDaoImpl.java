@@ -21,6 +21,7 @@ public class ActiveTspDaoImpl extends BaseDaoImpl implements ActiveTspDao {
 		
 		ActiveTsp activeTsp = new ActiveTsp();
 		activeTsp.setTsp(tsp);
+		activeTsp.setAircraftInfo(tsp.getAircraftInfo());
 		activeTsp.setCreatedBy(tsp.getCreatedBy());
 		
 		getSession().saveOrUpdate(activeTsp);

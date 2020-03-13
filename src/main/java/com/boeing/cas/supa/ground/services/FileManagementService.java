@@ -90,7 +90,7 @@ public class FileManagementService {
 			if (TSP_STORAGE_CONTAINER.equals(type)) {
 				String airlineName = airlineGroup.toUpperCase();
 				String tailNumber = file.substring(0, file.indexOf(".json"));
-				Tsp activeTsp = this.tspManagementService.getActiveTspByAirlineAndTailNumberAndStage(airlineName, tailNumber, Tsp.Stage.PROD.toString());
+				Tsp activeTsp = this.tspManagementService.getActiveTspByAirlineAndTailNumber(airlineName, tailNumber);
 				if (activeTsp == null) {
 					throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("No file corresponding to specified name %s and type %s", file, type), RequestFailureReason.NOT_FOUND));
 				}

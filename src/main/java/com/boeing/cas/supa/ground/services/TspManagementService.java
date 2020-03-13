@@ -1,27 +1,20 @@
 package com.boeing.cas.supa.ground.services;
 
-import java.sql.Timestamp;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-
 import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.boeing.cas.supa.ground.dao.ActiveTspDao;
 import com.boeing.cas.supa.ground.dao.AirlineDao;
-import com.boeing.cas.supa.ground.dao.AirlineTailDao;
+import com.boeing.cas.supa.ground.dao.AircraftInfoDao;
 import com.boeing.cas.supa.ground.dao.TspDao;
 import com.boeing.cas.supa.ground.pojos.Airline;
-import com.boeing.cas.supa.ground.pojos.AirlineTail;
+import com.boeing.cas.supa.ground.pojos.AircraftInfo;
 import com.boeing.cas.supa.ground.pojos.Tsp;
 import com.boeing.cas.supa.ground.pojos.TspContent;
-import com.google.common.base.Strings;
 import com.google.gson.Gson;
 
 @Service
@@ -32,7 +25,7 @@ public class TspManagementService {
 	private AirlineDao airlineDao;
 	
 	@Autowired
-	private AirlineTailDao airlineTailDao;
+	private AircraftInfoDao aircraftInfoDao;
 	
 	@Autowired
 	private TspDao tspDao;
@@ -41,14 +34,14 @@ public class TspManagementService {
 	private ActiveTspDao activeTspDao;
 	
 	@Transactional(value = TxType.REQUIRES_NEW)
-	public boolean saveTsp(String airlineName, String tspContent, String stage, String effectiveDate, String userId, boolean isActive) {
+	public boolean saveTsp(String airlineName, String tspContent, String userId, boolean isActive) {
 		boolean success = false;
 		Gson gson = new Gson();
 		
 		try {
 			TspContent tspContentObject = gson.fromJson(tspContent, TspContent.class);
-			Tsp tspObject = this.tspDao.getTspByAirlineAndTailNumberAndVersionAndStage(airlineName, tspContentObject.tail,
-					String.valueOf(tspContentObject.version), Tsp.Stage.valueOf(stage.toUpperCase()));
+			Tsp tspObject = this.tspDao.getTspByAirlineAndTailNumberAndVersion(airlineName, tspContentObject.tail,
+					String.valueOf(tspContentObject.version));
 			
 			if (tspObject == null) {
 				tspObject = new Tsp();
@@ -61,32 +54,30 @@ public class TspManagementService {
 					this.airlineDao.save(airline);
 				}
 				
-				AirlineTail tail = this.airlineTailDao.getTailByAirlineAndTailNumber(airlineName, tspContentObject.tail);
+				AircraftInfo tail = this.aircraftInfoDao.getTailByAirlineAndTailNumber(airlineName, tspContentObject.tail);
 				if (tail == null) {
-					tail = new AirlineTail();
+					tail = new AircraftInfo();
 					tail.setAirline(airline);
 					tail.setTailNumber(tspContentObject.tail);
 					tail.setIsActive(true);
 					tail.setCreatedBy(userId);
 					
-					this.airlineTailDao.save(tail);
+					this.aircraftInfoDao.save(tail);
 				} else {
 					if (tail.getIsActive() == false) {
 						tail.setIsActive(true);
 
-						this.airlineTailDao.save(tail);
+						this.aircraftInfoDao.save(tail);
 					}
 				}
 				
 				tspObject = new Tsp();
-				tspObject.setAirlineTail(tail);
+				tspObject.setAircraftInfo(tail);
 				tspObject.setCreatedBy(userId);
 			} else {
 				tspObject.setUpdatedBy(userId);
 			}
 		
-			tspObject.setEffectiveDate(getDateTime(effectiveDate));
-			tspObject.setStage(Tsp.Stage.valueOf(stage));
 			tspObject.setTspContent(tspContent);
 			tspObject.setVersion(String.valueOf(tspContentObject.version));
 			
@@ -120,28 +111,19 @@ public class TspManagementService {
 		return this.tspDao.getTspListByAirlineAndTailNumber(airline, tailNumber);
 	}
 	
-	public List<Tsp> getTspListByAirlineAndTailNumberAndStage(String airline, String tailNumber, String stage) {
-		return this.tspDao.getTspListByAirlineAndTailNumberAndStage(airline, tailNumber, Tsp.Stage.valueOf(stage.toUpperCase()));
-	}
-	
-	public Tsp getActiveTspByAirlineAndTailNumberAndStage(String airline, String tailNumber, String stage) {
-		return this.tspDao.getActiveTspByAirlineAndTailNumberAndStage(airline, tailNumber, Tsp.Stage.valueOf(stage.toUpperCase()));
+	public Tsp getActiveTspByAirlineAndTailNumber(String airline, String tailNumber) {
+		return this.tspDao.getActiveTspByAirlineAndTailNumber(airline, tailNumber);
 	}
 	
 	@Transactional(value = TxType.REQUIRES_NEW)
-	public boolean activateTsp(String airlineName, String tailNumber, String version, String stage, String userId) {
+	public boolean activateTsp(String airlineName, String tailNumber, String version, String userId) {
 		boolean success = false;
 		
 		try {
-			Tsp tspObject = this.tspDao.getTspByAirlineAndTailNumberAndVersionAndStage(airlineName, tailNumber,
-					String.valueOf(version), Tsp.Stage.valueOf(stage.toUpperCase()));	
+			Tsp tspObject = this.tspDao.getTspByAirlineAndTailNumberAndVersion(airlineName, tailNumber,
+					String.valueOf(version));	
 			
-			if (tspObject == null) {
-				LOG.info("No TSP to activate");
-				return false;
-			}
-			
-			success = this.activateTsp(tspObject.getId(), userId);
+			success = this.activateTsp(tspObject, userId);
 		} catch (Exception ex) {
 			LOG.error("Failed to activate a TSP. Error: " + ex);
 			success = false;
@@ -156,24 +138,8 @@ public class TspManagementService {
 		
 		try {
 			Tsp tspObject = this.tspDao.getTspById(id);			
-			
-			if (tspObject == null) {
-				LOG.info("No TSP to activate");
-				return false;
-			}
-			
-			Tsp activeTsp = tspObject.getAirlineTail().getActiveTsp();
-			if (activeTsp != null && activeTsp.getId() == tspObject.getId()) {
-				// already activated
-				return true;
-			}
-			
-			if (activeTsp != null) {
-				this.activeTspDao.deleteActiveTsp(activeTsp.getActiveTsp());
-			}
-			
-			tspObject.setUpdatedBy(userId);
-			success = this.activeTspDao.activateTsp(tspObject);
+
+			success = activateTsp(tspObject, userId);
 		} catch (Exception ex) {
 			LOG.error("Failed to activate a TSP. Error: " + ex);
 			success = false;
@@ -209,12 +175,23 @@ public class TspManagementService {
 		return success;
 	}
 	
-	private Timestamp getDateTime(String input) {
-		if (Strings.isNullOrEmpty(input)) {
-			return null;
+	private boolean activateTsp(Tsp tspObject, String userId) {
+		if (tspObject == null) {
+			LOG.info("No TSP to activate");
+			return false;
 		}
-	
-		ZonedDateTime dateTime = ZonedDateTime.parse(input, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-		return Timestamp.from(dateTime.toInstant());
+		
+		Tsp activeTsp = tspObject.getAircraftInfo().getCurrentActiveTsp();
+		if (activeTsp != null && activeTsp.getId() == tspObject.getId()) {
+			// already activated
+			return true;
+		}
+		
+		if (activeTsp != null) {
+			this.activeTspDao.deleteActiveTsp(activeTsp.getActiveTsp());
+		}
+		
+		tspObject.setUpdatedBy(userId);
+		return this.activeTspDao.activateTsp(tspObject);
 	}
 }

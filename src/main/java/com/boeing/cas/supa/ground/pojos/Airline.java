@@ -20,7 +20,7 @@ public class Airline extends BaseEntity {
 	
 	@OneToMany(mappedBy = "airline", fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
 	@JsonIgnore
-	private Set<AirlineTail> tails;
+	private Set<AircraftInfo> tails;
 	
 	public String getName() {
 		return name;
@@ -30,14 +30,14 @@ public class Airline extends BaseEntity {
 		this.name = name;
 	}
 
-	public Set<AirlineTail> getTails() {
+	public Set<AircraftInfo> getTails() {
 		if (tails == null) {
-			tails = new HashSet<AirlineTail>();
+			tails = new HashSet<AircraftInfo>();
 		}
 		return tails;
 	}
 
-	public void setTails(Set<AirlineTail> tails) {
+	public void setTails(Set<AircraftInfo> tails) {
 		this.tails = tails;
 	}
 }
