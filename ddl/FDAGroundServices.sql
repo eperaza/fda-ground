@@ -510,13 +510,13 @@ GO
 CREATE TABLE [dbo].[user_account_codes](
 	[id] [int] NOT NULL IDENTITY(1,1),
 	[uuid] [nvarchar](6) NOT NULL,
-	[registration_token] [nvarchar](850) NOT NULL,
+	[registration_token] [text] NOT NULL,
 	[airline] [nvarchar](50) NULL,
 	[create_ts] [datetime] NOT NULL,
 PRIMARY KEY  
 (
 	[id] ASC
-)) ON [PRIMARY]
+)) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
 
 ALTER TABLE [dbo].[user_account_codes] ADD CONSTRAINT [DF_user_account_codes_create_ts]  DEFAULT (getdate()) FOR [create_ts]
@@ -524,4 +524,5 @@ GO
 
 CREATE INDEX uuid1 ON user_account_codes (uuid);
 GO
+
 
