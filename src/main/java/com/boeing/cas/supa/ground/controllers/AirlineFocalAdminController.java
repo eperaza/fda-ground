@@ -64,7 +64,7 @@ public class AirlineFocalAdminController {
 				newUserPayload,
 				accessTokenInRequest,
 				airlineGroups.get(0),
-				newUserPayload.getRoleGroupName());
+				newUserPayload.getRoleGroupName(), false);
 		if (result instanceof ApiError) {
 			return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
 		}

@@ -23,4 +23,12 @@ public interface UserAccountRegistrationDao {
 			String accountStateTo) throws UserAccountRegistrationException;
 	
 	public void removeUserAccountRegistrationData(String userPrincipalName) throws UserAccountRegistrationException;
+
+
+	public void insertRegistrationCode(String uuid, String registration_token, String airline) throws UserAccountRegistrationException;
+
+	public String getRegistrationCode(String uuid) throws UserAccountRegistrationException;
+
+	public void removeRegistrationCode(String uuid) throws UserAccountRegistrationException;
+
 }

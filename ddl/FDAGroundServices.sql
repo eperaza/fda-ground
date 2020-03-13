@@ -486,3 +486,42 @@ GO
 CREATE UNIQUE INDEX supakey1 ON current_supa_releases (airline, release);
 GO
 
+
+USE [FDAGroundServices]
+GO
+
+ALTER TABLE [dbo].[user_account_codes] DROP CONSTRAINT [DF_user_account_codes_create_ts]
+GO
+
+DROP INDEX uuid1 ON user_account_codes
+GO
+
+/****** Object:  Table [dbo].[user_account_codes]    Script Date: 12/6/2017 1:18:20 PM ******/
+DROP TABLE [dbo].[user_account_codes]
+GO
+
+/****** Object:  Table [dbo].[user_account_codes]    Script Date: 12/6/2017 1:18:20 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[user_account_codes](
+	[id] [int] NOT NULL IDENTITY(1,1),
+	[uuid] [nvarchar](6) NOT NULL,
+	[registration_token] [nvarchar](850) NOT NULL,
+	[airline] [nvarchar](50) NULL,
+	[create_ts] [datetime] NOT NULL,
+PRIMARY KEY  
+(
+	[id] ASC
+)) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[user_account_codes] ADD CONSTRAINT [DF_user_account_codes_create_ts]  DEFAULT (getdate()) FOR [create_ts]
+GO
+
+CREATE INDEX uuid1 ON user_account_codes (uuid);
+GO
+
