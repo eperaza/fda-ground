@@ -1808,7 +1808,7 @@ public class AzureADClientService {
 				new StringBuilder(newlyCreatedUser.getUserPrincipalName()).append(' ').append(registrationToken)
 						.append(' ').append(this.appProps.get(fdadvisorClientCertBase64)).toString().getBytes());
 
-		String userCode = registrationToken.replaceAll("-","");
+		String userCode = registrationToken.replaceAll("-","").toUpperCase();
 		if (userCode.length() > 6) {
 			userCode = userCode.substring(userCode.length() - 6);
 		}
@@ -1857,6 +1857,9 @@ public class AzureADClientService {
 		BufferedWriter writer = null;
 		try {
 			if (newRegistrationProcess) {
+				logger.debug("NewRegistrationProcess: userCode [{}]", userCode);
+				logger.debug("NewRegistrationProcess: token length [{}]", base64EncodedPayload.length());
+				logger.debug("NewRegistrationProcess: airline [{}]", airline);
 				userAccountRegister.insertRegistrationCode(userCode, base64EncodedPayload, airline);
 			}
 			else {
