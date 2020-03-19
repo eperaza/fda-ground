@@ -34,9 +34,9 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 		+ " email_address = :email_address, user_role = :user_role, registration_date = :registration_date "
 		+ " WHERE user_object_id = :user_object_id AND airline = :airline";
 
-	private static final String USER_ACCOUNT_CODE_SQL_INSERT = "INSERT INTO user_account_codes (uuid, registration_token, airline) VALUES (:uuid, :registration_token, :airline)";
-	private static final String USER_ACCOUNT_CODE_SQL_SELECT = "SELECT * FROM user_account_codes WHERE uuid = :uuid"; //AND airline = :airline";
-	private static final String USER_ACCOUNT_CODE_SQL_DELETE = "DELETE FROM user_account_codes WHERE uuid = :uuid";
+	private static final String USER_ACTIVATION_CODE_SQL_INSERT = "INSERT INTO user_activation_codes (activation_code, registration_cert, airline) VALUES (:activation_code, :registration_cert, :airline)";
+	private static final String USER_ACTIVATION_CODE_SQL_SELECT = "SELECT * FROM user_activation_codes WHERE activation_code = :activation_code"; //AND airline = :airline";
+	private static final String USER_ACTIVATION_CODE_SQL_DELETE = "DELETE FROM user_activation_codes WHERE activation_code = :activation_code";
 
 	@Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;
@@ -197,62 +197,77 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 
 
 	@Override
-	public void insertRegistrationCode(String uuid, String registration_token, String airline)
+	public void insertActivationCode(String activation_code, String registration_cert, String airline)
 			throws UserAccountRegistrationException
 	{
 
 		Map<String,Object> namedParameters = new HashMap<>();
-		namedParameters.put("uuid", uuid);
-		namedParameters.put("registration_token", registration_token);
+		namedParameters.put("activation_code", activation_code);
+		namedParameters.put("registration_cert", registration_cert);
 		namedParameters.put("airline", airline);
 		try {
 
-			int returnVal = jdbcTemplate.update(USER_ACCOUNT_CODE_SQL_INSERT, namedParameters);
+			int returnVal = jdbcTemplate.update(USER_ACTIVATION_CODE_SQL_INSERT, namedParameters);
 			if (returnVal != 1) {
-				logger.warn("Could not record user account code in database: {} record(s) updated", returnVal);
+				logger.warn("Could not insert activation code into database: {} record(s) updated", returnVal);
 				throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", String.format("%d record(s) updated", returnVal), RequestFailureReason.INTERNAL_SERVER_ERROR));
 			}
 		}
 		catch (DataAccessException dae) {
 
-			logger.warn("Failed to insert user account code record in database: {}", dae.getMessage(), dae);
+			logger.warn("Failed to insert activation code into database: {}", dae.getMessage(), dae);
 			throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 	}
 
 	@Override
-	public String getRegistrationCode(String uuid) throws UserAccountRegistrationException {
+	public List<ActivationCode> getActivationCode(String activation_code) throws UserAccountRegistrationException {
+
+		List<ActivationCode> codes = new ArrayList<>();
 
 		Map<String,Object> namedParameters = new HashMap<>();
-		namedParameters.put("uuid", uuid);
+		namedParameters.put("activation_code", activation_code);
 
 		try {
-			String code = jdbcTemplate.queryForObject(USER_ACCOUNT_CODE_SQL_SELECT, namedParameters, String.class);
-			return code;
+			codes = jdbcTemplate.query(USER_ACTIVATION_CODE_SQL_SELECT, namedParameters, new ActivationCodeMapper());
+			return codes;
 		}
 		catch (DataAccessException dae) {
 
-			logger.warn("Failed to obtain user code: {}", dae.getMessage(), dae);
-			throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
+			logger.warn("Failed to obtain activation code: {}", dae.getMessage(), dae);
+			throw new UserAccountRegistrationException(new ApiError("REGISTER_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 	}
 
 	@Override
-	public void removeRegistrationCode(String uuid) throws UserAccountRegistrationException {
+	public void removeActivationCode(String activation_code) throws UserAccountRegistrationException {
 
 		Map<String,Object> namedParameters = new HashMap<>();
-		namedParameters.put("uuid", uuid);
+		namedParameters.put("activation_code", activation_code);
 		try {
-			jdbcTemplate.update(USER_ACCOUNT_CODE_SQL_DELETE, namedParameters);
+			jdbcTemplate.update(USER_ACTIVATION_CODE_SQL_DELETE, namedParameters);
 		}
 		catch (DataAccessException dae) {
 
-			logger.warn("Failed to remove user account code in database: {}", dae.getMessage(), dae);
-			throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
+			logger.warn("Failed to remove activation code in database: {}", dae.getMessage(), dae);
+			throw new UserAccountRegistrationException(new ApiError("REGISTER_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 	}
 
 
+	private static final class ActivationCodeMapper implements RowMapper<ActivationCode> {
+
+		@Override
+		public ActivationCode mapRow(ResultSet resultSet, int rowNum) throws SQLException {
+
+			ActivationCode activationCode = new ActivationCode();
+				activationCode.setActivationCode(resultSet.getString("ACTIVATION_CODE"));
+				activationCode.setRegistrationCert(resultSet.getString("REGISTRATION_CERT"));
+				activationCode.setAirline(resultSet.getString("AIRLINE"));
+
+			return activationCode;
+		}
+	}
 
 	private static final class UserRowMapper implements RowMapper<UserAccount> {
 

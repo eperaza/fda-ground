@@ -1,6 +1,7 @@
 package com.boeing.cas.supa.ground.dao;
 
 import com.boeing.cas.supa.ground.exceptions.UserAccountRegistrationException;
+import com.boeing.cas.supa.ground.pojos.ActivationCode;
 import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.pojos.UserAccount;
 import com.boeing.cas.supa.ground.pojos.UserAccountRegistration;
@@ -25,10 +26,10 @@ public interface UserAccountRegistrationDao {
 	public void removeUserAccountRegistrationData(String userPrincipalName) throws UserAccountRegistrationException;
 
 
-	public void insertRegistrationCode(String uuid, String registration_token, String airline) throws UserAccountRegistrationException;
+	public void insertActivationCode(String activation_code, String registration_cert, String airline) throws UserAccountRegistrationException;
 
-	public String getRegistrationCode(String uuid) throws UserAccountRegistrationException;
+	public List<ActivationCode> getActivationCode(String activation_code) throws UserAccountRegistrationException;
 
-	public void removeRegistrationCode(String uuid) throws UserAccountRegistrationException;
+	public void removeActivationCode(String activation_code) throws UserAccountRegistrationException;
 
 }

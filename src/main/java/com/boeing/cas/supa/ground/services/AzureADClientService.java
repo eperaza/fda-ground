@@ -17,6 +17,7 @@ import com.boeing.cas.supa.ground.dao.FeatureManagementDao;
 import com.boeing.cas.supa.ground.dao.PowerBiInformationDao;
 import com.boeing.cas.supa.ground.exceptions.*;
 import com.boeing.cas.supa.ground.pojos.*;
+import com.boeing.cas.supa.ground.utils.*;
 import com.microsoft.azure.storage.StorageException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -36,13 +37,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.boeing.cas.supa.ground.dao.UserAccountRegistrationDao;
 import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
 import com.boeing.cas.supa.ground.helpers.HttpClientHelper;
-import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
-import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.Constants.PermissionType;
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
-import com.boeing.cas.supa.ground.utils.ControllerUtils;
-import com.boeing.cas.supa.ground.utils.PasswordPolicyEnforcer;
-import com.boeing.cas.supa.ground.utils.UsernamePolicyEnforcer;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -499,14 +495,14 @@ public class AzureADClientService {
 
 				helper.setText(composeNewUserAccountActivationEmail(newlyCreatedUser, registrationToken, newRegistrationProcess), true);
 
-				String mpFileName = newlyCreatedUser.getDisplayName().replaceAll("\\s+", "_").toLowerCase() + ".mp";
-
 				File emailPdfAttachment = getFileFromBlob("email-instructions",
 					"FDA_registration_instructions.pdf", airlineGroup.getDisplayName().substring(new String("airline-").length()));
-				File emailMpAttachment = getFileFromBlob("tmp", mpFileName, null);
 				if (newRegistrationProcess) {
 					logger.debug("Using new Process, do NOT attach mp");
 				} else {
+					String mpFileName = newlyCreatedUser.getDisplayName().replaceAll("\\s+", "_").toLowerCase() + ".mp";
+					File emailMpAttachment = getFileFromBlob("tmp", mpFileName, null);
+
 					logger.debug("Using old Process, attach mp email [{}]", emailMpAttachment.getAbsolutePath());
 					helper.addAttachment(emailMpAttachment.getName(), emailMpAttachment);
 				}
@@ -1059,11 +1055,10 @@ public class AzureADClientService {
 	}
 
 
-
 	public Object enableRepeatableUserRegistration(UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {
 
 		logger.debug("Invoking user registration (possibly repeated user registration)");
-		
+
 		// Validate the password provided by the admin; if invalid, return appropriate error key/description
 		if (!PasswordPolicyEnforcer.validate(userAccountActivation.getPassword())) {
 			return new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", PasswordPolicyEnforcer.ERROR_PSWD_FAILED_DESCRIPTION, RequestFailureReason.BAD_REQUEST);
@@ -1071,7 +1066,7 @@ public class AzureADClientService {
 
 		Object resultObj = null;
 		StringBuilder progressLog = new StringBuilder("Activate user -");
-		
+
 		HttpsURLConnection connGetUser = null, connEnableUser = null;
 		try {
 
@@ -1159,9 +1154,9 @@ public class AzureADClientService {
 							throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Invalid username or password", RequestFailureReason.UNAUTHORIZED));
 						} else {
 							throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Invalid or expired user registration token", RequestFailureReason.UNAUTHORIZED));
-						} 
+						}
 					} else if (responseCode == 404) {
-						
+
 						JsonNode errorNode = new ObjectMapper()
 								.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 								.setSerializationInclusion(Include.NON_NULL).readTree(responseStr).path("odata.error");
@@ -1206,7 +1201,7 @@ public class AzureADClientService {
 							.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 							.setSerializationInclusion(Include.NON_NULL);
 					userObj = mapper.readValue(responseStr, User.class);
-					
+
 					if (Boolean.parseBoolean(userObj.getAccountEnabled())) {
 						throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "User account is already activated", RequestFailureReason.CONFLICT));
 					}
@@ -1240,9 +1235,9 @@ public class AzureADClientService {
 				connEnableUser.setDoOutput(true);
 				try (DataOutputStream dos = new DataOutputStream(connEnableUser.getOutputStream())) {
 					dos.writeBytes(mapper.writeValueAsString(rootNode));
-					dos.flush();
+ 					dos.flush();
 				}
-				
+
 				responseStr = HttpClientHelper.getResponseStringFromConn(connEnableUser, connEnableUser.getResponseCode() == HttpStatus.NO_CONTENT.value());
 				JsonNode errorNode = StringUtils.isBlank(responseStr) ? null : mapper.readTree(responseStr).path("odata.error");
 				if (connEnableUser.getResponseCode() == HttpStatus.NO_CONTENT.value() && errorNode == null) {
@@ -1265,7 +1260,7 @@ public class AzureADClientService {
 				if (ar == null) {
 					throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Failed to obtain auth token for user credentials", RequestFailureReason.UNAUTHORIZED));
 				}
-				
+
 				if (ar instanceof AuthenticationResult) {
 
 					AuthenticationResult authResult = (AuthenticationResult) ar;
@@ -1317,7 +1312,7 @@ public class AzureADClientService {
 			logger.error("IOException: {}", ioe.getMessage(), ioe);
 			resultObj = new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0032");
 		} finally {
-			
+
 			if (resultObj instanceof ApiError) {
 				logger.error("FDAGndSvcLog> {}", ControllerUtils.sanitizeString(progressLog.toString()));
 			}
@@ -1325,7 +1320,27 @@ public class AzureADClientService {
 
 		return resultObj;
 	}
-	
+
+
+	public Object getClientCertFromActivationCode(String code) throws UserAccountRegistrationException {
+		logger.debug("Validate one-time activation code [{}]", code);
+		// First validate activation code
+		List<ActivationCode> codes = userAccountRegister.getActivationCode(code);
+		if (codes.isEmpty() || codes.size() > 1) {
+			return new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Missing or Invalid Activation Code", RequestFailureReason.BAD_REQUEST);
+		}
+
+		// Valid code, get activation information
+		ActivationCode activationCode = codes.get(0);
+		logger.debug("[{}] is a Valid code for [{}]", activationCode.getActivationCode(), activationCode.getAirline());
+		logger.debug("Remove activation code [{}]", activationCode.getActivationCode());
+		// Remove code
+		userAccountRegister.removeActivationCode(activationCode.getActivationCode());
+		Object resultObj = activationCode;
+		return resultObj;
+	}
+
+
 	public Object enableUserAndSetPassword(UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {
 
 		Object resultObj = null;
@@ -1808,10 +1823,7 @@ public class AzureADClientService {
 				new StringBuilder(newlyCreatedUser.getUserPrincipalName()).append(' ').append(registrationToken)
 						.append(' ').append(this.appProps.get(fdadvisorClientCertBase64)).toString().getBytes());
 
-		String userCode = registrationToken.replaceAll("-","").toUpperCase();
-		if (userCode.length() > 6) {
-			userCode = userCode.substring(userCode.length() - 6);
-		}
+		String activationCode = ActivationCodeGenerator.randomString(6);
 
 		StringBuilder emailMessageBody = new StringBuilder();
 		String airline = newlyCreatedUser.getGroups().stream()
@@ -1838,7 +1850,7 @@ public class AzureADClientService {
 		emailMessageBody.append("   1. Go to the <a href=\"https://itunes.apple.com/us/app/flitedeck-advisor/id1058617698\">App Store</a>")
 			.append(" to install FliteDeck Advisor on your iPad. Open the installed application.").append(Constants.HTML_LINE_BREAK);
 		if (newRegistrationProcess) {
-			emailMessageBody.append("   2. Come back to this email and enter this code: \"" + userCode + "\" into the FliteDeck Registration. ")
+			emailMessageBody.append("   2. Come back to this email and enter this code: \"" + activationCode + "\" into the FliteDeck Registration. ")
 				.append(Constants.HTML_LINE_BREAK);
 		} else {
 			emailMessageBody.append("   2. Come back to this email and tap on the MP attachment to open it. Tap on the icon at the top-right corner")
@@ -1857,10 +1869,10 @@ public class AzureADClientService {
 		BufferedWriter writer = null;
 		try {
 			if (newRegistrationProcess) {
-				logger.debug("NewRegistrationProcess: userCode [{}]", userCode);
+				logger.debug("NewRegistrationProcess: activationCode [{}]", activationCode);
 				logger.debug("NewRegistrationProcess: token length [{}]", base64EncodedPayload.length());
 				logger.debug("NewRegistrationProcess: airline [{}]", airline);
-				userAccountRegister.insertRegistrationCode(userCode, base64EncodedPayload, airline);
+				userAccountRegister.insertActivationCode(activationCode, base64EncodedPayload, airline);
 			}
 			else {
 				File emailMpAttachment = new ClassPathResource(appProps.get("EmailMpAttachmentLocation")).getFile();
