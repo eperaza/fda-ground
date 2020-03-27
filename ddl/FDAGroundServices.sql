@@ -509,6 +509,7 @@ GO
 
 CREATE TABLE [dbo].[user_activation_codes](
 	[id] [int] NOT NULL IDENTITY(1,1),
+	[email_address] [nvarchar] (280) NOT NULL,
 	[activation_code] [nvarchar](6) NOT NULL,
 	[registration_cert] [text] NOT NULL,
 	[airline] [nvarchar](50) NULL,

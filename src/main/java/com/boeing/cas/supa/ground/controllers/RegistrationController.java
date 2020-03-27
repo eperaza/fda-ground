@@ -110,10 +110,13 @@ public class RegistrationController {
 	}
 
 	@RequestMapping(path="/getclientcert", method = { RequestMethod.GET })
-	public ResponseEntity<Object> getClientCert(@RequestParam("activationcode") String activationCode) throws UserAccountRegistrationException {
+	public ResponseEntity<Object> getClientCert(@RequestParam("activationCode") String activationCode,
+												@RequestParam("emailAddress") String emailAddress) throws UserAccountRegistrationException {
 
-		logger.debug("Get Client cert using activation code [{}]", ControllerUtils.sanitizeString(activationCode));
-		Object result = aadClient.getClientCertFromActivationCode(activationCode);
+		logger.debug("Get Client cert using activation code [{}] for [{}]",
+				ControllerUtils.sanitizeString(activationCode),
+				ControllerUtils.sanitizeString(emailAddress));
+		Object result = aadClient.getClientCertFromActivationCode(emailAddress, activationCode);
 
 		if (result instanceof ApiError) {
 

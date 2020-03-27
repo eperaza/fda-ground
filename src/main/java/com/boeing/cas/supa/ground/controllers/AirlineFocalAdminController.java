@@ -72,6 +72,24 @@ public class AirlineFocalAdminController {
 		return new ResponseEntity<>(result, HttpStatus.CREATED);
 	}
 
+	@RequestMapping(path="/airlinefocaladmin/createnewusers", method = { RequestMethod.POST })
+	public ResponseEntity<Object> createNewUser(@RequestBody NewUser newUserPayload, @RequestHeader("Authorization") String authToken) {
+
+		// Extract the access token from the authorization request header
+		String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
+
+		Object result = aadClient.createUser(newUserPayload, accessTokenInRequest, null, newUserPayload.getRoleGroupName(), true);
+
+		if (result instanceof ApiError) {
+
+			ApiError error = (ApiError) result;
+			logger.error(error.getErrorLabel(), error.getErrorDescription());
+			return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(error.getFailureReason()));
+		}
+
+		return new ResponseEntity<>(result, HttpStatus.CREATED);
+	}
+
 	@RequestMapping(path="/airlinefocaladmin/users/{userId}", method = { RequestMethod.DELETE })
 	public ResponseEntity<Object> deleteUser(@PathVariable("userId") String userId, @RequestHeader("Authorization") String authToken) {
 

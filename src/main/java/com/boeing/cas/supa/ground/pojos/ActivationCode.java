@@ -3,10 +3,18 @@ package com.boeing.cas.supa.ground.pojos;
 
 public class ActivationCode {
 
+	private String emailAddress;
 	private String activationCode;
 	private String registrationCert;
 	private String airline;
 
+	public String getEmailAddress() {
+		return emailAddress;
+	}
+
+	public void setEmailAddress(String emailAddress) {
+		this.emailAddress = emailAddress;
+	}
 
 	public String getActivationCode() {
 		return activationCode;
@@ -35,6 +43,7 @@ public class ActivationCode {
 	@Override
 	public String toString() {
 		return "ActivationCode{" +
+				"emailAddress='" + emailAddress + '\'' +
 				"activationCode='" + activationCode + '\'' +
 				", registrationCert='" + registrationCert + '\'' +
 				", airline='" + airline + '\'' +

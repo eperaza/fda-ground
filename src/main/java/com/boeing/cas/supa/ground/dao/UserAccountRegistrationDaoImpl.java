@@ -34,9 +34,9 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 		+ " email_address = :email_address, user_role = :user_role, registration_date = :registration_date "
 		+ " WHERE user_object_id = :user_object_id AND airline = :airline";
 
-	private static final String USER_ACTIVATION_CODE_SQL_INSERT = "INSERT INTO user_activation_codes (activation_code, registration_cert, airline) VALUES (:activation_code, :registration_cert, :airline)";
-	private static final String USER_ACTIVATION_CODE_SQL_SELECT = "SELECT * FROM user_activation_codes WHERE activation_code = :activation_code"; //AND airline = :airline";
-	private static final String USER_ACTIVATION_CODE_SQL_DELETE = "DELETE FROM user_activation_codes WHERE activation_code = :activation_code";
+	private static final String USER_ACTIVATION_CODE_SQL_INSERT = "INSERT INTO user_activation_codes (email_address, activation_code, registration_cert, airline) VALUES (:email_address, :activation_code, :registration_cert, :airline)";
+	private static final String USER_ACTIVATION_CODE_SQL_SELECT = "SELECT * FROM user_activation_codes WHERE activation_code = :activation_code AND email_address = :email_address";
+	private static final String USER_ACTIVATION_CODE_SQL_DELETE = "DELETE FROM user_activation_codes WHERE activation_code = :activation_code AND email_address = :email_address";
 
 	@Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;
@@ -197,11 +197,12 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 
 
 	@Override
-	public void insertActivationCode(String activation_code, String registration_cert, String airline)
+	public void insertActivationCode(String email_address, String activation_code, String registration_cert, String airline)
 			throws UserAccountRegistrationException
 	{
 
 		Map<String,Object> namedParameters = new HashMap<>();
+		namedParameters.put("email_address", email_address);
 		namedParameters.put("activation_code", activation_code);
 		namedParameters.put("registration_cert", registration_cert);
 		namedParameters.put("airline", airline);
@@ -221,11 +222,12 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 	}
 
 	@Override
-	public List<ActivationCode> getActivationCode(String activation_code) throws UserAccountRegistrationException {
+	public List<ActivationCode> getActivationCode(String email_address, String activation_code) throws UserAccountRegistrationException {
 
 		List<ActivationCode> codes = new ArrayList<>();
 
 		Map<String,Object> namedParameters = new HashMap<>();
+		namedParameters.put("email_address", email_address);
 		namedParameters.put("activation_code", activation_code);
 
 		try {
@@ -240,9 +242,10 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 	}
 
 	@Override
-	public void removeActivationCode(String activation_code) throws UserAccountRegistrationException {
+	public void removeActivationCode(String email_address, String activation_code) throws UserAccountRegistrationException {
 
 		Map<String,Object> namedParameters = new HashMap<>();
+		namedParameters.put("email_address", email_address);
 		namedParameters.put("activation_code", activation_code);
 		try {
 			jdbcTemplate.update(USER_ACTIVATION_CODE_SQL_DELETE, namedParameters);
@@ -261,6 +264,7 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 		public ActivationCode mapRow(ResultSet resultSet, int rowNum) throws SQLException {
 
 			ActivationCode activationCode = new ActivationCode();
+				activationCode.setEmailAddress(resultSet.getString("EMAIL_ADDRESS"));
 				activationCode.setActivationCode(resultSet.getString("ACTIVATION_CODE"));
 				activationCode.setRegistrationCert(resultSet.getString("REGISTRATION_CERT"));
 				activationCode.setAirline(resultSet.getString("AIRLINE"));

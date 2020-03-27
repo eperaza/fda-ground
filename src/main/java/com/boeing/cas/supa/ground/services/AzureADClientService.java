@@ -1322,20 +1322,21 @@ public class AzureADClientService {
 	}
 
 
-	public Object getClientCertFromActivationCode(String code) throws UserAccountRegistrationException {
-		logger.debug("Validate one-time activation code [{}]", code);
+	public Object getClientCertFromActivationCode(String email, String code) throws UserAccountRegistrationException {
+		logger.debug("Validate one-time activation code [{}] for [{}]", code, email);
 		// First validate activation code
-		List<ActivationCode> codes = userAccountRegister.getActivationCode(code);
+		List<ActivationCode> codes = userAccountRegister.getActivationCode(email, code);
 		if (codes.isEmpty() || codes.size() > 1) {
-			return new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Missing or Invalid Activation Code", RequestFailureReason.BAD_REQUEST);
+			return new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE",
+			"Missing or Invalid Activation Code, Missing or Invalid Email Address", RequestFailureReason.BAD_REQUEST);
 		}
 
 		// Valid code, get activation information
 		ActivationCode activationCode = codes.get(0);
-		logger.debug("[{}] is a Valid code for [{}]", activationCode.getActivationCode(), activationCode.getAirline());
-		logger.debug("Remove activation code [{}]", activationCode.getActivationCode());
+		logger.debug("[{}] is a Valid code for [{}]", activationCode.getActivationCode(), activationCode.getEmailAddress());
+		logger.debug("Remove activation code [{}] for [{}]", activationCode.getActivationCode(), activationCode.getEmailAddress());
 		// Remove code
-		userAccountRegister.removeActivationCode(activationCode.getActivationCode());
+		userAccountRegister.removeActivationCode(activationCode.getEmailAddress(), activationCode.getActivationCode());
 		Object resultObj = activationCode;
 		return resultObj;
 	}
@@ -1823,6 +1824,7 @@ public class AzureADClientService {
 				new StringBuilder(newlyCreatedUser.getUserPrincipalName()).append(' ').append(registrationToken)
 						.append(' ').append(this.appProps.get(fdadvisorClientCertBase64)).toString().getBytes());
 
+		String emailAddress = newlyCreatedUser.getOtherMails().get(0);
 		String activationCode = ActivationCodeGenerator.randomString(6);
 
 		StringBuilder emailMessageBody = new StringBuilder();
@@ -1869,10 +1871,11 @@ public class AzureADClientService {
 		BufferedWriter writer = null;
 		try {
 			if (newRegistrationProcess) {
+				logger.debug("NewRegistrationProcess: emailAddress [{}]", emailAddress);
 				logger.debug("NewRegistrationProcess: activationCode [{}]", activationCode);
 				logger.debug("NewRegistrationProcess: token length [{}]", base64EncodedPayload.length());
 				logger.debug("NewRegistrationProcess: airline [{}]", airline);
-				userAccountRegister.insertActivationCode(activationCode, base64EncodedPayload, airline);
+				userAccountRegister.insertActivationCode(emailAddress, activationCode, base64EncodedPayload, airline);
 			}
 			else {
 				File emailMpAttachment = new ClassPathResource(appProps.get("EmailMpAttachmentLocation")).getFile();

@@ -26,10 +26,10 @@ public interface UserAccountRegistrationDao {
 	public void removeUserAccountRegistrationData(String userPrincipalName) throws UserAccountRegistrationException;
 
 
-	public void insertActivationCode(String activation_code, String registration_cert, String airline) throws UserAccountRegistrationException;
+	public void insertActivationCode(String email_address, String activation_code, String registration_cert, String airline) throws UserAccountRegistrationException;
 
-	public List<ActivationCode> getActivationCode(String activation_code) throws UserAccountRegistrationException;
+	public List<ActivationCode> getActivationCode(String email_address, String activation_code) throws UserAccountRegistrationException;
 
-	public void removeActivationCode(String activation_code) throws UserAccountRegistrationException;
+	public void removeActivationCode(String email_address, String activation_code) throws UserAccountRegistrationException;
 
 }
