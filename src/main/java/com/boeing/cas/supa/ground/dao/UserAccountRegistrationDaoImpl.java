@@ -264,11 +264,8 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 		public ActivationCode mapRow(ResultSet resultSet, int rowNum) throws SQLException {
 
 			ActivationCode activationCode = new ActivationCode();
-				activationCode.setEmailAddress(resultSet.getString("EMAIL_ADDRESS"));
-				activationCode.setActivationCode(resultSet.getString("ACTIVATION_CODE"));
-				activationCode.setRegistrationCert(resultSet.getString("REGISTRATION_CERT"));
-				activationCode.setAirline(resultSet.getString("AIRLINE"));
-
+				activationCode.setAppIDName("com.boeing.cas.fuel-advisor");
+				activationCode.setCertificate(resultSet.getString("REGISTRATION_CERT"));
 			return activationCode;
 		}
 	}

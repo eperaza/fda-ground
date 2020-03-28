@@ -3,50 +3,30 @@ package com.boeing.cas.supa.ground.pojos;
 
 public class ActivationCode {
 
-	private String emailAddress;
-	private String activationCode;
-	private String registrationCert;
-	private String airline;
+	private String appIDName;
+	private String certificate;
 
-	public String getEmailAddress() {
-		return emailAddress;
+	public String getAppIDName() {
+		return appIDName;
 	}
 
-	public void setEmailAddress(String emailAddress) {
-		this.emailAddress = emailAddress;
+	public void setAppIDName(String appIDName) {
+		this.appIDName = appIDName;
 	}
 
-	public String getActivationCode() {
-		return activationCode;
+	public String getCertificate() {
+		return certificate;
 	}
 
-	public void setActivationCode(String activationCode) {
-		this.activationCode = activationCode;
-	}
-
-	public String getRegistrationCert() {
-		return registrationCert;
-	}
-
-	public void setRegistrationCert(String registrationCert) {
-		this.registrationCert = registrationCert;
-	}
-
-	public String getAirline() {
-		return airline;
-	}
-
-	public void setAirline(String airline) {
-		this.airline = airline;
+	public void setCertificate(String certificate) {
+		this.certificate = certificate;
 	}
 
 	@Override
 	public String toString() {
 		return "ActivationCode{" +
-				"emailAddress='" + emailAddress + '\'' +
-				"activationCode='" + activationCode + '\'' +
-				", registrationCert='" + registrationCert + '\'' +
-				", airline='" + airline + '\'' +
+				"appIDName='" + appIDName + '\'' +
+				", certificate='" + certificate + '\'' +
 				'}';
 	}
 }

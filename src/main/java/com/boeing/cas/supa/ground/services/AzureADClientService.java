@@ -1333,10 +1333,10 @@ public class AzureADClientService {
 
 		// Valid code, get activation information
 		ActivationCode activationCode = codes.get(0);
-		logger.debug("[{}] is a Valid code for [{}]", activationCode.getActivationCode(), activationCode.getEmailAddress());
-		logger.debug("Remove activation code [{}] for [{}]", activationCode.getActivationCode(), activationCode.getEmailAddress());
+		logger.debug("[{}] is a Valid code for [{}]", code, email);
+		logger.debug("Remove activation code [{}] for [{}]", code, email);
 		// Remove code
-		userAccountRegister.removeActivationCode(activationCode.getEmailAddress(), activationCode.getActivationCode());
+		userAccountRegister.removeActivationCode(email, code);
 		Object resultObj = activationCode;
 		return resultObj;
 	}
