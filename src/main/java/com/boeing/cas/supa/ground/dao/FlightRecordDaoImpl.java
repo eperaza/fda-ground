@@ -37,17 +37,17 @@ public class FlightRecordDaoImpl implements FlightRecordDao {
 	private static final String INSERT_FLIGHT_RECORD = "INSERT INTO flight_records (flight_record_name, storage_path, file_size_kb, flight_datetime, aid_id, airline, user_id, upload_to_adw) VALUES (:flight_record_name, :storage_path, :file_size_kb, :flight_datetime, :aid_id, :airline, :user_id, :upload_to_adw)";
 	private static final String UPDATE_FLIGHT_RECORD_DELETED_ON_AID = "UPDATE flight_records SET deleted_on_aid = 1 WHERE flight_record_name = :flight_record_name AND deleted_on_aid = 0";
 
-	// used to obtain flight/analytic counts and current supa version for each tail.
-	// first obtain tail from storage_path: AMX/eidra/201810 or AMX/UNRESOLVED using: substring(left (storage_path, CHARINDEX('/', storage_path, 7)), 5, 25)
+	// used to obtain flight/analytic counts and current supa version for each valid tail (UNRESOLVED taill will be filtered out)
+	// first obtain tail from storage_path: AMX/eidra/201810 or AMX using: substring(left (storage_path, CHARINDEX('/', storage_path, 7)), 5, 25)
 	// then resolve counts using COUNT and SUM
 	// finally obtain the supa version, using the aid_id associated with the most recent (MAX) flight_datetime
-	private static final String GET_FLIGHT_COUNTS = "SELECT (CASE WHEN tail = '' THEN 'UNRESOLVED' ELSE tail END) AS tailNumber,"
+	private static final String GET_FLIGHT_COUNTS = "SELECT tail AS tailNumber,"
 		+ " COUNT(airline) AS uploaded_by_fda, SUM(analytics) AS processed_by_analytics,"
 		+ " SUBSTRING(MAX(supa),36,50) AS supa_version FROM"
 		+ " (SELECT airline, CONCAT(flight_datetime,'~',aid_id) AS supa,"
 		+ " SUBSTRING(LEFT (storage_path, CHARINDEX('/', storage_path, 7)), 5, 20) AS tail,"
 		+ " (CASE WHEN processed_by_analytics=1 THEN 1 ELSE 0 END) AS analytics"
-		+ " FROM flight_records WHERE airline = :airline) info GROUP BY tail ORDER BY tailNumber";
+		+ " FROM flight_records WHERE airline = :airline) info WHERE tail != '' GROUP BY tail ORDER BY tailNumber";
 
 	private static final String GET_LATEST_EXISTING_SUPA_VERSION = "SELECT SUBSTRING(MAX(supa),36,50) AS supa_version"
 		+ " FROM (SELECT CONCAT(flight_datetime,'~',aid_id) AS supa,"
