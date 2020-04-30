@@ -4,7 +4,7 @@ import java.security.SecureRandom;
 
 public class ActivationCodeGenerator {
 
-	static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	static final String AB = "34679ACDEFGHJKMNPQRTUVWXY";
 	static SecureRandom rnd = new SecureRandom();
 
 	public static String randomString( int len ){

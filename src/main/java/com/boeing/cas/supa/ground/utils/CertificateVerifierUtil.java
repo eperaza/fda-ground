@@ -73,6 +73,7 @@ public class CertificateVerifierUtil {
 			}
 			X509Certificate x509ServerCert = null;
 			if (registrationProcess) {
+			    //one time cert
                 x509ServerCert = this.appRegistrationCertificates.get(certHolder);
             } else {
                 x509ServerCert = this.appCertificates.get(certHolder);
