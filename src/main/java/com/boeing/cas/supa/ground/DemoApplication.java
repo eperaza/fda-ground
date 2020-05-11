@@ -83,6 +83,7 @@ public class DemoApplication {
 		appSecrets.put("AzureADTenantName", keyVaultRetriever.getSecretByKey("AzureADTenantName"));
 		appSecrets.put("EmailMpAttachmentLocation", keyVaultRetriever.getSecretByKey("EmailMpAttachmentLocation"));
 		appSecrets.put("FDAdvisorClientCertName", keyVaultRetriever.getSecretByKey("FDAdvisorClientCertName"));
+		appSecrets.put("FDAdvisorRegistrationCertName", keyVaultRetriever.getSecretByKey("FDAdvisorRegistrationCertName"));
 		appSecrets.put("FDAdvisorClientCertBundlePassword", keyVaultRetriever.getSecretByKey("FDAdvisorClientCertBundlePassword"));
 		String fdaClientCertBase64 = new StringBuilder(appSecrets.get("FDAdvisorClientCertName")).append("base64").toString();
 		appSecrets.put(fdaClientCertBase64, keyVaultRetriever.getSecretByKey(fdaClientCertBase64));
