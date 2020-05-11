@@ -21,7 +21,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
 public class TspManagementController {
-
+	private static final String DefaultAircraftType = "B737-800";
+	
 	@Autowired
 	private Map<String, String> appProps;
 	
@@ -53,11 +54,12 @@ public class TspManagementController {
     public ResponseEntity<Object> saveTsp(@RequestBody String tspContent, 
     		@RequestHeader("Authorization") String authToken,
     		@RequestHeader(name = "airline", required = true) String airlineName,
+    		@RequestHeader(name = "aircraftType", required = false, defaultValue = DefaultAircraftType) String aircraftType,
     		@RequestHeader(name = "active", required = false, defaultValue = "false") String active) {
 
         String userId = getUserId(authToken);
 
-        boolean result = tspManagementService.saveTsp(airlineName, tspContent, userId, Boolean.TRUE.toString().equalsIgnoreCase(active));
+        boolean result = tspManagementService.saveTsp(airlineName, aircraftType, tspContent, userId, Boolean.TRUE.toString().equalsIgnoreCase(active));
 
         if (result == false) {
         	 return new ResponseEntity<>("Failed to save TSP to database", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -95,7 +97,7 @@ public class TspManagementController {
 				ByteArrayOutputStream outputStream = util.downloadFile("tsp", fileName);
 				String airlineName = fileName.substring(0, fileName.indexOf("/"));
 				String content = new String(outputStream.toByteArray());
-				tspManagementService.saveTsp(airlineName, content, userId, true);
+				tspManagementService.saveTsp(airlineName, DefaultAircraftType, content, userId, true);
 			}
         } catch (Exception ex) {
         	return new ResponseEntity<>("fail", HttpStatus.INTERNAL_SERVER_ERROR); 

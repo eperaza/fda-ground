@@ -9,6 +9,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -18,7 +19,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "AircraftInfo")
-@NamedQuery(name = "getTailByAirlineAndTailNumber", query = "SELECT al FROM AircraftInfo al WHERE al.airline.name = :name AND al.tailNumber = :tailNumber")
+@NamedQueries({
+	@NamedQuery(name = "getTailByAirlineAndTailNumber", query = "SELECT al FROM AircraftInfo al WHERE al.airline.name = :name AND al.tailNumber = :tailNumber"),
+	@NamedQuery(name = "getAircarftPropertiesByAirlineAndTailNumber", query = "SELECT new com.boeing.cas.supa.ground.pojos.AircraftConfiguration(a) "
+			+ "FROM AircraftInfo a WHERE a.airline.name = :name AND a.tailNumber = :tailNumber ")
+})
 public class AircraftInfo extends BaseEntity {
 	private String tailNumber;
 	
@@ -28,6 +33,14 @@ public class AircraftInfo extends BaseEntity {
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "AirlineId", nullable = false)
 	private Airline airline;
+	
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "AircraftTypeID", nullable = false)
+	private AircraftType aircraftType;
+	
+	@OneToMany(mappedBy = "aircraftInfo", fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
+	@JsonIgnore
+	private Set<AircraftProperty> aircraftProperties;
 	
 	@OneToMany(mappedBy = "aircraftInfo", fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
 	@JsonIgnore
@@ -77,6 +90,25 @@ public class AircraftInfo extends BaseEntity {
 	
 	public void setActiveTsp(ActiveTsp activeTsp) {
 		this.activeTsp = activeTsp;
+	}
+
+	public AircraftType getAircraftType() {
+		return aircraftType;
+	}
+
+	public void setAircraftType(AircraftType aircraftType) {
+		this.aircraftType = aircraftType;
+	}
+
+	public Set<AircraftProperty> getAircraftProperties() {
+		if (this.aircraftProperties == null) {
+			this.aircraftProperties = new HashSet<AircraftProperty>();
+		}
+		return aircraftProperties;
+	}
+
+	public void setAircraftProperties(Set<AircraftProperty> aircraftProperties) {
+		this.aircraftProperties = aircraftProperties;
 	}
 	
 	@JsonIgnore

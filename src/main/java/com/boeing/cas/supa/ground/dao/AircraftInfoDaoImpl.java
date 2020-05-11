@@ -1,5 +1,6 @@
 package com.boeing.cas.supa.ground.dao;
 
+import com.boeing.cas.supa.ground.pojos.AircraftConfiguration;
 import com.boeing.cas.supa.ground.pojos.AircraftInfo;
 
 import org.hibernate.Query;
@@ -37,5 +38,14 @@ public class AircraftInfoDaoImpl extends BaseDaoImpl implements AircraftInfoDao 
 		query.setParameter("tailNumber", tailNumber);
 		
 		return (AircraftInfo)query.uniqueResult();
+	}
+
+	@Override
+	public AircraftConfiguration getAircarftPropertiesByAirlineAndTailNumber(String airlineName, String tailNumber) {
+		Query query = getSession().getNamedQuery("getAircarftPropertiesByAirlineAndTailNumber");
+		query.setParameter("name", airlineName);
+		query.setParameter("tailNumber", tailNumber);
+		
+		return (AircraftConfiguration)query.uniqueResult();
 	}
 }

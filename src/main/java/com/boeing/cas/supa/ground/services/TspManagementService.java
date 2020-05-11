@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.boeing.cas.supa.ground.dao.ActiveTspDao;
 import com.boeing.cas.supa.ground.dao.AirlineDao;
 import com.boeing.cas.supa.ground.dao.AircraftInfoDao;
+import com.boeing.cas.supa.ground.dao.AircraftTypeDao;
 import com.boeing.cas.supa.ground.dao.TspDao;
 import com.boeing.cas.supa.ground.pojos.Airline;
 import com.boeing.cas.supa.ground.pojos.AircraftInfo;
@@ -33,8 +34,11 @@ public class TspManagementService {
 	@Autowired
 	private ActiveTspDao activeTspDao;
 	
+	@Autowired
+	private AircraftTypeDao aircraftTypeDao;
+	
 	@Transactional(value = TxType.REQUIRES_NEW)
-	public boolean saveTsp(String airlineName, String tspContent, String userId, boolean isActive) {
+	public boolean saveTsp(String airlineName, String aircraftType, String tspContent, String userId, boolean isActive) {
 		boolean success = false;
 		Gson gson = new Gson();
 		
@@ -61,6 +65,7 @@ public class TspManagementService {
 					tail.setTailNumber(tspContentObject.tail);
 					tail.setIsActive(true);
 					tail.setCreatedBy(userId);
+					tail.setAircraftType(this.aircraftTypeDao.getAircraftTypeByName(aircraftType));
 					
 					this.aircraftInfoDao.save(tail);
 				} else {

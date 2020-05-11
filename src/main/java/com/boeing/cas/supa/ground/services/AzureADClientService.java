@@ -2132,4 +2132,32 @@ public class AzureADClientService {
 		return uploadFolder;
 	}
 
+	/**
+	 * Validate user privileges by checking group membership. Must belong to group and a single Airline group.
+	 * If the user doesn't belong to any group or belongs to more than one group, return null;
+	 * otherwise, return airline name without "airline-" prefix 
+	 * @param authToken
+	 * @return
+	 */
+	public String validateAndGetAirlineName(String authToken) {
+		User currentUser = null;
+		try {
+			currentUser = this.getUserInfoFromJwtAccessToken(authToken);
+		} catch (Exception ex) {}
+		
+		if (currentUser == null) {
+			return null;
+		}
+
+		// Validate user privileges by checking group membership. Must belong to group and a single Airline group.
+		List<Group> airlineGroups = currentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+		if (airlineGroups.size() != 1) {
+			return null;
+		}
+		
+		String airline = airlineGroups.get(0).getDisplayName();
+		logger.info("Airline Group: {}", airline);
+		airline = airline.replace(Constants.AAD_GROUP_AIRLINE_PREFIX, "");
+		return airline;
+	}
 }
