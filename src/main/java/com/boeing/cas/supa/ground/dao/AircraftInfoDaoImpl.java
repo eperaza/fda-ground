@@ -8,10 +8,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import javax.transaction.Transactional;
-import javax.transaction.Transactional.TxType;
 
 @Repository
-@Transactional(value = TxType.REQUIRES_NEW)
+@Transactional
 public class AircraftInfoDaoImpl extends BaseDaoImpl implements AircraftInfoDao {
 	
 	@Override

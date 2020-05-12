@@ -7,10 +7,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import javax.transaction.Transactional;
-import javax.transaction.Transactional.TxType;
 
 @Repository
-@Transactional(value = TxType.REQUIRES_NEW)
+@Transactional
 public class TspDaoImpl extends BaseDaoImpl implements TspDao {
 
 	@Override
@@ -21,13 +20,13 @@ public class TspDaoImpl extends BaseDaoImpl implements TspDao {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<Tsp> getAllTsps() {
+	public List<Tsp> getTsps() {
 		return getSession().createQuery("from Tsp").list();
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<Tsp> getTspListByAirline(String airlineName) {
+	public List<Tsp> getTsps(String airlineName) {
 		Query query = getSession().getNamedQuery("getTspListByAirline");
 		query.setParameter("airlineName", airlineName);
 		
@@ -36,7 +35,7 @@ public class TspDaoImpl extends BaseDaoImpl implements TspDao {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<Tsp> getTspListByAirlineAndTailNumber(String airlineName, String tailNumber) {
+	public List<Tsp> getTsps(String airlineName, String tailNumber) {
 		Query query = getSession().getNamedQuery("getTspListByAirlineAndTailNumber");
 		query.setParameter("airlineName", airlineName);
 		query.setParameter("tailNumber", tailNumber);

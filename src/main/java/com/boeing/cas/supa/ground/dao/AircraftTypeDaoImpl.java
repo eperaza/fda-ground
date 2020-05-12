@@ -2,7 +2,6 @@ package com.boeing.cas.supa.ground.dao;
 
 import java.util.List;
 import javax.transaction.Transactional;
-import javax.transaction.Transactional.TxType;
 
 import org.hibernate.Query;
 import org.springframework.stereotype.Repository;
@@ -10,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import com.boeing.cas.supa.ground.pojos.AircraftType;
 
 @Repository
-@Transactional(value = TxType.REQUIRES_NEW)
+@Transactional
 public class AircraftTypeDaoImpl extends BaseDaoImpl implements AircraftTypeDao {
 	@SuppressWarnings("unchecked")
 	@Override

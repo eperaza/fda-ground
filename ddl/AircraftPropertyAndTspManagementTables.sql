@@ -184,8 +184,10 @@ BEGIN
 	CREATE TABLE [dbo].[TSP](
 		[ID] [int] IDENTITY(1,1) NOT NULL,
 		[AircraftInfoID] [int] NOT NULL,
-		[TspContent] [nvarchar](4000) NOT NULL,
+		[TspContent] [varchar](8000) NOT NULL,
 		[Version] [varchar](10) NOT NULL,
+		[CutoffDate] [datetime] NULL,
+		[NumberOfFlights] [int] NULL,
 		[CreatedDate] [datetime] NOT NULL DEFAULT GETDATE(),
 		[CreatedBy] [nvarchar](50) NOT NULL DEFAULT ('SYSTEM'),
 		[UpdatedDate] [datetime] NULL,

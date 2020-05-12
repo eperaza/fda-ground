@@ -1,5 +1,7 @@
 package com.boeing.cas.supa.ground.pojos;
 
+import java.util.Date;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -27,6 +29,8 @@ public class Tsp extends BaseEntity {
 	
 	private String tspContent;
 	private String version;
+	private Date cutoffDate;
+	private Integer numberOfFlights;
 	
 	@OneToOne(mappedBy = "tsp", fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
 	private ActiveTsp activeTsp;
@@ -61,5 +65,21 @@ public class Tsp extends BaseEntity {
 	
 	public void setActiveTsp(ActiveTsp activeTsp) {
 		this.activeTsp = activeTsp;
+	}
+
+	public Date getCutoffDate() {
+		return cutoffDate;
+	}
+
+	public void setCutoffDate(Date cutoffDate) {
+		this.cutoffDate = cutoffDate;
+	}
+
+	public Integer getNumberOfFlights() {
+		return numberOfFlights;
+	}
+
+	public void setNumberOfFlights(Integer numberOfFlights) {
+		this.numberOfFlights = numberOfFlights;
 	}
 }

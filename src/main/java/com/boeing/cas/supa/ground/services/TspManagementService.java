@@ -1,5 +1,7 @@
 package com.boeing.cas.supa.ground.services;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
@@ -16,11 +18,15 @@ import com.boeing.cas.supa.ground.pojos.Airline;
 import com.boeing.cas.supa.ground.pojos.AircraftInfo;
 import com.boeing.cas.supa.ground.pojos.Tsp;
 import com.boeing.cas.supa.ground.pojos.TspContent;
+import com.google.common.base.Strings;
 import com.google.gson.Gson;
 
 @Service
+@Transactional
 public class TspManagementService {
 	private static final Logger LOG = LoggerFactory.getLogger(TspManagementService.class);
+	
+	private static final String DateFormat = "MM-dd-yyyy";
 	
 	@Autowired
 	private AirlineDao airlineDao;
@@ -38,7 +44,7 @@ public class TspManagementService {
 	private AircraftTypeDao aircraftTypeDao;
 	
 	@Transactional(value = TxType.REQUIRES_NEW)
-	public boolean saveTsp(String airlineName, String aircraftType, String tspContent, String userId, boolean isActive) {
+	public boolean saveTsp(String airlineName, String aircraftType, String tspContent, String userId, boolean isActive, String cutoffDate, Integer numberOfFlights) {
 		boolean success = false;
 		Gson gson = new Gson();
 		
@@ -85,6 +91,8 @@ public class TspManagementService {
 		
 			tspObject.setTspContent(tspContent);
 			tspObject.setVersion(String.valueOf(tspContentObject.version));
+			tspObject.setNumberOfFlights(numberOfFlights);
+			tspObject.setCutoffDate(getCutoffDate(cutoffDate));
 			
 			success = this.tspDao.save(tspObject);
 			
@@ -104,23 +112,22 @@ public class TspManagementService {
 		return success;
 	}
 	
-	public List<Tsp> getAllTsps() {
-		return this.tspDao.getAllTsps();
+	public List<Tsp> getTsps() {
+		return this.tspDao.getTsps();
 	}
 	
-	public List<Tsp> getTspListByAirline(String airline) {
-		return this.tspDao.getTspListByAirline(airline);
+	public List<Tsp> getTsps(String airline) {
+		return this.tspDao.getTsps(airline);
 	}
 	
-	public List<Tsp> getTspListByAirlineAndTailNumber(String airline, String tailNumber) {
-		return this.tspDao.getTspListByAirlineAndTailNumber(airline, tailNumber);
+	public List<Tsp> getTsps(String airline, String tailNumber) {
+		return this.tspDao.getTsps(airline, tailNumber);
 	}
 	
 	public Tsp getActiveTspByAirlineAndTailNumber(String airline, String tailNumber) {
 		return this.tspDao.getActiveTspByAirlineAndTailNumber(airline, tailNumber);
 	}
 	
-	@Transactional(value = TxType.REQUIRES_NEW)
 	public boolean activateTsp(String airlineName, String tailNumber, String version, String userId) {
 		boolean success = false;
 		
@@ -137,7 +144,6 @@ public class TspManagementService {
 		return success;
 	}
 	
-	@Transactional(value = TxType.REQUIRES_NEW)
 	public boolean activateTsp(int id, String userId) {
 		boolean success = false;
 		
@@ -153,7 +159,6 @@ public class TspManagementService {
 		return success;
 	}
 	
-	@Transactional(value = TxType.REQUIRES_NEW)
 	public boolean deactivateTsp(int id) {
 		boolean success = false;
 		
@@ -196,7 +201,20 @@ public class TspManagementService {
 			this.activeTspDao.deleteActiveTsp(activeTsp.getActiveTsp());
 		}
 		
-		tspObject.setUpdatedBy(userId);
 		return this.activeTspDao.activateTsp(tspObject);
+	}
+	
+	private Date getCutoffDate(String cutoffDate) {
+		if (Strings.isNullOrEmpty(cutoffDate)) {
+			return null;
+		}
+		
+		try {
+			SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DateFormat);
+			return simpleDateFormat.parse(cutoffDate);
+		} catch (Exception ex) {
+			LOG.error("Invalid cutoff date format: " + cutoffDate);
+			return null;
+		}
 	}
 }
