@@ -83,6 +83,7 @@ public class DemoApplication {
 		appSecrets.put("AzureADTenantName", keyVaultRetriever.getSecretByKey("AzureADTenantName"));
 		appSecrets.put("EmailMpAttachmentLocation", keyVaultRetriever.getSecretByKey("EmailMpAttachmentLocation"));
 		appSecrets.put("FDAdvisorClientCertName", keyVaultRetriever.getSecretByKey("FDAdvisorClientCertName"));
+		appSecrets.put("FDAdvisorRegistrationCertName", keyVaultRetriever.getSecretByKey("FDAdvisorRegistrationCertName"));
 		appSecrets.put("FDAdvisorClientCertBundlePassword", keyVaultRetriever.getSecretByKey("FDAdvisorClientCertBundlePassword"));
 		String fdaClientCertBase64 = new StringBuilder(appSecrets.get("FDAdvisorClientCertName")).append("base64").toString();
 		appSecrets.put(fdaClientCertBase64, keyVaultRetriever.getSecretByKey(fdaClientCertBase64));
@@ -109,17 +110,26 @@ public class DemoApplication {
 		return appSecrets;
 	}
 
-	@Bean
+	@Bean(name = "appCertificates")
 	public Map<String, X509Certificate> getAppCertificates(KeyVaultRetriever keyVaultRetriever) {
 
 		Map<String, X509Certificate> appCertificates = new ConcurrentHashMap<String, X509Certificate>();
 		String fdaClientCertName = keyVaultRetriever.getSecretByKey("FDAdvisorClientCertName");
 		appCertificates.put(fdaClientCertName, keyVaultRetriever.getCertificateByCertName(fdaClientCertName));
-
 		return appCertificates;
 	}
 
-    @Bean
+	@Bean(name = "appRegistrationCertificates")
+	public Map<String, X509Certificate> getAppRegistrationCertificates(KeyVaultRetriever keyVaultRetriever) {
+
+		Map<String, X509Certificate> appRegistrationCertificates = new ConcurrentHashMap<String, X509Certificate>();
+		//need to remove hard-coded names, and use keyvault entries instead
+		String fdaRegistrationCertName = "fdadvisor2z";
+		appRegistrationCertificates.put(fdaRegistrationCertName, keyVaultRetriever.getCertificateByCertName(fdaRegistrationCertName));
+		return appRegistrationCertificates;
+	}
+
+	@Bean
     public SSLSocketFactory getSSLSocketFactory(Map<String,String> appSecrets) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, UnrecoverableKeyException, KeyManagementException {
 
     	SSLSocketFactory sslSocketFactory = null;

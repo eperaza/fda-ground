@@ -34,6 +34,9 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 		+ " email_address = :email_address, user_role = :user_role, registration_date = :registration_date "
 		+ " WHERE user_object_id = :user_object_id AND airline = :airline";
 
+	private static final String USER_ACTIVATION_CODE_SQL_INSERT = "INSERT INTO user_activation_codes (email_address, activation_code, registration_cert, airline) VALUES (:email_address, :activation_code, :registration_cert, :airline)";
+	private static final String USER_ACTIVATION_CODE_SQL_SELECT = "SELECT * FROM user_activation_codes WHERE activation_code = :activation_code AND email_address = :email_address";
+	private static final String USER_ACTIVATION_CODE_SQL_DELETE = "DELETE FROM user_activation_codes WHERE activation_code = :activation_code AND email_address = :email_address";
 
 	@Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;
@@ -189,6 +192,81 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 
 			logger.warn("Failed to remove user account registration records in database: {}", dae.getMessage(), dae);
 			throw new UserAccountRegistrationException(new ApiError("DELETE_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
+		}
+	}
+
+
+	@Override
+	public void insertActivationCode(String email_address, String activation_code, String registration_cert, String airline)
+			throws UserAccountRegistrationException
+	{
+
+		Map<String,Object> namedParameters = new HashMap<>();
+		namedParameters.put("email_address", email_address);
+		namedParameters.put("activation_code", activation_code);
+		namedParameters.put("registration_cert", registration_cert);
+		namedParameters.put("airline", airline);
+		try {
+
+			int returnVal = jdbcTemplate.update(USER_ACTIVATION_CODE_SQL_INSERT, namedParameters);
+			if (returnVal != 1) {
+				logger.warn("Could not insert activation code into database: {} record(s) updated", returnVal);
+				throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", String.format("%d record(s) updated", returnVal), RequestFailureReason.INTERNAL_SERVER_ERROR));
+			}
+		}
+		catch (DataAccessException dae) {
+
+			logger.warn("Failed to insert activation code into database: {}", dae.getMessage(), dae);
+			throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
+		}
+	}
+
+	@Override
+	public List<ActivationCode> getActivationCode(String email_address, String activation_code) throws UserAccountRegistrationException {
+
+		List<ActivationCode> codes = new ArrayList<>();
+
+		Map<String,Object> namedParameters = new HashMap<>();
+		namedParameters.put("email_address", email_address);
+		namedParameters.put("activation_code", activation_code);
+
+		try {
+			codes = jdbcTemplate.query(USER_ACTIVATION_CODE_SQL_SELECT, namedParameters, new ActivationCodeMapper());
+			return codes;
+		}
+		catch (DataAccessException dae) {
+
+			logger.warn("Failed to obtain activation code: {}", dae.getMessage(), dae);
+			throw new UserAccountRegistrationException(new ApiError("REGISTER_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
+		}
+	}
+
+	@Override
+	public void removeActivationCode(String email_address, String activation_code) throws UserAccountRegistrationException {
+
+		Map<String,Object> namedParameters = new HashMap<>();
+		namedParameters.put("email_address", email_address);
+		namedParameters.put("activation_code", activation_code);
+		try {
+			jdbcTemplate.update(USER_ACTIVATION_CODE_SQL_DELETE, namedParameters);
+		}
+		catch (DataAccessException dae) {
+
+			logger.warn("Failed to remove activation code in database: {}", dae.getMessage(), dae);
+			throw new UserAccountRegistrationException(new ApiError("REGISTER_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
+		}
+	}
+
+
+	private static final class ActivationCodeMapper implements RowMapper<ActivationCode> {
+
+		@Override
+		public ActivationCode mapRow(ResultSet resultSet, int rowNum) throws SQLException {
+
+			ActivationCode activationCode = new ActivationCode();
+				activationCode.setAppIDName("com.boeing.cas.fuel-advisor");
+				activationCode.setCertificate(resultSet.getString("REGISTRATION_CERT"));
+			return activationCode;
 		}
 	}
 

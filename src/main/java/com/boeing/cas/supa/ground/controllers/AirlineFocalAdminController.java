@@ -64,9 +64,39 @@ public class AirlineFocalAdminController {
 				newUserPayload,
 				accessTokenInRequest,
 				airlineGroups.get(0),
-				newUserPayload.getRoleGroupName());
+				newUserPayload.getRoleGroupName(), false);
 		if (result instanceof ApiError) {
 			return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
+		}
+
+		return new ResponseEntity<>(result, HttpStatus.CREATED);
+	}
+
+	@RequestMapping(path="/airlinefocaladmin/createnewusers", method = { RequestMethod.POST })
+	public ResponseEntity<Object> createNewUser(@RequestBody NewUser newUserPayload, @RequestHeader("Authorization") String authToken) {
+
+		// Extract the access token from the authorization request header
+		String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
+
+		// Get group membership of user issuing request. Ensure that user belongs to role-airlinefocal group
+		// and one and only one airline group.
+		User airlineFocalCurrentUser = aadClient.getUserInfoFromJwtAccessToken(accessTokenInRequest);
+		// Validate user privileges by checking group membership. Must belong to Role-AirlineFocal group and a single Airline group.
+		List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
+		//List<Group> roleGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).peek(g -> logger.info("Role Group: {}", g)).collect(Collectors.toList());
+		// Allow anyone who can access this screen to add users.
+		List<Group> roleGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
+		if (airlineGroups.size() != 1 || roleGroups.size() != 1) {
+			return new ResponseEntity<>(new ApiError("MISSING_OR_INVALID_MEMBERSHIP", "User membership is ambiguous, within airlines or roles"), HttpStatus.UNAUTHORIZED);
+		}
+
+		Object result = aadClient.createUser(newUserPayload, accessTokenInRequest, airlineGroups.get(0), newUserPayload.getRoleGroupName(), true);
+
+		if (result instanceof ApiError) {
+
+			ApiError error = (ApiError) result;
+			logger.error(error.getErrorLabel(), error.getErrorDescription());
+			return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(error.getFailureReason()));
 		}
 
 		return new ResponseEntity<>(result, HttpStatus.CREATED);

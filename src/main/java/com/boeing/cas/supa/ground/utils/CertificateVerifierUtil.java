@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -31,9 +32,14 @@ public class CertificateVerifierUtil {
 	private final Logger logger = LoggerFactory.getLogger(CertificateVerifierUtil.class);
 
 	@Autowired
+    @Qualifier("appCertificates")
 	private Map<String, X509Certificate> appCertificates;
-	
-	private X509Certificate getCertFromHeader(String certHeader) {
+
+    @Autowired
+    @Qualifier("appRegistrationCertificates")
+    private Map<String, X509Certificate> appRegistrationCertificates;
+
+    private X509Certificate getCertFromHeader(String certHeader) {
 
 		logger.debug("Get certificate from header: {}", certHeader);
 		X509Certificate cert = null;
@@ -51,13 +57,13 @@ public class CertificateVerifierUtil {
 		return cert;
 	}
 
-    public boolean isValidClientCertificate(String certHeader, String certHolder) {
+    public boolean isValidClientCertificate(String certHeader, String certHolder, boolean registrationProcess) {
 
     	X509Certificate x509ClientCert = this.getCertFromHeader(certHeader);
-        return this.isValidClientCertificate(x509ClientCert, certHolder);
+        return this.isValidClientCertificate(x509ClientCert, certHolder, registrationProcess);
     }
 
-	public boolean isValidClientCertificate(X509Certificate x509ClientCert, String certHolder) {
+	public boolean isValidClientCertificate(X509Certificate x509ClientCert, String certHolder, boolean registrationProcess) {
 
 		// Article ref: https://docs.microsoft.com/en-us/azure/app-service/app-service-web-configure-tls-mutual-auth
 		try {
@@ -65,8 +71,15 @@ public class CertificateVerifierUtil {
 			if (this.isSelfSignedCert(x509ClientCert)) {
 				throw new SecurityException("Self-signed certificates are not accepted");
 			}
+			X509Certificate x509ServerCert = null;
+			if (registrationProcess) {
+			    //one time cert
+                x509ServerCert = this.appRegistrationCertificates.get(certHolder);
+            } else {
+                x509ServerCert = this.appCertificates.get(certHolder);
+            }
 
-            X509Certificate x509ServerCert = this.appCertificates.get(certHolder);
+            //X509Certificate x509ServerCert = this.appCertificates.get(certHolder);
             Map<String, String> x509ClientCertSubjectDn = this.getMap(x509ClientCert.getSubjectDN().getName());
             Map<String, String> x509ClientCertIssuerDn = this.getMap(x509ClientCert.getIssuerDN().getName());
             String x509ClientCertThumbPrint = this.getThumbprint(x509ClientCert);
@@ -74,6 +87,7 @@ public class CertificateVerifierUtil {
             Map<String, String> x509ServerCertIssuerDn = this.getMap(x509ServerCert.getIssuerDN().getName());
             String x509ServerCertThumbPrint = this.getThumbprint(x509ServerCert);
             x509ClientCert.checkValidity(new Date());
+            logger.debug("registration cert? {}", registrationProcess?"yes":"no");
             logger.debug("client cert subject DN: {}", x509ClientCert.getSubjectDN().getName());
             logger.debug("server cert subject DN: {}", x509ServerCert.getSubjectDN().getName());
             logger.debug("client cert issuer DN: {}", x509ClientCert.getIssuerDN().getName());

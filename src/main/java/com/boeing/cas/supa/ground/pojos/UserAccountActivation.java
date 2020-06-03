@@ -5,6 +5,7 @@ public class UserAccountActivation {
 	private String registrationToken;
 	private String username;
 	private String password;
+	private String activationCode = "unknown";
 
 	public UserAccountActivation() {}
 	
@@ -13,6 +14,14 @@ public class UserAccountActivation {
 		this.registrationToken = registrationToken;
 		this.username = username;
 		this.password = password;
+	}
+
+	public UserAccountActivation(String registrationToken, String username, String password, String activationCode) {
+
+		this.registrationToken = registrationToken;
+		this.username = username;
+		this.password = password;
+		this.activationCode = activationCode;
 	}
 
 	public String getRegistrationToken() {
@@ -39,13 +48,22 @@ public class UserAccountActivation {
 		this.password = password;
 	}
 
+	public String getActivationCode() {
+		return activationCode;
+	}
+
+	public void setActivationCode(String activationCode) {
+		this.activationCode = activationCode;
+	}
+
 	@Override
 	public String toString() {
 
 		return new StringBuilder('[').append(this.getClass().getSimpleName()).append(']').append(':')
 				.append(this.registrationToken).append(',')
 				.append(this.username).append(',')
-				.append(this.password)
+				.append(this.password).append(',')
+				.append(this.activationCode)
 				.append(']')
 			.toString();
 	}
