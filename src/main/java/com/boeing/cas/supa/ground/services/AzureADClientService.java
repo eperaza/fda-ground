@@ -499,6 +499,10 @@ public class AzureADClientService {
 						"FDA_registration_instructions.pdf", airlineGroup.getDisplayName().substring(new String("airline-").length()));
 				File emailOldPdfAttachment = getFileFromBlob("email-instructions",
 						"FDA_registration_instructions.pdf", airlineGroup.getDisplayName().substring(new String("airline-").length()));
+
+				File emailNewPdfAttachment = getFileFromBlob("email-new-instructions",
+						"FDA_registration_instructions.pdf", airlineGroup.getDisplayName().substring(new String("airline-").length()));
+
 				if (newRegistrationProcess) {
 					logger.debug("Using new Process, do NOT attach mp");
 					helper.addAttachment(emailNewPdfAttachment.getName(), emailNewPdfAttachment);
@@ -512,12 +516,14 @@ public class AzureADClientService {
 				logger.debug("attach pdf instructions email [{}]", newRegistrationProcess?
 						emailNewPdfAttachment.getAbsolutePath(): emailOldPdfAttachment.getAbsolutePath());
 
+				String emailPath = newRegistrationProcess ? emailNewPdfAttachment.getAbsolutePath() : emailOldPdfAttachment.getAbsolutePath();
+				logger.debug("attach pdf instructions email [{}]", emailPath);
+
 				emailSender.send(message);
 				logger.info("Sent account activation email to new user {}", newlyCreatedUser.getUserPrincipalName());
 				progressLog.append("\nSuccessfully queued email for delivery");
 			}
 			else {
-
 				JsonNode errorNode = mapper.readTree(responseStr).path("odata.error");
 				JsonNode messageNode = errorNode.path("message");
 				JsonNode valueNode = messageNode.path("value");
@@ -1862,7 +1868,7 @@ public class AzureADClientService {
 		emailMessageBody.append("   1. Go to the <a href=\"https://itunes.apple.com/us/app/flitedeck-advisor/id1058617698\">App Store</a>")
 			.append(" to install FliteDeck Advisor on your iPad. Open the installed application.").append(Constants.HTML_LINE_BREAK);
 		if (newRegistrationProcess) {
-			emailMessageBody.append("   2. Come back to this email and enter this <b>ONE-TIME ONLY</b> code: \"" + activationCode + "\" into the FliteDeck Registration. ")
+			emailMessageBody.append("   2. Come back to this email and enter this <b>ONE-TIME</b> code: \"" + activationCode + "\" into the FliteDeck Registration. ")
 				.append(Constants.HTML_LINE_BREAK);
 		} else {
 			emailMessageBody.append("   2. Come back to this email and tap on the MP attachment to open it. Tap on the icon at the top-right corner")
