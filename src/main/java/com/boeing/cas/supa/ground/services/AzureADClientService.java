@@ -500,8 +500,8 @@ public class AzureADClientService {
 				File emailOldPdfAttachment = getFileFromBlob("email-instructions",
 						"FDA_registration_instructions.pdf", airlineGroup.getDisplayName().substring(new String("airline-").length()));
 
-				File emailNewPdfAttachment = getFileFromBlob("email-new-instructions",
-						"FDA_registration_instructions.pdf", airlineGroup.getDisplayName().substring(new String("airline-").length()));
+				//File emailNewPdfAttachment = getFileFromBlob("email-new-instructions",
+				//		"FDA_registration_instructions.pdf", airlineGroup.getDisplayName().substring(new String("airline-").length()));
 
 				if (newRegistrationProcess) {
 					logger.debug("Using new Process, do NOT attach mp");
