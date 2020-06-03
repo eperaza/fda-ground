@@ -495,19 +495,22 @@ public class AzureADClientService {
 
 				helper.setText(composeNewUserAccountActivationEmail(newlyCreatedUser, registrationToken, newRegistrationProcess), true);
 
-				File emailPdfAttachment = getFileFromBlob("email-instructions",
-					"FDA_registration_instructions.pdf", airlineGroup.getDisplayName().substring(new String("airline-").length()));
+				File emailNewPdfAttachment = getFileFromBlob("email-new-instructions",
+						"FDA_registration_instructions.pdf", airlineGroup.getDisplayName().substring(new String("airline-").length()));
+				File emailOldPdfAttachment = getFileFromBlob("email-instructions",
+						"FDA_registration_instructions.pdf", airlineGroup.getDisplayName().substring(new String("airline-").length()));
 				if (newRegistrationProcess) {
 					logger.debug("Using new Process, do NOT attach mp");
+					helper.addAttachment(emailNewPdfAttachment.getName(), emailNewPdfAttachment);
 				} else {
 					String mpFileName = newlyCreatedUser.getDisplayName().replaceAll("\\s+", "_").toLowerCase() + ".mp";
 					File emailMpAttachment = getFileFromBlob("tmp", mpFileName, null);
-
+					helper.addAttachment(emailOldPdfAttachment.getName(), emailOldPdfAttachment);
 					logger.debug("Using old Process, attach mp email [{}]", emailMpAttachment.getAbsolutePath());
 					helper.addAttachment(emailMpAttachment.getName(), emailMpAttachment);
 				}
-				logger.debug("attach pdf instructions email [{}]", emailPdfAttachment.getAbsolutePath());
-				helper.addAttachment(emailPdfAttachment.getName(), emailPdfAttachment);
+				logger.debug("attach pdf instructions email [{}]", newRegistrationProcess?
+						emailNewPdfAttachment.getAbsolutePath(): emailOldPdfAttachment.getAbsolutePath());
 
 				emailSender.send(message);
 				logger.info("Sent account activation email to new user {}", newlyCreatedUser.getUserPrincipalName());

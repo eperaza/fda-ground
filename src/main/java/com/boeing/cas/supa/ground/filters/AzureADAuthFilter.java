@@ -88,10 +88,10 @@ public class AzureADAuthFilter implements Filter {
 		int responseCode = 400;
 		ApiError responseException = null;
 
-		// whelan - need to remove hardcoded fdadvisor2x
+		//need to remove hard-coded names, and use keyvault entries instead
 		if (registrationPath) {
-			if (this.isValidClientCertInReqHeader("fdadvisor2x", httpRequest, true)) {
-				logger.debug("{} cert is valid, moving request along", "fdadvisor2x");
+			if (this.isValidClientCertInReqHeader("fdadvisor2z", httpRequest, true)) {
+				logger.debug("{} cert is valid, moving request along", "fdadvisor2z");
 				chain.doFilter(request, response);
 				return;
 			}

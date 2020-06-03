@@ -116,10 +116,6 @@ public class DemoApplication {
 		Map<String, X509Certificate> appCertificates = new ConcurrentHashMap<String, X509Certificate>();
 		String fdaClientCertName = keyVaultRetriever.getSecretByKey("FDAdvisorClientCertName");
 		appCertificates.put(fdaClientCertName, keyVaultRetriever.getCertificateByCertName(fdaClientCertName));
-		//whelan update
-		//String fdaClientCertName = keyVaultRetriever.getSecretByKey("FDAdvisorClientCertName");
-		//String fdaRegistrationCertName = "fdadvisor2x";
-		//appCertificates.put(fdaRegistrationCertName, keyVaultRetriever.getCertificateByCertName(fdaRegistrationCertName));
 		return appCertificates;
 	}
 
@@ -127,9 +123,8 @@ public class DemoApplication {
 	public Map<String, X509Certificate> getAppRegistrationCertificates(KeyVaultRetriever keyVaultRetriever) {
 
 		Map<String, X509Certificate> appRegistrationCertificates = new ConcurrentHashMap<String, X509Certificate>();
-		//whelan update
-		//String fdaClientCertName = keyVaultRetriever.getSecretByKey("FDAdvisorClientCertName");
-		String fdaRegistrationCertName = "fdadvisor2x";
+		//need to remove hard-coded names, and use keyvault entries instead
+		String fdaRegistrationCertName = "fdadvisor2z";
 		appRegistrationCertificates.put(fdaRegistrationCertName, keyVaultRetriever.getCertificateByCertName(fdaRegistrationCertName));
 		return appRegistrationCertificates;
 	}
