@@ -299,7 +299,7 @@ public class AzureADClientService {
 	}
 
 	public Object createUser(NewUser newUserPayload, String accessTokenInRequest, Group airlineGroup,
-							 String roleGroupName, boolean newRegistrationProcess) {
+							 						  String roleGroupName, boolean newRegistrationProcess) {
 
 		Object resultObj = null;
 		StringBuilder progressLog = new StringBuilder("Create user -");
@@ -1330,14 +1330,13 @@ public class AzureADClientService {
 		return resultObj;
 	}
 
-
 	public Object getClientCertFromActivationCode(String email, String code) throws UserAccountRegistrationException {
 		logger.debug("Validate one-time activation code [{}] for [{}]", code, email);
 		// First validate activation code
 		List<ActivationCode> codes = userAccountRegister.getActivationCode(email, code);
 		if (codes.isEmpty() || codes.size() > 1) {
 			return new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE",
-			"Missing or Invalid Activation Code, Missing or Invalid Email Address", RequestFailureReason.BAD_REQUEST);
+					"Missing or Invalid Activation Code, Missing or Invalid Email Address", RequestFailureReason.BAD_REQUEST);
 		}
 
 		// Valid code, get activation information
@@ -1356,7 +1355,6 @@ public class AzureADClientService {
 		Object resultObj = activationCode;
 		return resultObj;
 	}
-
 
 	public Object enableUserAndSetPassword(UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {
 
@@ -1850,12 +1848,16 @@ public class AzureADClientService {
 				.collect(Collectors.joining(","));
 
 		emailMessageBody.append("Hi ").append(newlyCreatedUser.getDisplayName()).append(' ')
-			.append(String.format("(%s),", airline));
+				.append(String.format("(%s),", airline));
 
-		String role = newlyCreatedUser.getGroups().stream()
-			.filter(group -> group.getDisplayName().startsWith("role-"))
-			.map(group -> group.getDisplayName().replace("role-airline", StringUtils.EMPTY).toLowerCase())
-			.collect(Collectors.joining(","));
+		String emailAddress = newlyCreatedUser.getOtherMails().get(0);
+		String activationCode = ActivationCodeGenerator.randomString(6);
+
+		StringBuilder emailMessageBody = new StringBuilder();
+		String airline = newlyCreatedUser.getGroups().stream()
+				.filter(group -> group.getDisplayName().startsWith("airline-"))
+				.map(group -> group.getDisplayName().replace("airline-", StringUtils.EMPTY).toUpperCase())
+				.collect(Collectors.joining(","));
 
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
 		emailMessageBody.append("Your new account for FliteDeck Advisor has been successfully created. The Airline ").append(String.format("%s",
@@ -1866,18 +1868,18 @@ public class AzureADClientService {
 
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
 		emailMessageBody.append("   1. Go to the <a href=\"https://itunes.apple.com/us/app/flitedeck-advisor/id1058617698\">App Store</a>")
-			.append(" to install FliteDeck Advisor on your iPad. Open the installed application.").append(Constants.HTML_LINE_BREAK);
+				.append(" to install FliteDeck Advisor on your iPad. Open the installed application.").append(Constants.HTML_LINE_BREAK);
 		if (newRegistrationProcess) {
 			emailMessageBody.append("   2. Come back to this email and enter this <b>ONE-TIME</b> code: \"" + activationCode + "\" into the FliteDeck Registration. ")
-				.append(Constants.HTML_LINE_BREAK);
+					.append(Constants.HTML_LINE_BREAK);
 		} else {
 			emailMessageBody.append("   2. Come back to this email and tap on the MP attachment to open it. Tap on the icon at the top-right corner")
-				.append(" of the new screen, then tap on \"Copy to FliteDeck Advisor\" to continue.").append(Constants.HTML_LINE_BREAK);
+					.append(" of the new screen, then tap on \"Copy to FliteDeck Advisor\" to continue.").append(Constants.HTML_LINE_BREAK);
 		}
 		emailMessageBody.append("   3. After completing the registration and the WiFi configuration, reopen the FliteDeck Advisor to start using it.");
 
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-        emailMessageBody.append("Please find the attached PDF document for detailed instructions. If you experience any issues or have any questions, please contact our representative, Jim Fritz at james.l.fritz@boeing.com. ");
+		emailMessageBody.append("Please find the attached PDF document for detailed instructions. If you experience any issues or have any questions, please contact our representative, Jim Fritz at james.l.fritz@boeing.com. ");
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
 		emailMessageBody.append("Thank you, ").append("FliteDeck Advisor Support");
@@ -1936,7 +1938,7 @@ public class AzureADClientService {
 
 
 		logger.info("Registered {} using ", newlyCreatedUser.getUserPrincipalName(),
-			newRegistrationProcess?"NewRegistrationProcess":"OldRegistrationProcess");
+				newRegistrationProcess?"NewRegistrationProcess":"OldRegistrationProcess");
 
 
 		return emailMessageBody.toString();
@@ -2055,7 +2057,6 @@ public class AzureADClientService {
 
         return base64;
     }
-
 
 	private List<String> getPersistentEmailFromBlob(String containerName, String fileName) {
 

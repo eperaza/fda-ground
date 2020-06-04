@@ -33,7 +33,7 @@ public class CertificateVerifierUtil {
 
 	@Autowired
     @Qualifier("appCertificates")
-	private Map<String, X509Certificate> appCertificates;
+    private Map<String, X509Certificate> appCertificates;
 
     @Autowired
     @Qualifier("appRegistrationCertificates")
@@ -59,21 +59,21 @@ public class CertificateVerifierUtil {
 
     public boolean isValidClientCertificate(String certHeader, String certHolder, boolean registrationProcess) {
 
-    	X509Certificate x509ClientCert = this.getCertFromHeader(certHeader);
+        X509Certificate x509ClientCert = this.getCertFromHeader(certHeader);
         return this.isValidClientCertificate(x509ClientCert, certHolder, registrationProcess);
     }
 
-	public boolean isValidClientCertificate(X509Certificate x509ClientCert, String certHolder, boolean registrationProcess) {
+    public boolean isValidClientCertificate(X509Certificate x509ClientCert, String certHolder, boolean registrationProcess) {
 
-		// Article ref: https://docs.microsoft.com/en-us/azure/app-service/app-service-web-configure-tls-mutual-auth
-		try {
-		
-			if (this.isSelfSignedCert(x509ClientCert)) {
-				throw new SecurityException("Self-signed certificates are not accepted");
-			}
-			X509Certificate x509ServerCert = null;
-			if (registrationProcess) {
-			    //one time cert
+        // Article ref: https://docs.microsoft.com/en-us/azure/app-service/app-service-web-configure-tls-mutual-auth
+        try {
+
+            if (this.isSelfSignedCert(x509ClientCert)) {
+                throw new SecurityException("Self-signed certificates are not accepted");
+            }
+            X509Certificate x509ServerCert = null;
+            if (registrationProcess) {
+                //one time cert
                 x509ServerCert = this.appRegistrationCertificates.get(certHolder);
             } else {
                 x509ServerCert = this.appCertificates.get(certHolder);
@@ -113,7 +113,7 @@ public class CertificateVerifierUtil {
                 throw new SecurityException("Thumbprint mismatch");
             }
             return true;
-		}
+        }
         catch (SecurityException | NoSuchAlgorithmException | CertificateException e) {
             this.logger.error("Certificate verification failed: {}", (Object)e.getMessage());
         }
@@ -121,10 +121,12 @@ public class CertificateVerifierUtil {
             this.logger.error("Certificate verification failure: {}", (Object)e.getMessage());
         }
 
-		return false;
-	}
+        return false;
+    }
 
-	/**
+
+
+    /**
 	 * Checks whether given X.509 certificate is self-signed.
 	 * @param cert 
 	 */

@@ -21,8 +21,8 @@ public interface UserAccountRegistrationDao {
 			throws UserAccountRegistrationException;
 
 	public void enableNewUserAccount(String registrationToken, String userPrincipalName, String accountStateFrom,
-			String accountStateTo) throws UserAccountRegistrationException;
-	
+									 String accountStateTo) throws UserAccountRegistrationException;
+
 	public void removeUserAccountRegistrationData(String userPrincipalName) throws UserAccountRegistrationException;
 
 

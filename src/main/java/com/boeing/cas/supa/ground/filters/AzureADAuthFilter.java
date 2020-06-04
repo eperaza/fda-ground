@@ -60,6 +60,10 @@ public class AzureADAuthFilter implements Filter {
 	private static final Set<String> REGISTRATION_PATH = Collections.unmodifiableSet(
 			new HashSet<>(Arrays.asList("/getclientcert")));
 
+	// include any path which uses the (one-time) registration cert
+	private static final Set<String> REGISTRATION_PATH = Collections.unmodifiableSet(
+			new HashSet<>(Arrays.asList("/getclientcert")));
+
 	@Autowired
 	private CertificateVerifierUtil certVerify;
 
@@ -122,43 +126,43 @@ public class AzureADAuthFilter implements Filter {
 			boolean validOAuthToken = this.isValidOAuthToken(httpRequest.getHeader("Authorization"));
 			if (validClientCert && validOAuthToken) {
 				logger.debug("{} cert and OAuth2 token are good!", appProps.get("FDAdvisorClientCertName"));
-                chain.doFilter(request, response);
-                return;
-            }
-            else if (!validClientCert) {
+				chain.doFilter(request, response);
+				return;
+			}
+			else if (!validClientCert) {
 				logger.error("{} cert failed!", appProps.get("FDAdvisorClientCertName"));
-            	responseCode = 403;
-                responseException = new ApiError("Invalid client certificate", "Must provide a valid client certificate");
-            }
-            else {
+				responseCode = 403;
+				responseException = new ApiError("Invalid client certificate", "Must provide a valid client certificate");
+			}
+			else {
 				logger.error("OAuth2 token failed!");
-            	responseCode = 401;
-                responseException = new ApiError("Authorization_Missing", "Must provide a valid authorization token");
-            }
-        }
-        catch (ParseException pe) {
-            responseCode = 400;
-            logger.error("Parse exception while verifying cert and/or OAuth2 token: {}", pe.getMessage(), pe);
-            responseException = new ApiError("JWT_ERROR", pe.getMessage());
-        }
-        catch (SecurityException se) {
-        	responseCode = 401;
-        	// If request URL corresponds to root of application, a monitoring/ping service may be behind
-        	// the calls. In that case, do not show the stack trace and categorize this as a warning.
-        	if (path.equals("/")
-        		|| path.equals(StringUtils.EMPTY)) {
-        		logger.warn("Security exception while verifying cert and/or OAuth2 token: {}", se.getMessage());
-        	} else {
-        		logger.error("Security exception while verifying cert and/or OAuth2 token for request URL [{}]: {}", path, se.getMessage(), se);
-        	}
-        	responseException = new ApiError("MISSING_INVALID_CLIENT_AUTH", se.getMessage());
-        }
-        finally {
+				responseCode = 401;
+				responseException = new ApiError("Authorization_Missing", "Must provide a valid authorization token");
+			}
+		}
+		catch (ParseException pe) {
+			responseCode = 400;
+			logger.error("Parse exception while verifying cert and/or OAuth2 token: {}", pe.getMessage(), pe);
+			responseException = new ApiError("JWT_ERROR", pe.getMessage());
+		}
+		catch (SecurityException se) {
+			responseCode = 401;
+			// If request URL corresponds to root of application, a monitoring/ping service may be behind
+			// the calls. In that case, do not show the stack trace and categorize this as a warning.
+			if (path.equals("/")
+					|| path.equals(StringUtils.EMPTY)) {
+				logger.warn("Security exception while verifying cert and/or OAuth2 token: {}", se.getMessage());
+			} else {
+				logger.error("Security exception while verifying cert and/or OAuth2 token for request URL [{}]: {}", path, se.getMessage(), se);
+			}
+			responseException = new ApiError("MISSING_INVALID_CLIENT_AUTH", se.getMessage());
+		}
+		finally {
 
-            if (responseException != null) {
-            	sendResponse(responseCode, responseException, httpResponse);
-            }
-        }
+			if (responseException != null) {
+				sendResponse(responseCode, responseException, httpResponse);
+			}
+		}
 	}
 
 	private void sendResponse(int responseCode, ApiError responseException, HttpServletResponse httpResponse) throws IOException {
@@ -175,24 +179,24 @@ public class AzureADAuthFilter implements Filter {
         out.print(mapper.writeValueAsString(responseException));
         out.flush();
 	}
-	
+
 	private boolean isValidClientCertInReqHeader(String certHolder, HttpServletRequest httpRequest,
-						 boolean registrationProcess) {
+												 boolean registrationProcess) {
 
-    	String certHeader = httpRequest.getHeader("X-ARR-ClientCert");
+		String certHeader = httpRequest.getHeader("X-ARR-ClientCert");
 		logger.debug("registration cert? {}", registrationProcess?"yes":"no");
-    	logger.debug("certificate header in request: {}", certHeader);
-        if (StringUtils.isNotBlank(certHeader)) {
-            return this.certVerify.isValidClientCertificate(certHeader, certHolder, registrationProcess);
-        }
+		logger.debug("certificate header in request: {}", certHeader);
+		if (StringUtils.isNotBlank(certHeader)) {
+			return this.certVerify.isValidClientCertificate(certHeader, certHolder, registrationProcess);
+		}
 
-        return this.isValidClientCertInReqAttribute(certHolder, httpRequest, registrationProcess);
-    }
+		return this.isValidClientCertInReqAttribute(certHolder, httpRequest, registrationProcess);
+	}
 
 	private boolean isValidClientCertInReqAttribute(String certHolder, HttpServletRequest httpRequest,
-						boolean registrationProcess) {
+													boolean registrationProcess) {
 
-    	logger.debug("certificate in request as attribute: {}", certHolder);
+		logger.debug("certificate in request as attribute: {}", certHolder);
 		X509Certificate[] certs = (X509Certificate[]) httpRequest.getAttribute("javax.servlet.request.X509Certificate");
 		boolean isValid = false;
 
@@ -209,6 +213,7 @@ public class AzureADAuthFilter implements Filter {
 
 		return isValid;
 	}
+
 
 	private boolean isValidOAuthToken(String xAuth) throws ParseException {
 

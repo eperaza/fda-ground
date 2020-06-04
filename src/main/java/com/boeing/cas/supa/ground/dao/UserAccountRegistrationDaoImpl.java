@@ -30,9 +30,9 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 
 	private static final String USER_ACCOUNT_SELECT_SQL = "SELECT * FROM user_account_registrations WHERE airline = :airline AND user_object_id != :user_object_id";
 	private static final String USER_ACCOUNT_UPDATE_SQL
-		= "UPDATE user_account_registrations SET display_name = :display_name, first_name = :first_name, last_name = :last_name, "
-		+ " email_address = :email_address, user_role = :user_role, registration_date = :registration_date "
-		+ " WHERE user_object_id = :user_object_id AND airline = :airline";
+			= "UPDATE user_account_registrations SET display_name = :display_name, first_name = :first_name, last_name = :last_name, "
+			+ " email_address = :email_address, user_role = :user_role, registration_date = :registration_date "
+			+ " WHERE user_object_id = :user_object_id AND airline = :airline";
 
 	private static final String USER_ACTIVATION_CODE_SQL_INSERT = "INSERT INTO user_activation_codes (email_address, activation_code, registration_cert, airline) VALUES (:email_address, :activation_code, :registration_cert, :airline)";
 	private static final String USER_ACTIVATION_CODE_SQL_SELECT = "SELECT * FROM user_activation_codes WHERE activation_code = :activation_code AND email_address = :email_address";
@@ -158,7 +158,7 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 
 	@Override
 	public void enableNewUserAccount(String registrationToken, String userPrincipalName, String accountStateFrom, String accountStateTo)
-			throws UserAccountRegistrationException {
+		throws UserAccountRegistrationException {
 
 		Map<String,Object> namedParameters = new HashMap<>();
 		namedParameters.put("registration_token", registrationToken);
@@ -198,7 +198,7 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 
 	@Override
 	public void insertActivationCode(String email_address, String activation_code, String registration_cert, String airline)
-			throws UserAccountRegistrationException
+		throws UserAccountRegistrationException
 	{
 
 		Map<String,Object> namedParameters = new HashMap<>();
@@ -264,8 +264,8 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 		public ActivationCode mapRow(ResultSet resultSet, int rowNum) throws SQLException {
 
 			ActivationCode activationCode = new ActivationCode();
-				activationCode.setAppIDName("com.boeing.cas.fuel-advisor");
-				activationCode.setCertificate(resultSet.getString("REGISTRATION_CERT"));
+			activationCode.setAppIDName("com.boeing.cas.fuel-advisor");
+			activationCode.setCertificate(resultSet.getString("REGISTRATION_CERT"));
 			return activationCode;
 		}
 	}
@@ -276,26 +276,26 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 		public UserAccount mapRow(ResultSet resultSet, int rowNum) throws SQLException {
 
 			UserAccount user = new UserAccount();
-				user.setObjectType("User");
-				user.setObjectId(resultSet.getString("USER_OBJECT_ID"));
-				user.setUserPrincipalName(resultSet.getString("USER_PRINCIPAL_NAME"));
-				String account_state = resultSet.getString("ACCOUNT_STATE");
-				user.setAccountEnabled(account_state.equals("USER_ACTIVATED")?"true":"false");
+			user.setObjectType("User");
+			user.setObjectId(resultSet.getString("USER_OBJECT_ID"));
+			user.setUserPrincipalName(resultSet.getString("USER_PRINCIPAL_NAME"));
+			String account_state = resultSet.getString("ACCOUNT_STATE");
+			user.setAccountEnabled(account_state.equals("USER_ACTIVATED")?"true":"false");
 
-				user.setDisplayName(resultSet.getString("DISPLAY_NAME"));
-				user.setGivenName(resultSet.getString("FIRST_NAME"));
-				user.setSurname(resultSet.getString("LAST_NAME"));
-				int endPoint = user.getUserPrincipalName().indexOf("@");
-				if (endPoint > 0) {
-					user.setMailNickname(user.getUserPrincipalName().substring(0, endPoint));
-				}
-				String other_email = resultSet.getString("EMAIL_ADDRESS");
-				List<String> emails = new ArrayList<>();
-				emails.add(other_email);
+			user.setDisplayName(resultSet.getString("DISPLAY_NAME"));
+			user.setGivenName(resultSet.getString("FIRST_NAME"));
+			user.setSurname(resultSet.getString("LAST_NAME"));
+			int endPoint = user.getUserPrincipalName().indexOf("@");
+			if (endPoint > 0) {
+				user.setMailNickname(user.getUserPrincipalName().substring(0, endPoint));
+			}
+			String other_email = resultSet.getString("EMAIL_ADDRESS");
+			List<String> emails = new ArrayList<>();
+			emails.add(other_email);
 
-				user.setOtherMails(emails);
-				user.setUserRole(resultSet.getString("USER_ROLE"));
-				user.setCreatedDateTime(resultSet.getString("REGISTRATION_DATE"));
+			user.setOtherMails(emails);
+			user.setUserRole(resultSet.getString("USER_ROLE"));
+			user.setCreatedDateTime(resultSet.getString("REGISTRATION_DATE"));
 			return user;
 		}
 	}
