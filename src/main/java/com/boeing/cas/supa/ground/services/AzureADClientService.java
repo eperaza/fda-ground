@@ -17,6 +17,7 @@ import com.boeing.cas.supa.ground.dao.FeatureManagementDao;
 import com.boeing.cas.supa.ground.dao.PowerBiInformationDao;
 import com.boeing.cas.supa.ground.exceptions.*;
 import com.boeing.cas.supa.ground.pojos.*;
+import com.boeing.cas.supa.ground.utils.*;
 import com.microsoft.azure.storage.StorageException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -36,13 +37,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.boeing.cas.supa.ground.dao.UserAccountRegistrationDao;
 import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
 import com.boeing.cas.supa.ground.helpers.HttpClientHelper;
-import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
-import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.Constants.PermissionType;
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
-import com.boeing.cas.supa.ground.utils.ControllerUtils;
-import com.boeing.cas.supa.ground.utils.PasswordPolicyEnforcer;
-import com.boeing.cas.supa.ground.utils.UsernamePolicyEnforcer;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -302,7 +298,8 @@ public class AzureADClientService {
 		return group;
 	}
 
-	public Object createUser(NewUser newUserPayload, String accessTokenInRequest, Group airlineGroup, String roleGroupName) {
+	public Object createUser(NewUser newUserPayload, String accessTokenInRequest, Group airlineGroup,
+							 						  String roleGroupName, boolean newRegistrationProcess) {
 
 		Object resultObj = null;
 		StringBuilder progressLog = new StringBuilder("Create user -");
@@ -496,19 +493,31 @@ public class AzureADClientService {
 				helper.setSubject("Welcome to FliteDeck Advisor - New Account Registration");
 				helper.setTo(newUserPayload.getOtherMails().get(0));
 
-				helper.setText(composeNewUserAccountActivationEmail(newlyCreatedUser, registrationToken), true);
+				helper.setText(composeNewUserAccountActivationEmail(newlyCreatedUser, registrationToken, newRegistrationProcess), true);
 
-				String mpFileName = newlyCreatedUser.getDisplayName().replaceAll("\\s+", "_").toLowerCase() + ".mp";
+				File emailNewPdfAttachment = getFileFromBlob("email-new-instructions",
+						"FDA_registration_instructions.pdf", airlineGroup.getDisplayName().substring(new String("airline-").length()));
+				File emailOldPdfAttachment = getFileFromBlob("email-instructions",
+						"FDA_registration_instructions.pdf", airlineGroup.getDisplayName().substring(new String("airline-").length()));
 
-				File emailPdfAttachment = getFileFromBlob("email-instructions",
-					"FDA_registration_instructions.pdf", airlineGroup.getDisplayName().substring(new String("airline-").length()));
-				File emailMpAttachment = getFileFromBlob("tmp", mpFileName, null);
+				//File emailNewPdfAttachment = getFileFromBlob("email-new-instructions",
+				//		"FDA_registration_instructions.pdf", airlineGroup.getDisplayName().substring(new String("airline-").length()));
 
-				logger.debug("attach mp email [{}]", emailMpAttachment.getAbsolutePath());
-				helper.addAttachment(emailMpAttachment.getName(), emailMpAttachment);
+				if (newRegistrationProcess) {
+					logger.debug("Using new Process, do NOT attach mp");
+					helper.addAttachment(emailNewPdfAttachment.getName(), emailNewPdfAttachment);
+				} else {
+					String mpFileName = newlyCreatedUser.getDisplayName().replaceAll("\\s+", "_").toLowerCase() + ".mp";
+					File emailMpAttachment = getFileFromBlob("tmp", mpFileName, null);
+					helper.addAttachment(emailOldPdfAttachment.getName(), emailOldPdfAttachment);
+					logger.debug("Using old Process, attach mp email [{}]", emailMpAttachment.getAbsolutePath());
+					helper.addAttachment(emailMpAttachment.getName(), emailMpAttachment);
+				}
+				logger.debug("attach pdf instructions email [{}]", newRegistrationProcess?
+						emailNewPdfAttachment.getAbsolutePath(): emailOldPdfAttachment.getAbsolutePath());
 
-				logger.debug("attach pdf instructions email [{}]", emailPdfAttachment.getAbsolutePath());
-				helper.addAttachment(emailPdfAttachment.getName(), emailPdfAttachment);
+				String emailPath = newRegistrationProcess ? emailNewPdfAttachment.getAbsolutePath() : emailOldPdfAttachment.getAbsolutePath();
+				logger.debug("attach pdf instructions email [{}]", emailPath);
 
 				emailSender.send(message);
 				logger.info("Sent account activation email to new user {}", newlyCreatedUser.getUserPrincipalName());
@@ -645,7 +654,7 @@ public class AzureADClientService {
 		} finally {
 
 			if (resultObj instanceof ApiError) {
-				logger.error("PowerBiInformationException: {}", jpe.getMessage(), jpe);
+				logger.error("Failed to retrieve Power Bi Information  {}");
 			}
 		}
 
@@ -1797,26 +1806,30 @@ public class AzureADClientService {
 	}
 
 
-	private String composeNewUserAccountActivationEmail(User newlyCreatedUser, String registrationToken)
+	private String composeNewUserAccountActivationEmail(User newlyCreatedUser, String registrationToken, boolean newRegistrationProcess)
 		throws UserAccountRegistrationException
 	{
 		String fdadvisorClientCertBase64 = new StringBuilder(appProps.get("FDAdvisorClientCertName")).append("base64").toString();
 		String base64EncodedPayload = Base64.getEncoder().encodeToString(
 				new StringBuilder(newlyCreatedUser.getUserPrincipalName()).append(' ').append(registrationToken)
 						.append(' ').append(this.appProps.get(fdadvisorClientCertBase64)).toString().getBytes());
+
+		String emailAddress = newlyCreatedUser.getOtherMails().get(0);
+		String activationCode = ActivationCodeGenerator.randomString(6);
+
 		StringBuilder emailMessageBody = new StringBuilder();
-		emailMessageBody.append("Hi ").append(newlyCreatedUser.getDisplayName()).append(' ').append(String.format("(%s),",
-				newlyCreatedUser.getGroups().stream()
-						.filter(group -> group.getDisplayName().startsWith("airline-"))
-						.map(group -> group.getDisplayName().replace("airline-", StringUtils.EMPTY).toUpperCase())
-						.collect(Collectors.joining(","))
-		));
+		String airline = newlyCreatedUser.getGroups().stream()
+				.filter(group -> group.getDisplayName().startsWith("airline-"))
+				.map(group -> group.getDisplayName().replace("airline-", StringUtils.EMPTY).toUpperCase())
+				.collect(Collectors.joining(","));
+
+		emailMessageBody.append("Hi ").append(newlyCreatedUser.getDisplayName()).append(' ')
+				.append(String.format("(%s),", airline));
 
 		String role = newlyCreatedUser.getGroups().stream()
 				.filter(group -> group.getDisplayName().startsWith("role-"))
 				.map(group -> group.getDisplayName().replace("role-airline", StringUtils.EMPTY).toLowerCase())
 				.collect(Collectors.joining(","));
-
 
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
 		emailMessageBody.append("Your new account for FliteDeck Advisor has been successfully created. The Airline ").append(String.format("%s",
@@ -1827,14 +1840,18 @@ public class AzureADClientService {
 
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
 		emailMessageBody.append("   1. Go to the <a href=\"https://itunes.apple.com/us/app/flitedeck-advisor/id1058617698\">App Store</a>")
-			.append(" to install FliteDeck Advisor on your iPad. Open the installed application.").append(Constants.HTML_LINE_BREAK);
-		emailMessageBody.append("   2. Come back to this email and tap on the MP attachment to open it. Tap on the icon at the top-right corner")
-			.append(" of the new screen, then tap on \"Copy to FliteDeck Advisor\" to continue.").append(Constants.HTML_LINE_BREAK);
-
+				.append(" to install FliteDeck Advisor on your iPad. Open the installed application.").append(Constants.HTML_LINE_BREAK);
+		if (newRegistrationProcess) {
+			emailMessageBody.append("   2. Come back to this email and enter this <b>ONE-TIME</b> code: \"" + activationCode + "\" into the FliteDeck Registration. ")
+					.append(Constants.HTML_LINE_BREAK);
+		} else {
+			emailMessageBody.append("   2. Come back to this email and tap on the MP attachment to open it. Tap on the icon at the top-right corner")
+					.append(" of the new screen, then tap on \"Copy to FliteDeck Advisor\" to continue.").append(Constants.HTML_LINE_BREAK);
+		}
 		emailMessageBody.append("   3. After completing the registration and the WiFi configuration, reopen the FliteDeck Advisor to start using it.");
 
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-        emailMessageBody.append("Please find the attached PDF document for detailed instructions. If you experience any issues or have any questions, please contact our representative, Jim Fritz at james.l.fritz@boeing.com. ");
+		emailMessageBody.append("Please find the attached PDF document for detailed instructions. If you experience any issues or have any questions, please contact our representative, Jim Fritz at james.l.fritz@boeing.com. ");
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
 		emailMessageBody.append("Thank you, ").append("FliteDeck Advisor Support");
@@ -1843,49 +1860,57 @@ public class AzureADClientService {
 		BufferedReader reader = null;
 		BufferedWriter writer = null;
 		try {
-			File emailMpAttachment = new ClassPathResource(appProps.get("EmailMpAttachmentLocation")).getFile();
-			reader = new BufferedReader(new FileReader(emailMpAttachment));
-			String str;
-			StringBuffer sb = new StringBuffer();
-			while ((str = reader.readLine()) != null)
-			{
-				str = str.replaceAll("<!-- Add Certificate here -->", base64EncodedPayload);
-				sb.append(str + "\n");
+			if (newRegistrationProcess) {
+				logger.debug("NewRegistrationProcess: emailAddress [{}]", emailAddress);
+				logger.debug("NewRegistrationProcess: activationCode [{}]", activationCode);
+				logger.debug("NewRegistrationProcess: token length [{}]", base64EncodedPayload.length());
+				logger.debug("NewRegistrationProcess: airline [{}]", airline);
+				userAccountRegister.insertActivationCode(emailAddress, activationCode, base64EncodedPayload, airline);
 			}
-			reader.close();
-			String mpFileName = newlyCreatedUser.getDisplayName().replaceAll("\\s+", "_").toLowerCase() + ".mp";
-			Path path = Files.createTempDirectory(StringUtils.EMPTY);
-			File mpFile = new File(path.toString() + File.separator + mpFileName);
-			writer = new BufferedWriter(new FileWriter(mpFile));
-			writer.write(sb.toString());
-			writer.close();
-			logger.debug("upload mp file to azure blob [{}]", mpFile.getAbsolutePath());
-			this.uploadAttachment(mpFile);
-			logger.debug("upload complete!");
-		}
-		catch (IOException io) {
+			// old registration
+			else {
+				File emailMpAttachment = new ClassPathResource(appProps.get("EmailMpAttachmentLocation")).getFile();
+				reader = new BufferedReader(new FileReader(emailMpAttachment));
+				String str;
+				StringBuffer sb = new StringBuffer();
+				while ((str = reader.readLine()) != null) {
+					str = str.replaceAll("<!-- Add Certificate here -->", base64EncodedPayload);
+					sb.append(str + "\n");
+				}
+				reader.close();
+				String mpFileName = newlyCreatedUser.getDisplayName().replaceAll("\\s+", "_").toLowerCase() + ".mp";
+				Path path = Files.createTempDirectory(StringUtils.EMPTY);
+				File mpFile = new File(path.toString() + File.separator + mpFileName);
+				writer = new BufferedWriter(new FileWriter(mpFile));
+				writer.write(sb.toString());
+				writer.close();
+				logger.debug("upload mp file to azure blob [{}]", mpFile.getAbsolutePath());
+				this.uploadAttachment(mpFile);
+				logger.debug("upload complete!");
+			}
+		} catch (IOException io) {
 			logger.warn("Failed to read attachment: {}", io.getMessage(), io);
 			throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", "failed to read attachment", RequestFailureReason.INTERNAL_SERVER_ERROR));
-		}
-		finally {
+		} finally {
 			if (reader != null) {
 				try {
 					reader.close();
-				}
-				catch (IOException io) {
+				} catch (IOException io) {
 					//ignore
 				}
 			}
 			if (writer != null) {
 				try {
 					writer.close();
-				}
-				catch (IOException io) {
+				} catch (IOException io) {
 					//ignore
 				}
 			}
 		}
-		logger.info("Registered {} ", newlyCreatedUser.getUserPrincipalName());
+
+
+		logger.info("Registered {} using ", newlyCreatedUser.getUserPrincipalName(),
+				newRegistrationProcess?"NewRegistrationProcess":"OldRegistrationProcess");
 
 
 		return emailMessageBody.toString();
