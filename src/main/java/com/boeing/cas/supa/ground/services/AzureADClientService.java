@@ -1850,13 +1850,9 @@ public class AzureADClientService {
 		emailMessageBody.append("Hi ").append(newlyCreatedUser.getDisplayName()).append(' ')
 				.append(String.format("(%s),", airline));
 
-		String emailAddress = newlyCreatedUser.getOtherMails().get(0);
-		String activationCode = ActivationCodeGenerator.randomString(6);
-
-		StringBuilder emailMessageBody = new StringBuilder();
-		String airline = newlyCreatedUser.getGroups().stream()
-				.filter(group -> group.getDisplayName().startsWith("airline-"))
-				.map(group -> group.getDisplayName().replace("airline-", StringUtils.EMPTY).toUpperCase())
+		String role = newlyCreatedUser.getGroups().stream()
+				.filter(group -> group.getDisplayName().startsWith("role-"))
+				.map(group -> group.getDisplayName().replace("role-airline", StringUtils.EMPTY).toLowerCase())
 				.collect(Collectors.joining(","));
 
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
