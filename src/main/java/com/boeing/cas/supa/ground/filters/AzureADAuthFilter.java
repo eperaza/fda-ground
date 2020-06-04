@@ -54,7 +54,11 @@ public class AzureADAuthFilter implements Filter {
 
 	private static final Set<String> ALLOWED_PATHS = Collections.unmodifiableSet(
 			new HashSet<>(
-					Arrays.asList("/login", "/refresh", "/register", "/registeruser", "/logfile", "/getregistrationcode", "/error" )));
+					Arrays.asList("/login", "/refresh", "/register", "/registeruser", "/logfile", "/getregistrationcode", "/error", "/createnewusers" )));
+
+	// include any path which uses the (one-time) registration cert
+	private static final Set<String> REGISTRATION_PATH = Collections.unmodifiableSet(
+			new HashSet<>(Arrays.asList("/getclientcert")));
 
 	// include any path which uses the (one-time) registration cert
 	private static final Set<String> REGISTRATION_PATH = Collections.unmodifiableSet(

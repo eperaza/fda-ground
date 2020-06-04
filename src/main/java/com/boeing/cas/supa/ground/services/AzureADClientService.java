@@ -524,7 +524,6 @@ public class AzureADClientService {
 				progressLog.append("\nSuccessfully queued email for delivery");
 			}
 			else {
-
 				JsonNode errorNode = mapper.readTree(responseStr).path("odata.error");
 				JsonNode messageNode = errorNode.path("message");
 				JsonNode valueNode = messageNode.path("value");
@@ -1065,11 +1064,10 @@ public class AzureADClientService {
 	}
 
 
-
 	public Object enableRepeatableUserRegistration(UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {
 
 		logger.debug("Invoking user registration (possibly repeated user registration)");
-		
+
 		// Validate the password provided by the admin; if invalid, return appropriate error key/description
 		if (!PasswordPolicyEnforcer.validate(userAccountActivation.getPassword())) {
 			return new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", PasswordPolicyEnforcer.ERROR_PSWD_FAILED_DESCRIPTION, RequestFailureReason.BAD_REQUEST);
@@ -1077,7 +1075,7 @@ public class AzureADClientService {
 
 		Object resultObj = null;
 		StringBuilder progressLog = new StringBuilder("Activate user -");
-		
+
 		HttpsURLConnection connGetUser = null, connEnableUser = null;
 		try {
 
@@ -1165,9 +1163,9 @@ public class AzureADClientService {
 							throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Invalid username or password", RequestFailureReason.UNAUTHORIZED));
 						} else {
 							throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Invalid or expired user registration token", RequestFailureReason.UNAUTHORIZED));
-						} 
+						}
 					} else if (responseCode == 404) {
-						
+
 						JsonNode errorNode = new ObjectMapper()
 								.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 								.setSerializationInclusion(Include.NON_NULL).readTree(responseStr).path("odata.error");
@@ -1212,7 +1210,7 @@ public class AzureADClientService {
 							.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 							.setSerializationInclusion(Include.NON_NULL);
 					userObj = mapper.readValue(responseStr, User.class);
-					
+
 					if (Boolean.parseBoolean(userObj.getAccountEnabled())) {
 						throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "User account is already activated", RequestFailureReason.CONFLICT));
 					}
@@ -1246,9 +1244,9 @@ public class AzureADClientService {
 				connEnableUser.setDoOutput(true);
 				try (DataOutputStream dos = new DataOutputStream(connEnableUser.getOutputStream())) {
 					dos.writeBytes(mapper.writeValueAsString(rootNode));
-					dos.flush();
+ 					dos.flush();
 				}
-				
+
 				responseStr = HttpClientHelper.getResponseStringFromConn(connEnableUser, connEnableUser.getResponseCode() == HttpStatus.NO_CONTENT.value());
 				JsonNode errorNode = StringUtils.isBlank(responseStr) ? null : mapper.readTree(responseStr).path("odata.error");
 				if (connEnableUser.getResponseCode() == HttpStatus.NO_CONTENT.value() && errorNode == null) {
@@ -1271,7 +1269,7 @@ public class AzureADClientService {
 				if (ar == null) {
 					throw new UserAccountRegistrationException(new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "Failed to obtain auth token for user credentials", RequestFailureReason.UNAUTHORIZED));
 				}
-				
+
 				if (ar instanceof AuthenticationResult) {
 
 					AuthenticationResult authResult = (AuthenticationResult) ar;
@@ -1323,7 +1321,7 @@ public class AzureADClientService {
 			logger.error("IOException: {}", ioe.getMessage(), ioe);
 			resultObj = new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", "FDAGNDSVCERR0032");
 		} finally {
-			
+
 			if (resultObj instanceof ApiError) {
 				logger.error("FDAGndSvcLog> {}", ControllerUtils.sanitizeString(progressLog.toString()));
 			}
@@ -1852,9 +1850,13 @@ public class AzureADClientService {
 		emailMessageBody.append("Hi ").append(newlyCreatedUser.getDisplayName()).append(' ')
 				.append(String.format("(%s),", airline));
 
-		String role = newlyCreatedUser.getGroups().stream()
-				.filter(group -> group.getDisplayName().startsWith("role-"))
-				.map(group -> group.getDisplayName().replace("role-airline", StringUtils.EMPTY).toLowerCase())
+		String emailAddress = newlyCreatedUser.getOtherMails().get(0);
+		String activationCode = ActivationCodeGenerator.randomString(6);
+
+		StringBuilder emailMessageBody = new StringBuilder();
+		String airline = newlyCreatedUser.getGroups().stream()
+				.filter(group -> group.getDisplayName().startsWith("airline-"))
+				.map(group -> group.getDisplayName().replace("airline-", StringUtils.EMPTY).toUpperCase())
 				.collect(Collectors.joining(","));
 
 		emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
