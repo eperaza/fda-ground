@@ -111,7 +111,7 @@ public class DemoApplication {
 		return appSecrets;
 	}
 
-	@Bean
+	@Bean(name = "appCertificates")
 	public Map<String, X509Certificate> getAppCertificates(KeyVaultRetriever keyVaultRetriever) {
 
 		Map<String, X509Certificate> appCertificates = new ConcurrentHashMap<String, X509Certificate>();
@@ -121,7 +121,17 @@ public class DemoApplication {
 		return appCertificates;
 	}
 
-    @Bean
+	@Bean(name = "appRegistrationCertificates")
+	public Map<String, X509Certificate> getAppRegistrationCertificates(KeyVaultRetriever keyVaultRetriever) {
+
+		Map<String, X509Certificate> appRegistrationCertificates = new ConcurrentHashMap<String, X509Certificate>();
+		//need to remove hard-coded names, and use keyvault entries instead
+		String fdaRegistrationCertName = "fdadvisor2z";
+		appRegistrationCertificates.put(fdaRegistrationCertName, keyVaultRetriever.getCertificateByCertName(fdaRegistrationCertName));
+		return appRegistrationCertificates;
+	}
+
+	@Bean
     public SSLSocketFactory getSSLSocketFactory(Map<String,String> appSecrets) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, UnrecoverableKeyException, KeyManagementException {
 
     	SSLSocketFactory sslSocketFactory = null;

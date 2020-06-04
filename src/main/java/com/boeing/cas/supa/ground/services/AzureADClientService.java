@@ -1331,7 +1331,33 @@ public class AzureADClientService {
 
 		return resultObj;
 	}
-	
+
+	public Object getClientCertFromActivationCode(String email, String code) throws UserAccountRegistrationException {
+		logger.debug("Validate one-time activation code [{}] for [{}]", code, email);
+		// First validate activation code
+		List<ActivationCode> codes = userAccountRegister.getActivationCode(email, code);
+		if (codes.isEmpty() || codes.size() > 1) {
+			return new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE",
+					"Missing or Invalid Activation Code, Missing or Invalid Email Address", RequestFailureReason.BAD_REQUEST);
+		}
+
+		// Valid code, get activation information
+		ActivationCode activationCode = codes.get(0);
+		logger.debug("[{}] is a Valid code for [{}]", code, email);
+		// Remove code
+		List<String> persistentEmailFromBlob = getPersistentEmailFromBlob("persistent-emails", new StringBuilder("persistent.emails").toString());
+
+		// If not a persistent email, then remove it.
+		if (!persistentEmailFromBlob.contains(email.toLowerCase())) {
+			logger.debug("Remove activation code [{}] for [{}]", code, email);
+			userAccountRegister.removeActivationCode(email, code);
+		} else {
+			logger.debug("Retain persistent email -> [{}]", email);
+		}
+		Object resultObj = activationCode;
+		return resultObj;
+	}
+
 	public Object enableUserAndSetPassword(UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {
 
 		Object resultObj = null;
@@ -2029,6 +2055,34 @@ public class AzureADClientService {
 
         return base64;
     }
+
+	private List<String> getPersistentEmailFromBlob(String containerName, String fileName) {
+
+		List<String> emails = new ArrayList<>();
+		try {
+			AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
+			try (ByteArrayOutputStream outputStream = asu.downloadFile(containerName, fileName)) {
+				String base = outputStream.toString().toLowerCase();
+				logger.debug("{} contains [{}]", fileName, base);
+				emails = Arrays.asList(base.split(";"));
+				logger.debug("{} contains [{}] emails", fileName, emails.size());
+
+			} catch (NullPointerException npe) {
+				logger.error("Failed to retrieve Persistent emails [{}]: {}", fileName, npe.getMessage(), npe);
+			}
+		}
+		catch (IOException ioe) {
+			logger.error("Failed to retrieve Persistent emails [{}]: {}", fileName, ioe.getMessage(), ioe);
+		}
+		logger.info("found [{}] persistent emails.", emails.size());
+		if (!emails.isEmpty())
+			for (String email : emails)
+				logger.debug("entry [{}]", email);
+		else {
+			logger.debug("{} in {} is empty.", fileName, containerName);
+		}
+		return emails;
+	}
 
 	public ApiError getLoginErrorFromString(String responseString) {
 
