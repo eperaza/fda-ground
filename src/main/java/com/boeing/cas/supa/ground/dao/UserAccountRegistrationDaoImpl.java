@@ -30,10 +30,13 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 
 	private static final String USER_ACCOUNT_SELECT_SQL = "SELECT * FROM user_account_registrations WHERE airline = :airline AND user_object_id != :user_object_id";
 	private static final String USER_ACCOUNT_UPDATE_SQL
-		= "UPDATE user_account_registrations SET display_name = :display_name, first_name = :first_name, last_name = :last_name, "
-		+ " email_address = :email_address, user_role = :user_role, registration_date = :registration_date "
-		+ " WHERE user_object_id = :user_object_id AND airline = :airline";
+			= "UPDATE user_account_registrations SET display_name = :display_name, first_name = :first_name, last_name = :last_name, "
+			+ " email_address = :email_address, user_role = :user_role, registration_date = :registration_date "
+			+ " WHERE user_object_id = :user_object_id AND airline = :airline";
 
+	private static final String USER_ACTIVATION_CODE_SQL_INSERT = "INSERT INTO user_activation_codes (email_address, activation_code, registration_cert, airline) VALUES (:email_address, :activation_code, :registration_cert, :airline)";
+	private static final String USER_ACTIVATION_CODE_SQL_SELECT = "SELECT * FROM user_activation_codes WHERE activation_code = :activation_code AND email_address = :email_address";
+	private static final String USER_ACTIVATION_CODE_SQL_DELETE = "DELETE FROM user_activation_codes WHERE activation_code = :activation_code AND email_address = :email_address";
 
 	@Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;
@@ -155,7 +158,7 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 
 	@Override
 	public void enableNewUserAccount(String registrationToken, String userPrincipalName, String accountStateFrom, String accountStateTo)
-			throws UserAccountRegistrationException {
+		throws UserAccountRegistrationException {
 
 		Map<String,Object> namedParameters = new HashMap<>();
 		namedParameters.put("registration_token", registrationToken);
@@ -192,32 +195,107 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 		}
 	}
 
+
+	@Override
+	public void insertActivationCode(String email_address, String activation_code, String registration_cert, String airline)
+		throws UserAccountRegistrationException
+	{
+
+		Map<String,Object> namedParameters = new HashMap<>();
+		namedParameters.put("email_address", email_address);
+		namedParameters.put("activation_code", activation_code);
+		namedParameters.put("registration_cert", registration_cert);
+		namedParameters.put("airline", airline);
+		try {
+
+			int returnVal = jdbcTemplate.update(USER_ACTIVATION_CODE_SQL_INSERT, namedParameters);
+			if (returnVal != 1) {
+				logger.warn("Could not insert activation code into database: {} record(s) updated", returnVal);
+				throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", String.format("%d record(s) updated", returnVal), RequestFailureReason.INTERNAL_SERVER_ERROR));
+			}
+		}
+		catch (DataAccessException dae) {
+
+			logger.warn("Failed to insert activation code into database: {}", dae.getMessage(), dae);
+			throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
+		}
+	}
+
+	@Override
+	public List<ActivationCode> getActivationCode(String email_address, String activation_code) throws UserAccountRegistrationException {
+
+		List<ActivationCode> codes = new ArrayList<>();
+
+		Map<String,Object> namedParameters = new HashMap<>();
+		namedParameters.put("email_address", email_address);
+		namedParameters.put("activation_code", activation_code);
+
+		try {
+			codes = jdbcTemplate.query(USER_ACTIVATION_CODE_SQL_SELECT, namedParameters, new ActivationCodeMapper());
+			return codes;
+		}
+		catch (DataAccessException dae) {
+
+			logger.warn("Failed to obtain activation code: {}", dae.getMessage(), dae);
+			throw new UserAccountRegistrationException(new ApiError("REGISTER_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
+		}
+	}
+
+	@Override
+	public void removeActivationCode(String email_address, String activation_code) throws UserAccountRegistrationException {
+
+		Map<String,Object> namedParameters = new HashMap<>();
+		namedParameters.put("email_address", email_address);
+		namedParameters.put("activation_code", activation_code);
+		try {
+			jdbcTemplate.update(USER_ACTIVATION_CODE_SQL_DELETE, namedParameters);
+		}
+		catch (DataAccessException dae) {
+
+			logger.warn("Failed to remove activation code in database: {}", dae.getMessage(), dae);
+			throw new UserAccountRegistrationException(new ApiError("REGISTER_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
+		}
+	}
+
+
+	private static final class ActivationCodeMapper implements RowMapper<ActivationCode> {
+
+		@Override
+		public ActivationCode mapRow(ResultSet resultSet, int rowNum) throws SQLException {
+
+			ActivationCode activationCode = new ActivationCode();
+			activationCode.setAppIDName("com.boeing.cas.fuel-advisor");
+			activationCode.setCertificate(resultSet.getString("REGISTRATION_CERT"));
+			return activationCode;
+		}
+	}
+
 	private static final class UserRowMapper implements RowMapper<UserAccount> {
 
 		@Override
 		public UserAccount mapRow(ResultSet resultSet, int rowNum) throws SQLException {
 
 			UserAccount user = new UserAccount();
-				user.setObjectType("User");
-				user.setObjectId(resultSet.getString("USER_OBJECT_ID"));
-				user.setUserPrincipalName(resultSet.getString("USER_PRINCIPAL_NAME"));
-				String account_state = resultSet.getString("ACCOUNT_STATE");
-				user.setAccountEnabled(account_state.equals("USER_ACTIVATED")?"true":"false");
+			user.setObjectType("User");
+			user.setObjectId(resultSet.getString("USER_OBJECT_ID"));
+			user.setUserPrincipalName(resultSet.getString("USER_PRINCIPAL_NAME"));
+			String account_state = resultSet.getString("ACCOUNT_STATE");
+			user.setAccountEnabled(account_state.equals("USER_ACTIVATED")?"true":"false");
 
-				user.setDisplayName(resultSet.getString("DISPLAY_NAME"));
-				user.setGivenName(resultSet.getString("FIRST_NAME"));
-				user.setSurname(resultSet.getString("LAST_NAME"));
-				int endPoint = user.getUserPrincipalName().indexOf("@");
-				if (endPoint > 0) {
-					user.setMailNickname(user.getUserPrincipalName().substring(0, endPoint));
-				}
-				String other_email = resultSet.getString("EMAIL_ADDRESS");
-				List<String> emails = new ArrayList<>();
-				emails.add(other_email);
+			user.setDisplayName(resultSet.getString("DISPLAY_NAME"));
+			user.setGivenName(resultSet.getString("FIRST_NAME"));
+			user.setSurname(resultSet.getString("LAST_NAME"));
+			int endPoint = user.getUserPrincipalName().indexOf("@");
+			if (endPoint > 0) {
+				user.setMailNickname(user.getUserPrincipalName().substring(0, endPoint));
+			}
+			String other_email = resultSet.getString("EMAIL_ADDRESS");
+			List<String> emails = new ArrayList<>();
+			emails.add(other_email);
 
-				user.setOtherMails(emails);
-				user.setUserRole(resultSet.getString("USER_ROLE"));
-				user.setCreatedDateTime(resultSet.getString("REGISTRATION_DATE"));
+			user.setOtherMails(emails);
+			user.setUserRole(resultSet.getString("USER_ROLE"));
+			user.setCreatedDateTime(resultSet.getString("REGISTRATION_DATE"));
 			return user;
 		}
 	}
