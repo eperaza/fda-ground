@@ -300,10 +300,6 @@ public class AzureADClientService {
 	public Object createUser(NewUser newUserPayload, String accessTokenInRequest, Group airlineGroup,
 							 						  String roleGroupName, boolean newRegistrationProcess) {
 
-		logger.debug("=================================");
-		logger.debug("*** New Reg Used: {}", newRegistrationProcess);
-		logger.debug("=================================");
-
 		Object resultObj = null;
 		StringBuilder progressLog = new StringBuilder("Create user -");
 
