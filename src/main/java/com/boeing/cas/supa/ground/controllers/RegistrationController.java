@@ -1,18 +1,10 @@
 package com.boeing.cas.supa.ground.controllers;
 
-import com.boeing.cas.supa.ground.exceptions.UserAccountRegistrationException;
-import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
-import com.boeing.cas.supa.ground.pojos.ApiError;
-import com.boeing.cas.supa.ground.pojos.Credential;
-import com.boeing.cas.supa.ground.pojos.UserAccountActivation;
-import com.boeing.cas.supa.ground.pojos.UserRegistration;
-import com.boeing.cas.supa.ground.services.AzureADClientService;
-import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
-import com.boeing.cas.supa.ground.utils.Constants;
-import com.boeing.cas.supa.ground.utils.ControllerUtils;
-import com.microsoft.aad.adal4j.AuthenticationException;
-import com.microsoft.aad.adal4j.AuthenticationResult;
-import org.apache.commons.lang3.StringUtils;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Base64;
+import java.util.Map;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,10 +13,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Base64;
-import java.util.Map;
+import com.boeing.cas.supa.ground.exceptions.UserAccountRegistrationException;
+import com.boeing.cas.supa.ground.helpers.AzureADClientHelper;
+import com.boeing.cas.supa.ground.pojos.ApiError;
+import com.boeing.cas.supa.ground.pojos.Credential;
+import com.boeing.cas.supa.ground.pojos.UserAccountActivation;
+import com.boeing.cas.supa.ground.pojos.UserRegistration;
+import com.boeing.cas.supa.ground.services.AzureADClientService;
+import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
+import com.boeing.cas.supa.ground.utils.ControllerUtils;
+import com.microsoft.aad.adal4j.AuthenticationException;
+import com.microsoft.aad.adal4j.AuthenticationResult;
+
+import com.boeing.cas.supa.ground.utils.Constants;
+import org.apache.commons.lang3.StringUtils;
 
 
 @RestController

@@ -122,9 +122,6 @@ public class EmailRegistrationService {
                 new StringBuilder(newUser.getUserPrincipalName()).append(' ').append(registrationToken)
                         .append(' ').append(this.appProps.get(fdadvisorClientCertBase64)).toString().getBytes());
 
-//        String emailAddress = newUser.getOtherMails().get(0);
-//        String activationCode = ActivationCodeGenerator.randomString(6);
-
         StringBuilder emailMessageBody = new StringBuilder();
         String airline = newUser.getGroups().stream()
                 .filter(group -> group.getDisplayName().startsWith("airline-"))

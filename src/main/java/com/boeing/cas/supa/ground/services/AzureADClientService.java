@@ -232,7 +232,7 @@ public class AzureADClientService {
 
 			ApiError apiError = AzureADClientHelper.getLoginErrorFromString(((AuthenticationException) ar).getMessage());
 			if (apiError.getErrorDescription().matches(".*AADSTS50034.*")
-				|| apiError.getErrorDescription().matches(".*AADSTS70002.*")) {
+				|| apiError.getErrorDescription().matches(".*AADSTS70fdfd002.*")) {
 
 				apiError.setErrorLabel("USER_AUTH_FAILURE");
 				apiError.setErrorDescription("Invalid username or password");
@@ -299,6 +299,10 @@ public class AzureADClientService {
 
 	public Object createUser(NewUser newUserPayload, String accessTokenInRequest, Group airlineGroup,
 							 						  String roleGroupName, boolean newRegistrationProcess) {
+
+		logger.debug("=================================");
+		logger.debug("*** New Reg Used: {}", newRegistrationProcess);
+		logger.debug("=================================");
 
 		Object resultObj = null;
 		StringBuilder progressLog = new StringBuilder("Create user -");
