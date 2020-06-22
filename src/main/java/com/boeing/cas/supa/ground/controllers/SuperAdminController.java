@@ -56,7 +56,7 @@ public class SuperAdminController {
 		if(newUserPayload.getAirlineGroupName().trim().equalsIgnoreCase("airline-amx")){
 			 result = aadClient.createUser(newUserPayload, accessTokenInRequest, null, newUserPayload.getRoleGroupName(), false);
 		}else{
-			 result = aadClient.createUser(newUserPayload, accessTokenInRequest, null, newUserPayload.getRoleGroupName(), true);
+			result = aadClient.createUser(newUserPayload, accessTokenInRequest, null, newUserPayload.getRoleGroupName(), true);
 		}
 
 		if (result instanceof ApiError) {
