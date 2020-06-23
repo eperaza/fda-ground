@@ -113,7 +113,7 @@ public class EmailRegistrationService {
 
     public String getOldActivationEmailForUser(User newUser, String registrationToken)
             throws UserAccountRegistrationException {
-
+        logger.debug("asldkfja;sdlkf");
         logger.debug(" ===========FDAClientCert=======");
         String fdadvisorClientCertBase64 = new StringBuilder(appProps.get("FDAdvisorClientCertName")).append("base64").toString();
         logger.info("CERT IS: {}", fdadvisorClientCertBase64);
