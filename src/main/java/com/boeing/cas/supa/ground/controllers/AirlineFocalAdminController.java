@@ -70,9 +70,6 @@ public class AirlineFocalAdminController {
 	@RequestMapping(path="/airlinefocaladmin/createnewusers", method = { RequestMethod.POST })
 	public ResponseEntity<Object> createNewUser(@RequestBody NewUser newUserPayload, @RequestHeader("Authorization") String authToken) {
 
-		logger.debug("========== INCOMING NEWUSERPAYLOAD ==============");
-		logger.debug("payload: {}", newUserPayload);
-
 		// Extract the access token from the authorization request header
 		String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
 
@@ -80,11 +77,10 @@ public class AirlineFocalAdminController {
 		// and one and only one airline group.
 		User airlineFocalCurrentUser = aadClient.getUserInfoFromJwtAccessToken(accessTokenInRequest);
 
-		logger.debug("============ airlineFocalCurrentUser =============");
-		logger.debug("user: {}", airlineFocalCurrentUser);
 
 		// Validate user privileges by checking group membership. Must belong to Role-AirlineFocal group and a single Airline group.
 		List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
+
 		//List<Group> roleGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).peek(g -> logger.info("Role Group: {}", g)).collect(Collectors.toList());
 		// Allow anyone who can access this screen to add users.
 		List<Group> roleGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
@@ -93,15 +89,13 @@ public class AirlineFocalAdminController {
 		}
 
 		Object result;
-		if(newUserPayload.getAirlineGroupName().trim().equalsIgnoreCase("airline-amx")){
-			logger.debug("**** AirlineFocal OLD REGISTRATION endpoint !!!!");
+		if(newUserPayload.airlineGroupName != null && newUserPayload.getAirlineGroupName().trim().equalsIgnoreCase("airline-amx")){
+			logger.debug(" **** OLD AIRLINE REGISTRATION PROCESS **** ");
 			logger.debug("Registering airline: {}", newUserPayload.getAirlineGroupName().toLowerCase());
 
 			result = aadClient.createUser(newUserPayload, accessTokenInRequest, null, newUserPayload.getRoleGroupName(), false);
 		}else{
-			logger.debug("!!!! AirlineFocal NEW  REGISTRATION!!!!");
-			logger.debug("Registering airline: {}", newUserPayload.getAirlineGroupName().toLowerCase());
-
+			logger.debug(" **** NEW AIRLINE REGISTRATION PROCESS **** ");
 			result = aadClient.createUser(newUserPayload, accessTokenInRequest, null, newUserPayload.getRoleGroupName(), true);
 		}
 

@@ -1,8 +1,8 @@
 package com.boeing.cas.supa.ground.pojos;
 
-import java.util.List;
-
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.List;
 
 public class NewUser {
 
@@ -13,7 +13,7 @@ public class NewUser {
 	private String displayName;
 	private String password;
 	private boolean forceChangePasswordNextLogin;
-	private String airlineGroupName;
+	public String airlineGroupName;
 	private String roleGroupName;
 	private List<String> otherMails;
 
