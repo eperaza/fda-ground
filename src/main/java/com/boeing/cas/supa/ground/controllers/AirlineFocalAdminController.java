@@ -70,12 +70,19 @@ public class AirlineFocalAdminController {
 	@RequestMapping(path="/airlinefocaladmin/createnewusers", method = { RequestMethod.POST })
 	public ResponseEntity<Object> createNewUser(@RequestBody NewUser newUserPayload, @RequestHeader("Authorization") String authToken) {
 
+		logger.debug("========== INCOMING NEWUSERPAYLOAD ==============");
+		logger.debug("payload: {}", newUserPayload);
+
 		// Extract the access token from the authorization request header
 		String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
 
 		// Get group membership of user issuing request. Ensure that user belongs to role-airlinefocal group
 		// and one and only one airline group.
 		User airlineFocalCurrentUser = aadClient.getUserInfoFromJwtAccessToken(accessTokenInRequest);
+
+		logger.debug("============ airlineFocalCurrentUser =============");
+		logger.debug("user: {}", airlineFocalCurrentUser);
+
 		// Validate user privileges by checking group membership. Must belong to Role-AirlineFocal group and a single Airline group.
 		List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
 		//List<Group> roleGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).peek(g -> logger.info("Role Group: {}", g)).collect(Collectors.toList());
