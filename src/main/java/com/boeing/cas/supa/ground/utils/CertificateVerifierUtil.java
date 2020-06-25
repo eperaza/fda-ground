@@ -1,12 +1,15 @@
 package com.boeing.cas.supa.ground.utils;
 
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
+import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
-import java.security.InvalidKeyException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PublicKey;
-import java.security.SignatureException;
+import java.security.*;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -16,15 +19,6 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import javax.xml.bind.DatatypeConverter;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
 
 @Component
 public class CertificateVerifierUtil {
@@ -137,7 +131,8 @@ public class CertificateVerifierUtil {
             return true;
         }
         catch (SignatureException se) {
-            logger.warn("SignatureException: {}", se.getMessage());
+            // TODO - Figure out how to more gracefully use this?
+            // logger.warn("SignatureException: {}", se.getMessage());
         }
         catch (InvalidKeyException ike) {
             logger.warn("InvalidKeyException: {}", ike.getMessage());
