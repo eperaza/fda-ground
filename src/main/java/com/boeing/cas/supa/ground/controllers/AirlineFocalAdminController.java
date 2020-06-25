@@ -92,10 +92,10 @@ public class AirlineFocalAdminController {
 		if(airlineGroups.get(0).getDisplayName().equalsIgnoreCase("airline-amx")){
 			logger.debug(" **** OLD AIRLINE REGISTRATION PROCESS **** ");
 
-			result = aadClient.createUser(newUserPayload, accessTokenInRequest, null, newUserPayload.getRoleGroupName(), false);
+			result = aadClient.createUser(newUserPayload, accessTokenInRequest, airlineGroups.get(0), newUserPayload.getRoleGroupName(), false);
 		}else{
 			logger.debug(" **** NEW AIRLINE REGISTRATION PROCESS **** ");
-			result = aadClient.createUser(newUserPayload, accessTokenInRequest, null, newUserPayload.getRoleGroupName(), true);
+			result = aadClient.createUser(newUserPayload, accessTokenInRequest, airlineGroups.get(0), newUserPayload.getRoleGroupName(), true);
 		}
 
 		if (result instanceof ApiError) {
