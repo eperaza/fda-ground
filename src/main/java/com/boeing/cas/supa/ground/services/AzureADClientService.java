@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -80,6 +79,9 @@ public class AzureADClientService {
 
 	@Autowired
 	private PowerBiInformationDao powerBiInformationDao;
+
+	@Autowired
+	private EmailRegistrationService emailService;
 
 	public Object getAccessTokenFromUserCredentials(String username, String password, String authority, String clientId) {
 
@@ -230,7 +232,7 @@ public class AzureADClientService {
 
 			ApiError apiError = AzureADClientHelper.getLoginErrorFromString(((AuthenticationException) ar).getMessage());
 			if (apiError.getErrorDescription().matches(".*AADSTS50034.*")
-				|| apiError.getErrorDescription().matches(".*AADSTS70002.*")) {
+				|| apiError.getErrorDescription().matches(".*AADSTS70fdfd002.*")) {
 
 				apiError.setErrorLabel("USER_AUTH_FAILURE");
 				apiError.setErrorDescription("Invalid username or password");
@@ -2000,7 +2002,7 @@ public class AzureADClientService {
 	}
 
 
-	private boolean uploadAttachment(final File uploadfile) throws IOException {
+	public boolean uploadAttachment(final File uploadfile) throws IOException {
 
 		logger.debug("Upload File method invoked -  Single file upload!");
 
