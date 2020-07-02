@@ -37,7 +37,6 @@ public class SuperAdminController {
 		Object result = aadClient.createUser(newUserPayload, accessTokenInRequest, null, newUserPayload.getRoleGroupName(), false);
 
 		if (result instanceof ApiError) {
-			
 			ApiError error = (ApiError) result;
 			logger.error(error.getErrorLabel(), error.getErrorDescription());
 			return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(error.getFailureReason()));
@@ -52,10 +51,15 @@ public class SuperAdminController {
 		// Extract the access token from the authorization request header
 		String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
 
-		Object result = aadClient.createUser(newUserPayload, accessTokenInRequest, null, newUserPayload.getRoleGroupName(), true);
+		Object result;
+
+		if(newUserPayload.getAirlineGroupName().trim().equalsIgnoreCase("airline-amx")){
+			 result = aadClient.createUser(newUserPayload, accessTokenInRequest, null, newUserPayload.getRoleGroupName(), false);
+		}else{
+			result = aadClient.createUser(newUserPayload, accessTokenInRequest, null, newUserPayload.getRoleGroupName(), true);
+		}
 
 		if (result instanceof ApiError) {
-
 			ApiError error = (ApiError) result;
 			logger.error(error.getErrorLabel(), error.getErrorDescription());
 			return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(error.getFailureReason()));
