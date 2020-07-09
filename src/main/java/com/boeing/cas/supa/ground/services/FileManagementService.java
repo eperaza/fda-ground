@@ -9,7 +9,6 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -56,6 +55,9 @@ public class FileManagementService {
 
 	@Autowired
 	private FlightRecordDao flightRecordDao;
+	
+	@Autowired
+	private TspManagementService tspManagementService;
 
 
 	public byte[] getFileFromStorage(String file, String type, String authToken) throws FileDownloadException {
@@ -76,7 +78,6 @@ public class FileManagementService {
 			}
 
 			String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
-			String userRole = roleGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_USER_ROLE_PREFIX, StringUtils.EMPTY);
 
 			AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
 			if (StringUtils.isBlank(file) || StringUtils.isBlank(type)) {
@@ -87,39 +88,32 @@ public class FileManagementService {
 			String container = null, filePath = null;
 			// If TSP, then prepend airline as virtual directory to file path
 			if (TSP_STORAGE_CONTAINER.equals(type)) {
-				container = TSP_STORAGE_CONTAINER;
-				filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/').append(file).toString();
-				if (asu.blobExistsOnCloud(container, filePath) != true) {
-					// in case the file is not exist, try to upper case the file name
-					String tailNumberPart = file.substring(0, file.indexOf(".json"));
-					filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/').append(tailNumberPart.toUpperCase()).append(".json").toString();
-					
-					if (asu.blobExistsOnCloud(container, filePath) != true) {
-						// in case the file is not exist, try to upper case the first letter to support camel file name
-						filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/')
-													.append(file.substring(0, 1).toUpperCase())
-													.append(file.substring(1)).toString();
-					}
+				String airlineName = airlineGroup.toUpperCase();
+				String tailNumber = file.substring(0, file.indexOf(".json"));
+				Tsp activeTsp = this.tspManagementService.getActiveTspByAirlineAndTailNumber(airlineName, tailNumber);
+				if (activeTsp == null) {
+					throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("No file corresponding to specified name %s and type %s", file, type), RequestFailureReason.NOT_FOUND));
 				}
+				
+				fileInBytes = activeTsp.getTspContent().getBytes();
 			} else if (MOBILECONFIG_STORAGE_CONTAINER.equals(type)) {
 				container = MOBILECONFIG_STORAGE_CONTAINER;
 				filePath = file;
+				// Once container and file path are established, retrieve the file contents in bytes
+				try (ByteArrayOutputStream outputStream = asu.downloadFile(container, filePath)) {
+
+					if (outputStream == null) {
+						throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("No file corresponding to specified name %s and type %s", file, type), RequestFailureReason.NOT_FOUND));
+					}
+					outputStream.flush();
+					fileInBytes = outputStream.toByteArray();
+
+				} catch (IOException e) {
+					logger.error("Error retrieving file [{}] of type [{}]: {}", ControllerUtils.sanitizeString(file), ControllerUtils.sanitizeString(type), e.getMessage(), e);
+					throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("Error retrieving file [%s] of type [%s]: %s", file, type, e.getMessage()), RequestFailureReason.INTERNAL_SERVER_ERROR));
+				}
 			} else {
 				throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "Invalid file type requested for download", RequestFailureReason.BAD_REQUEST));
-			}
-
-			// Once container and file path are established, retrieve the file contents in bytes
-			try (ByteArrayOutputStream outputStream = asu.downloadFile(container, filePath)) {
-
-				if (outputStream == null) {
-					throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("No file corresponding to specified name %s and type %s", file, type), RequestFailureReason.NOT_FOUND));
-				}
-				outputStream.flush();
-				fileInBytes = outputStream.toByteArray();
-
-			} catch (IOException e) {
-				logger.error("Error retrieving file [{}] of type [{}]: {}", ControllerUtils.sanitizeString(file), ControllerUtils.sanitizeString(type), e.getMessage(), e);
-				throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("Error retrieving file [%s] of type [%s]: %s", file, type, e.getMessage()), RequestFailureReason.INTERNAL_SERVER_ERROR));
 			}
 		} catch (IOException ioe) {
 			logger.error("Error accessing Azure Storage: {}", ioe.getMessage(), ioe);
