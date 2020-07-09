@@ -1,7 +1,10 @@
 package com.boeing.cas.supa.ground.services;
 
+import com.boeing.cas.supa.ground.controllers.SuperAdminController;
 import com.boeing.cas.supa.ground.helpers.ExcelHelper;
 import org.apache.poi.ss.usermodel.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,7 +24,7 @@ import static java.util.stream.Collectors.toMap;
 public class UploadService {
 
     private final ExcelHelper excelHelper;
-
+    private final Logger logger = LoggerFactory.getLogger(SuperAdminController.class);
     private int airlineCellIndex = 2;
     private int emailRowIndex = 4;
 
@@ -53,7 +56,7 @@ public class UploadService {
 
         // **IMPORTANT
         String airline = airlineCells.get(airlineCellIndex);
-        System.out.println("airline: " + airline);
+        logger.debug("AIRLINE: " + airline);
 
         Row headerRow = rowStreamSupplier.get().skip(1).findFirst().get();
 
@@ -62,7 +65,6 @@ public class UploadService {
                 .map(String::valueOf)
                 .collect(Collectors.toList());
 
-        System.out.println("****header CElls: ");
         for(String cell: headerCells){
             System.out.println(cell);
         }
@@ -77,12 +79,12 @@ public class UploadService {
         List<String> invalidEmails = new ArrayList<>();
         for(String email: emails){
             if(!isValid(email)){
-                System.out.println("Invalid email found! - " + email);
+                logger.debug("!!! INVALID EMAIL : " + email);
                 invalidEmails.add(email);
             }
         }
         if(invalidEmails.size() == 0){
-            System.out.println("All Emails Good!!!");
+        logger.debug("All Emails Checkout!!! =) ");
         }
 
         List<Map<String, String>> result = rowStreamSupplier.get()
