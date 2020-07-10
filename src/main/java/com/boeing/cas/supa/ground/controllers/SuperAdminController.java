@@ -51,7 +51,7 @@ public class SuperAdminController {
 		return new ResponseEntity<>(result, HttpStatus.CREATED);
 	}
 
-	@RequestMapping(path="/createnewusers", method = { RequestMethod.POST })
+	@RequestMapping(path="/registerUsers", method = { RequestMethod.POST })
 	public ResponseEntity<Object> createNewUser(@RequestBody NewUser newUserPayload, @RequestHeader("Authorization") String authToken) {
 
 		// Extract the access token from the authorization request header
