@@ -5,6 +5,7 @@ import com.boeing.cas.supa.ground.pojos.Group;
 import com.boeing.cas.supa.ground.pojos.NewUser;
 import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
+import com.boeing.cas.supa.ground.services.UploadService;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -15,9 +16,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RequestMapping(path="/airlinefocaladmin")
@@ -26,11 +29,18 @@ public class AirlineFocalAdminController {
 
 	private final Logger logger = LoggerFactory.getLogger(AirlineFocalAdminController.class);
 
+	@Autowired
+	private UploadService uploadService;
+
 	private static final List<String> ALLOWED_USER_ROLES = Arrays.asList(
 		new String[] { "role-airlinefocal", "role-airlinepilot", "role-airlinemaintenance", "role-airlinecheckairman", "role-airlineefbadmin" });
 
 	@Autowired
 	private AzureADClientService aadClient;
+
+	public AirlineFocalAdminController(UploadService uploadService) {
+		this.uploadService = uploadService;
+	}
 
 	@RequestMapping(path="/users", method = { RequestMethod.POST })
 	public ResponseEntity<Object> createUser(@RequestBody NewUser newUserPayload, @RequestHeader("Authorization") String authToken) {
@@ -64,6 +74,20 @@ public class AirlineFocalAdminController {
 		if (result instanceof ApiError) {
 			return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
 		}
+
+		return new ResponseEntity<>(result, HttpStatus.CREATED);
+	}
+
+	@RequestMapping(path="/registerusersbulk", method = {RequestMethod.POST })
+	public ResponseEntity<Object> createMultipleUsers(@RequestParam("file") MultipartFile file, @RequestHeader("Authorization") String authToken) throws Exception{
+		logger.debug(" ==== CORRECT UPLOAD ENDPOINT HIT ===");
+
+		if(file == null){
+			logger.debug("!!!!! OH NO THE FILE IS NOT HERE");
+		}
+
+		logger.debug("*** EXCEL FILE RECEIVED to MULTIPLE REG !!!!");
+		List<Map<String, String>> result = uploadService.upload(file);
 
 		return new ResponseEntity<>(result, HttpStatus.CREATED);
 	}
