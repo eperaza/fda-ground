@@ -55,9 +55,6 @@ public class FileManagementService {
 
 	@Autowired
 	private FlightRecordDao flightRecordDao;
-	
-	@Autowired
-	private TspManagementService tspManagementService;
 
 
 	public byte[] getFileFromStorage(String file, String type, String authToken) throws FileDownloadException {
@@ -88,32 +85,39 @@ public class FileManagementService {
 			String container = null, filePath = null;
 			// If TSP, then prepend airline as virtual directory to file path
 			if (TSP_STORAGE_CONTAINER.equals(type)) {
-				String airlineName = airlineGroup.toUpperCase();
-				String tailNumber = file.substring(0, file.indexOf(".json"));
-				Tsp activeTsp = this.tspManagementService.getActiveTspByAirlineAndTailNumber(airlineName, tailNumber);
-				if (activeTsp == null) {
-					throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("No file corresponding to specified name %s and type %s", file, type), RequestFailureReason.NOT_FOUND));
+				container = TSP_STORAGE_CONTAINER;
+				filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/').append(file).toString();
+				if (asu.blobExistsOnCloud(container, filePath) != true) {
+					// in case the file is not exist, try to upper case the file name
+					String tailNumberPart = file.substring(0, file.indexOf(".json"));
+					filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/').append(tailNumberPart.toUpperCase()).append(".json").toString();
+					
+					if (asu.blobExistsOnCloud(container, filePath) != true) {
+						// in case the file is not exist, try to upper case the first letter to support camel file name
+						filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/')
+													.append(file.substring(0, 1).toUpperCase())
+													.append(file.substring(1)).toString();
+					}
 				}
-				
-				fileInBytes = activeTsp.getTspContent().getBytes();
 			} else if (MOBILECONFIG_STORAGE_CONTAINER.equals(type)) {
 				container = MOBILECONFIG_STORAGE_CONTAINER;
 				filePath = file;
-				// Once container and file path are established, retrieve the file contents in bytes
-				try (ByteArrayOutputStream outputStream = asu.downloadFile(container, filePath)) {
-
-					if (outputStream == null) {
-						throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("No file corresponding to specified name %s and type %s", file, type), RequestFailureReason.NOT_FOUND));
-					}
-					outputStream.flush();
-					fileInBytes = outputStream.toByteArray();
-
-				} catch (IOException e) {
-					logger.error("Error retrieving file [{}] of type [{}]: {}", ControllerUtils.sanitizeString(file), ControllerUtils.sanitizeString(type), e.getMessage(), e);
-					throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("Error retrieving file [%s] of type [%s]: %s", file, type, e.getMessage()), RequestFailureReason.INTERNAL_SERVER_ERROR));
-				}
 			} else {
 				throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "Invalid file type requested for download", RequestFailureReason.BAD_REQUEST));
+			}
+
+			// Once container and file path are established, retrieve the file contents in bytes
+			try (ByteArrayOutputStream outputStream = asu.downloadFile(container, filePath)) {
+
+				if (outputStream == null) {
+					throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("No file corresponding to specified name %s and type %s", file, type), RequestFailureReason.NOT_FOUND));
+				}
+				outputStream.flush();
+				fileInBytes = outputStream.toByteArray();
+
+			} catch (IOException e) {
+				logger.error("Error retrieving file [{}] of type [{}]: {}", ControllerUtils.sanitizeString(file), ControllerUtils.sanitizeString(type), e.getMessage(), e);
+				throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("Error retrieving file [%s] of type [%s]: %s", file, type, e.getMessage()), RequestFailureReason.INTERNAL_SERVER_ERROR));
 			}
 		} catch (IOException ioe) {
 			logger.error("Error accessing Azure Storage: {}", ioe.getMessage(), ioe);
