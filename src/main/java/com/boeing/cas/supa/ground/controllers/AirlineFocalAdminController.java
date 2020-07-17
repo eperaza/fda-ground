@@ -103,17 +103,20 @@ public class AirlineFocalAdminController {
 			}
 
 			for(Map<String, String> user : result){
-				logger.debug("trying to make user " + user);
-
 				final ObjectMapper mapper  = new ObjectMapper();
-
 				final UserFromExcel excelUser = mapper.convertValue(user, UserFromExcel.class);
+
+				logger.debug("username: " + excelUser.username);
+				logger.debug("email: " + excelUser.email);
+				logger.debug("firstname: " + excelUser.first_name);
+				logger.debug("lastname: " + excelUser.last_name);
+				logger.debug("password: " + excelUser.password);
+
 				logger.debug("Fails at UserFromExcel convert");
 				logger.debug("*************************");
-				logger.debug("excelUser " + excelUser.toString());
 
 				NewUser userFromExcel = new NewUser(
-						excelUser.username,
+						excelUser.first_name,
 						excelUser.first_name,
 						excelUser.last_name,
 						excelUser.password,
@@ -121,7 +124,12 @@ public class AirlineFocalAdminController {
 						defaultRole
 				);
 
-				logger.debug("userFromExcel : " + userFromExcel.toString());
+
+				logger.debug("username : " + userFromExcel.getUserPrincipalName());
+				logger.debug("firstname: " + userFromExcel.getGivenName());
+				logger.debug("lastname: " + userFromExcel.getSurname());
+				logger.debug("password: " + userFromExcel.getPassword());
+				logger.debug("email: " + userFromExcel.getOtherMails());
 
 				if(airlineGroups.get(0).getDisplayName().equalsIgnoreCase("airline-amx")){
 					aadClient.createUser(userFromExcel, authToken, airlineGroups.get(0), userFromExcel.getRoleGroupName(), false);

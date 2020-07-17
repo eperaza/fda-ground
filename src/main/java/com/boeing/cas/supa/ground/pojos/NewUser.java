@@ -17,6 +17,9 @@ public class NewUser {
 	private String roleGroupName;
 	private List<String> otherMails;
 
+	public NewUser(){
+	}
+
 	public NewUser(String userPrincipalName, String givenName, String surname, String password, String email, String roleGroupName){
 		this.userPrincipalName = userPrincipalName;
 		this.givenName = givenName;
