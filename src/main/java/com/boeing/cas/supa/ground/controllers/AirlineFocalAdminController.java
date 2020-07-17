@@ -1,13 +1,11 @@
 package com.boeing.cas.supa.ground.controllers;
 
-import com.boeing.cas.supa.ground.pojos.ApiError;
-import com.boeing.cas.supa.ground.pojos.Group;
-import com.boeing.cas.supa.ground.pojos.NewUser;
-import com.boeing.cas.supa.ground.pojos.User;
+import com.boeing.cas.supa.ground.pojos.*;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
 import com.boeing.cas.supa.ground.services.UploadService;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +16,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -80,14 +79,60 @@ public class AirlineFocalAdminController {
 
 	@RequestMapping(path="/registerusersbulk", method = {RequestMethod.POST })
 	public ResponseEntity<Object> createMultipleUsers(@RequestParam("file") MultipartFile file, @RequestHeader("Authorization") String authToken) throws Exception{
-		logger.debug(" ==== CORRECT UPLOAD ENDPOINT HIT ===");
 
-		if(file == null){
-			logger.debug("!!!!! OH NO THE FILE IS NOT HERE");
+		// Extract the access token from the authorization request header
+		String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
+
+		// Get group membership of user issuing request. Ensure that user belongs to role-airlinefocal group
+		// and one and only one airline group.
+		User airlineFocalCurrentUser = aadClient.getUserInfoFromJwtAccessToken(accessTokenInRequest);
+		List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
+
+		List<Map<String, String>> result = new ArrayList<>();
+		logger.debug("*** EXCEL FILE RECEIVED for Bulk Registration");
+
+		// default role
+		String defaultRole = "airlinepilot";
+
+		try{
+			result = uploadService.upload(file);
+
+			logger.debug("!! Excel OK - trying to register: ");
+			for(Map<String, String> person : result){
+				logger.debug(person.toString());
+			}
+
+			for(Map<String, String> user : result){
+				logger.debug("trying to make user " + user);
+
+				final ObjectMapper mapper  = new ObjectMapper();
+
+				final UserFromExcel excelUser = mapper.convertValue(user, UserFromExcel.class);
+				logger.debug("Fails at UserFromExcel convert");
+				logger.debug("*************************");
+				logger.debug("excelUser " + excelUser.toString());
+
+				NewUser userFromExcel = new NewUser(
+						excelUser.username,
+						excelUser.first_name,
+						excelUser.last_name,
+						excelUser.password,
+						excelUser.email,
+						defaultRole
+				);
+
+				logger.debug("userFromExcel : " + userFromExcel.toString());
+
+				if(airlineGroups.get(0).getDisplayName().equalsIgnoreCase("airline-amx")){
+					aadClient.createUser(userFromExcel, authToken, airlineGroups.get(0), userFromExcel.getRoleGroupName(), false);
+				}else{
+					aadClient.createUser(userFromExcel, authToken, airlineGroups.get(0), userFromExcel.getRoleGroupName(), true);
+				}
+			}
+
+		}catch(Exception ex){
+			logger.debug(" =============  " + ex);
 		}
-
-		logger.debug("*** EXCEL FILE RECEIVED to MULTIPLE REG !!!!");
-		List<Map<String, String>> result = uploadService.upload(file);
 
 		return new ResponseEntity<>(result, HttpStatus.CREATED);
 	}

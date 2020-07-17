@@ -17,6 +17,17 @@ public class NewUser {
 	private String roleGroupName;
 	private List<String> otherMails;
 
+	public NewUser(String userPrincipalName, String givenName, String surname, String password, String email, String roleGroupName){
+		this.userPrincipalName = userPrincipalName;
+		this.givenName = givenName;
+		this.accountEnabled = true;
+		this.forceChangePasswordNextLogin = false;
+		this.surname = surname;
+		this.password = password;
+		this.otherMails.add(email);
+		this.roleGroupName = roleGroupName;
+	}
+
 	public String getUserPrincipalName() {
 		return userPrincipalName;
 	}

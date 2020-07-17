@@ -1,17 +1,18 @@
 package com.boeing.cas.supa.ground.services;
 
-import javax.transaction.Transactional;
-import javax.transaction.Transactional.TxType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import com.boeing.cas.supa.ground.dao.AircraftInfoDao;
 import com.boeing.cas.supa.ground.pojos.AircraftConfiguration;
 import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
 @Service
 public class AircraftPropertyService {

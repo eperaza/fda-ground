@@ -1,13 +1,8 @@
 package com.boeing.cas.supa.ground.pojos;
 
+import javax.persistence.*;
 import java.util.Calendar;
 import java.util.Date;
-
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
 
 @MappedSuperclass
 public class BaseEntity {
@@ -16,11 +11,9 @@ public class BaseEntity {
 	private int id;
 	
 	@Column(updatable = false, insertable = false)
-	private Date createdDate;
+	private Date modifiedTime;
 	private String createdBy;
-	
-	@Column(insertable = false)
-	private Date updatedDate;
+
 	private String updatedBy;
 
 	public int getId() {
@@ -31,15 +24,15 @@ public class BaseEntity {
 		this.id = id;
 	}
 	
-	public Date getCreatedDate() {
-		if (createdDate == null) {
-			createdDate = Calendar.getInstance().getTime();
+	public Date getModifiedTime() {
+		if (modifiedTime == null) {
+			modifiedTime = Calendar.getInstance().getTime();
 		}
-		return createdDate;
+		return modifiedTime;
 	}
 
-	public void setCreatedDate(Date createdDate) {
-		this.createdDate = createdDate;
+	public void setModifiedTime(Date createdDate) {
+		this.modifiedTime = createdDate;
 	}
 
 	public String getCreatedBy() {
@@ -51,14 +44,6 @@ public class BaseEntity {
 
 	public void setCreatedBy(String createdBy) {
 		this.createdBy = createdBy;
-	}
-	
-	public Date getUpdatedDate() {
-		return updatedDate;
-	}
-
-	public void setUpdatedDate(Date updatedDate) {
-		this.updatedDate = updatedDate;
 	}
 
 	public String getUpdatedBy() {
