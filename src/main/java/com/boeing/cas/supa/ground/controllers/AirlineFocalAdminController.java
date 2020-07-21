@@ -94,54 +94,45 @@ public class AirlineFocalAdminController {
 		// default role
 		String defaultRole = "airlinepilot";
 
-		try{
-			result = uploadService.upload(file);
+		result = uploadService.upload(file);
 
-			logger.debug("!! Excel OK - trying to register: ");
-			for(Map<String, String> person : result){
-				logger.debug(person.toString());
-			}
-
-			for(Map<String, String> user : result){
-				final ObjectMapper mapper  = new ObjectMapper();
-				final UserFromExcel excelUser = mapper.convertValue(user, UserFromExcel.class);
-
-				logger.debug("username: " + excelUser.username);
-				logger.debug("email: " + excelUser.email);
-				logger.debug("firstname: " + excelUser.first_name);
-				logger.debug("lastname: " + excelUser.last_name);
-				logger.debug("password: " + excelUser.password);
-
-				logger.debug("Fails at UserFromExcel convert");
-				logger.debug("*************************");
-
-				NewUser userFromExcel = new NewUser(
-						excelUser.first_name,
-						excelUser.first_name,
-						excelUser.last_name,
-						excelUser.password,
-						excelUser.email,
-						defaultRole
-				);
-
-
-				logger.debug("username : " + userFromExcel.getUserPrincipalName());
-				logger.debug("firstname: " + userFromExcel.getGivenName());
-				logger.debug("lastname: " + userFromExcel.getSurname());
-				logger.debug("password: " + userFromExcel.getPassword());
-				logger.debug("email: " + userFromExcel.getOtherMails());
-
-				if(airlineGroups.get(0).getDisplayName().equalsIgnoreCase("airline-amx")){
-					aadClient.createUser(userFromExcel, authToken, airlineGroups.get(0), userFromExcel.getRoleGroupName(), false);
-				}else{
-					aadClient.createUser(userFromExcel, authToken, airlineGroups.get(0), userFromExcel.getRoleGroupName(), true);
-				}
-			}
-
-		}catch(Exception ex){
-			logger.debug(" =============  " + ex);
+		logger.debug("!! Excel OK - trying to register: ");
+		for(Map<String, String> person : result){
+			logger.debug(person.toString());
 		}
 
+		for(Map<String, String> user : result){
+			final ObjectMapper mapper  = new ObjectMapper();
+			final UserFromExcel excelUser = mapper.convertValue(user, UserFromExcel.class);
+
+			logger.debug("Fails at UserFromExcel convert");
+			logger.debug("*************************");
+
+			NewUser userFromExcel = new NewUser(
+					excelUser.first_name,
+					excelUser.first_name,
+					excelUser.last_name,
+					excelUser.password,
+					excelUser.email,
+					airlineGroups.get(0),
+					defaultRole
+			);
+
+			if(userFromExcel == null){
+				logger.debug("ITS NULL OMG");
+			}else{
+				logger.debug("USER IS OK OBJECT");
+			}
+			logger.debug("Gets here at least");
+
+			if(airlineGroups.get(0).getDisplayName().equalsIgnoreCase("airline-amx")){
+				logger.debug("Old REG Hit");
+				aadClient.createUser(userFromExcel, authToken, airlineGroups.get(0), userFromExcel.getRoleGroupName(), false);
+			}else{
+				logger.debug("New Reg Hit");
+				aadClient.createUser(userFromExcel, authToken, airlineGroups.get(0), userFromExcel.getRoleGroupName(), true);
+			}
+		}
 		return new ResponseEntity<>(result, HttpStatus.CREATED);
 	}
 

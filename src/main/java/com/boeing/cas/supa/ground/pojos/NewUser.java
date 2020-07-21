@@ -20,14 +20,16 @@ public class NewUser {
 	public NewUser(){
 	}
 
-	public NewUser(String userPrincipalName, String givenName, String surname, String password, String email, String roleGroupName){
+	public NewUser(String userPrincipalName, String givenName, String surname, String password, String email, Group airlineGroup, String roleGroupName){
 		this.userPrincipalName = userPrincipalName;
 		this.givenName = givenName;
+		this.displayName = userPrincipalName;
 		this.accountEnabled = true;
 		this.forceChangePasswordNextLogin = false;
 		this.surname = surname;
 		this.password = password;
 		this.otherMails.add(email);
+		this.airlineGroupName = airlineGroup.description;
 		this.roleGroupName = roleGroupName;
 	}
 

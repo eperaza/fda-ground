@@ -21,7 +21,9 @@ public class AircraftPropertyController {
     public ResponseEntity<Object> getAircraftProperty(@RequestHeader("Authorization") String authToken,
     		@RequestHeader(name = "tail", required = true) String tailNumber,
             @RequestHeader(name= "lastUpdated", required = true) String timeStamp) {
-    	
+
+
+
         Object result = aircraftPropertyService.getAircraftProperty(authToken, tailNumber);
 
 		if (result instanceof ApiError) {

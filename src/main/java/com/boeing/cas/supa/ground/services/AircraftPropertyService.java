@@ -24,7 +24,9 @@ public class AircraftPropertyService {
 	
 	@Autowired
 	private AzureADClientService azureADClientService;
-	
+
+
+
 	@Transactional(value = TxType.REQUIRES_NEW)
 	public Object getAircraftProperty(String authToken, String tailNumber) {
 		try {
