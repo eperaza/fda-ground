@@ -3,9 +3,8 @@ BEGIN
 	CREATE TABLE [dbo].[Platform](
 		[ID] [int] IDENTITY(1,1) NOT NULL,
 		[Name] [varchar](50) NOT NULL,
-		[CreatedDate] [datetime] NOT NULL DEFAULT GETDATE(),
+		[ModifiedTime] [datetime] NOT NULL DEFAULT GETDATE(),
 		[CreatedBy] [nvarchar](50) NOT NULL DEFAULT ('SYSTEM'),
-		[UpdatedDate] [datetime] NULL,
 		[UpdatedBy] [nvarchar](50) NULL,
 		CONSTRAINT [UC_Platform_Name] UNIQUE([Name]),
 	 CONSTRAINT [PK_Platform] PRIMARY KEY CLUSTERED 
@@ -20,9 +19,8 @@ BEGIN
 	CREATE TABLE [dbo].[Property](
 		[ID] [int] IDENTITY(1,1) NOT NULL,
 		[Name] [varchar](50) NOT NULL,
-		[CreatedDate] [datetime] NOT NULL DEFAULT GETDATE(),
+		[ModifiedTime] [datetime] NOT NULL DEFAULT GETDATE(),
 		[CreatedBy] [nvarchar](50) NOT NULL DEFAULT ('SYSTEM'),
-		[UpdatedDate] [datetime] NULL,
 		[UpdatedBy] [nvarchar](50) NULL,
 		CONSTRAINT [UC_Property_Name] UNIQUE([Name]),
 	 CONSTRAINT [PK_Property] PRIMARY KEY CLUSTERED 
@@ -38,9 +36,8 @@ BEGIN
 		[ID] [int] IDENTITY(1,1) NOT NULL,
 		[PlatformID] [int] NOT NULL,
 		[PropertyID] [int] NOT NULL,
-		[CreatedDate] [datetime] NOT NULL DEFAULT GETDATE(),
+		[ModifiedTime] [datetime] NOT NULL DEFAULT GETDATE(),
 		[CreatedBy] [nvarchar](50) NOT NULL DEFAULT ('SYSTEM'),
-		[UpdatedDate] [datetime] NULL,
 		[UpdatedBy] [nvarchar](50) NULL,
 	 CONSTRAINT [PK_PlatformProperty] PRIMARY KEY CLUSTERED 
 	(
@@ -67,8 +64,7 @@ BEGIN
 		[ID] [int] IDENTITY(1,1) NOT NULL,
 		[PlatformPropertyID] [int] NOT NULL,
 		[Value] [varchar] (100) NOT NULL,
-		[CreatedDate] [datetime] NOT NULL DEFAULT GETDATE(),
-		[CreatedBy] [nvarchar](50) NOT NULL DEFAULT ('SYSTEM'),
+		[ModifiedTime] [datetime] NOT NULL DEFAULT GETDATE(),
 		[UpdatedDate] [datetime] NULL,
 		[UpdatedBy] [nvarchar](50) NULL,
 	 CONSTRAINT [PK_PropertyValue] PRIMARY KEY CLUSTERED 
@@ -89,9 +85,8 @@ BEGIN
 	CREATE TABLE [dbo].[AircraftType](
 		[ID] [int] IDENTITY(1,1) NOT NULL,
 		[Name] [varchar](50) NOT NULL,
-		[CreatedDate] [datetime] NOT NULL DEFAULT GETDATE(),
+		[ModifiedTime] [datetime] NOT NULL DEFAULT GETDATE(),
 		[CreatedBy] [nvarchar](50) NOT NULL DEFAULT ('SYSTEM'),
-		[UpdatedDate] [datetime] NULL,
 		[UpdatedBy] [nvarchar](50) NULL,
 		CONSTRAINT [UC_AircraftType_Name] UNIQUE([Name]),
 	 CONSTRAINT [PK_AircraftType] PRIMARY KEY CLUSTERED 
@@ -106,9 +101,8 @@ BEGIN
 	CREATE TABLE [dbo].[Airline](
 		[ID] [int] IDENTITY(1,1) NOT NULL,
 		[Name] [varchar](50) NOT NULL,
-		[CreatedDate] [datetime] NOT NULL DEFAULT GETDATE(),
+		[ModifiedTime] [datetime] NOT NULL DEFAULT GETDATE(),
 		[CreatedBy] [nvarchar](50) NOT NULL DEFAULT ('SYSTEM'),
-		[UpdatedDate] [datetime] NULL,
 		[UpdatedBy] [nvarchar](50) NULL,
 		CONSTRAINT [UC_Airline_Name] UNIQUE([Name]),
 	 CONSTRAINT [PK_Airline] PRIMARY KEY CLUSTERED 
@@ -126,9 +120,8 @@ BEGIN
 		[AircraftTypeID] [int] NOT NULL,
 		[TailNumber] [nvarchar](20) NOT NULL,
 		[Active] [bit] NOT NULL DEFAULT (1),
-		[CreatedDate] [datetime] NOT NULL DEFAULT GETDATE(),
+		[ModifiedTime] [datetime] NOT NULL DEFAULT GETDATE(),
 		[CreatedBy] [nvarchar](50) NOT NULL DEFAULT ('SYSTEM'),
-		[UpdatedDate] [datetime] NULL,
 		[UpdatedBy] [nvarchar](50) NULL,
 		CONSTRAINT [UC_AircraftInfo_AirlineId_TailNumber] UNIQUE([AirlineID], [TailNumber]),
 	 CONSTRAINT [PK_AircraftInfo] PRIMARY KEY CLUSTERED 
@@ -156,9 +149,8 @@ BEGIN
 		[ID] [int] IDENTITY(1,1) NOT NULL,
 		[AircraftInfoID] [int] NOT NULL,
 		[PropertyValueID] [int] NOT NULL,
-		[CreatedDate] [datetime] NOT NULL DEFAULT GETDATE(),
+		[ModifiedTime] [datetime] NOT NULL DEFAULT GETDATE(),
 		[CreatedBy] [nvarchar](50) NOT NULL DEFAULT ('SYSTEM'),
-		[UpdatedDate] [datetime] NULL,
 		[UpdatedBy] [nvarchar](50) NULL,
 	 CONSTRAINT [PK_AircraftProperty] PRIMARY KEY CLUSTERED 
 	(
@@ -188,9 +180,8 @@ BEGIN
 		[Version] [varchar](10) NOT NULL,
 		[CutoffDate] [datetime] NULL,
 		[NumberOfFlights] [int] NULL,
-		[CreatedDate] [datetime] NOT NULL DEFAULT GETDATE(),
+		[ModifiedTime] [datetime] NOT NULL DEFAULT GETDATE(),
 		[CreatedBy] [nvarchar](50) NOT NULL DEFAULT ('SYSTEM'),
-		[UpdatedDate] [datetime] NULL,
 		[UpdatedBy] [nvarchar](50) NULL,
 		CONSTRAINT [UC_TSP_AircraftInfoID_Version] UNIQUE([AircraftInfoID], [Version]),
 	 CONSTRAINT [PK_TSP] PRIMARY KEY CLUSTERED 
@@ -212,9 +203,8 @@ BEGIN
 		[ID] [int] IDENTITY(1,1) NOT NULL,
 		[TspID] [int] NOT NULL,
 		[AircraftInfoID] int NOT NULL,
-		[CreatedDate] [datetime] NOT NULL DEFAULT GETDATE(),
+		[ModifiedTime] [datetime] NOT NULL DEFAULT GETDATE(),
 		[CreatedBy] [nvarchar](50) NOT NULL DEFAULT ('SYSTEM'),
-		[UpdatedDate] [datetime] NULL,
 		[UpdatedBy] [nvarchar](50) NULL,
 		CONSTRAINT [UC_ActiveTSP_AircraftInfoID] UNIQUE([AircraftInfoID]),
 	 CONSTRAINT [PK_ActiveTSP] PRIMARY KEY CLUSTERED 
