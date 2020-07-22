@@ -91,8 +91,8 @@ public class AirlineFocalAdminController {
 		List<Map<String, String>> result = new ArrayList<>();
 		logger.debug("*** EXCEL FILE RECEIVED for Bulk Registration");
 
-		// default role
-		String defaultRole = "airlinepilot";
+		// default role - pilot
+		String defaultRole = ALLOWED_USER_ROLES.get(1);
 
 		result = uploadService.upload(file);
 
@@ -105,11 +105,8 @@ public class AirlineFocalAdminController {
 			final ObjectMapper mapper  = new ObjectMapper();
 			final UserFromExcel excelUser = mapper.convertValue(user, UserFromExcel.class);
 
-			logger.debug("Fails at UserFromExcel convert");
-			logger.debug("*************************");
-
 			NewUser userFromExcel = new NewUser(
-					excelUser.first_name,
+					excelUser.username,
 					excelUser.first_name,
 					excelUser.last_name,
 					excelUser.password,
@@ -117,13 +114,6 @@ public class AirlineFocalAdminController {
 					airlineGroups.get(0),
 					defaultRole
 			);
-
-			if(userFromExcel == null){
-				logger.debug("ITS NULL OMG");
-			}else{
-				logger.debug("USER IS OK OBJECT");
-			}
-			logger.debug("Gets here at least");
 
 			if(airlineGroups.get(0).getDisplayName().equalsIgnoreCase("airline-amx")){
 				logger.debug("Old REG Hit");
