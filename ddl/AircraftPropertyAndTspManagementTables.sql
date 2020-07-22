@@ -225,3 +225,17 @@ BEGIN
 	
 	ALTER TABLE [dbo].[ActiveTSP] CHECK CONSTRAINT [FK_ActiveTSP_AircraftInfo]
 END
+
+ALTER TRIGGER [dbo].[tr_AircraftProperty_Modified]
+   ON [dbo].[AircraftProperty]
+   AFTER UPDATE
+AS BEGIN
+   SET [ModifiedTime] = GETDATE()
+END
+
+ALTER TRIGGER [dbo].[tr_TSP_Modified]
+   ON [dbo].[TSP]
+   AFTER UPDATE
+AS BEGIN
+   SET [ModifiedTime] = GETDATE()
+END
