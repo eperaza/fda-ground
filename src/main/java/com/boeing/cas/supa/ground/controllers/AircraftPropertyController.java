@@ -17,16 +17,38 @@ public class AircraftPropertyController {
     @Autowired
     private AircraftPropertyService aircraftPropertyService;
 
+
     @RequestMapping(path="/getAircraftProperty", method = { RequestMethod.GET })
     public ResponseEntity<Object> getAircraftProperty(@RequestHeader("Authorization") String authToken,
-    		@RequestHeader(name = "tail", required = true) String tailNumber) {
-    	
-        Object result = aircraftPropertyService.getAircraftProperty(authToken, tailNumber);
+                                                      @RequestHeader(name = "tail", required = true) String tailNumber,
+                                                      @RequestHeader(name= "lastUpdated", required = true) String timeStamp) {
 
-		if (result instanceof ApiError) {
-			return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
-		}
-		
+        String updateStamp = aircraftPropertyService.getLastModified(authToken, tailNumber);
+        Object result;
+
+        if(aircraftPropertyService.isUpdated(authToken, tailNumber, updateStamp)){
+            result = aircraftPropertyService.getAircraftProperty(authToken, tailNumber);
+        }else{
+            result = null;
+        }
+
+        if (result instanceof ApiError) {
+            return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
+        }
+
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
+
+//    @RequestMapping(path="/getAircraftProperty", method = { RequestMethod.GET })
+//    public ResponseEntity<Object> getAircraftProperty(@RequestHeader("Authorization") String authToken,
+//    		@RequestHeader(name = "tail", required = true) String tailNumber) {
+//
+//        Object result = aircraftPropertyService.getAircraftProperty(authToken, tailNumber);
+//
+//		if (result instanceof ApiError) {
+//			return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
+//		}
+//
+//        return new ResponseEntity<>(result, HttpStatus.OK);
+//    }
 }

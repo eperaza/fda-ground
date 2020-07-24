@@ -1,28 +1,21 @@
 package com.boeing.cas.supa.ground.pojos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import javax.persistence.*;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
-
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "AircraftInfo")
 @NamedQueries({
 	@NamedQuery(name = "getTailByAirlineAndTailNumber", query = "SELECT al FROM AircraftInfo al WHERE al.airline.name = :name AND al.tailNumber = :tailNumber"),
 	@NamedQuery(name = "getAircarftPropertiesByAirlineAndTailNumber", query = "SELECT new com.boeing.cas.supa.ground.pojos.AircraftConfiguration(a) "
-			+ "FROM AircraftInfo a WHERE a.airline.name = :name AND a.tailNumber = :tailNumber ")
+			+ "FROM AircraftInfo a WHERE a.airline.name = :name AND a.tailNumber = :tailNumber "),
+
+		// Truong for Review
+	@NamedQuery(name="getAircraftPropertyLastModifiedTimeStamp", query = "SELECT t.ModifiedTime from AircraftProperty t where t.na") // Unsure about sql statement
 })
 public class AircraftInfo extends BaseEntity {
 	private String tailNumber;
@@ -48,6 +41,10 @@ public class AircraftInfo extends BaseEntity {
 	
 	@OneToOne(mappedBy = "aircraftInfo", fetch = FetchType.LAZY)
 	private ActiveTsp activeTsp;
+
+	@Column(name="ModifiedTime")
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date modifiedTime;
 	
 	public String getTailNumber() {
 		return tailNumber;
@@ -114,5 +111,9 @@ public class AircraftInfo extends BaseEntity {
 	@JsonIgnore
 	public Tsp getCurrentActiveTsp() {
 		return this.activeTsp == null ? null : this.activeTsp.getTsp();
+	}
+
+	public Date getModifiedTime() {
+		return this.modifiedTime;
 	}
 }
