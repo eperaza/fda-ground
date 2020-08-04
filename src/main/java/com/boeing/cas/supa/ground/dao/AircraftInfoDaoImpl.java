@@ -2,12 +2,12 @@ package com.boeing.cas.supa.ground.dao;
 
 import com.boeing.cas.supa.ground.pojos.AircraftConfiguration;
 import com.boeing.cas.supa.ground.pojos.AircraftInfo;
-
 import org.hibernate.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import javax.transaction.Transactional;
+import java.util.Date;
+import java.util.List;
 
 @Repository
 @Transactional
@@ -28,6 +28,14 @@ public class AircraftInfoDaoImpl extends BaseDaoImpl implements AircraftInfoDao 
 	@Override
 	public AircraftInfo getAirlineTailById(int id) {
 		return getSession().get(AircraftInfo.class, id);
+	}
+
+	@Override
+	public Date getAircraftPropertyLastModifiedTimeStamp(String airlineName, String tailNumber) {
+		Query query = getSession().getNamedQuery("getAircraftPropertyLastModifiedTimeStamp");
+		query.setParameter("name", airlineName);
+		query.setParameter("tailNumber", tailNumber);
+		return (Date)query.uniqueResult();
 	}
 
 	@Override

@@ -1,14 +1,15 @@
 package com.boeing.cas.supa.ground.pojos;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import com.google.gson.annotations.SerializedName;
 
 public class AircraftConfiguration {
 	private static final String TailNumberProperty = "aircraft.tailNumber";
 	private static final String CarrierProperty = "aircraft.carrier";
-	private static final String TypeProperty = "aicraft.type";
+	private static final String TypeProperty = "aircraft.type";
 	private static final String ConfigurationsProperty = "configurations";
 	
     @SerializedName(TailNumberProperty)

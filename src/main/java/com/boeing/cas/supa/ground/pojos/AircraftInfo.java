@@ -15,7 +15,7 @@ import java.util.Set;
 			+ "FROM AircraftInfo a WHERE a.airline.name = :name AND a.tailNumber = :tailNumber "),
 
 		// Truong for Review
-	@NamedQuery(name="getAircraftPropertyLastModifiedTimeStamp", query = "SELECT t.ModifiedTime from AircraftProperty t where t.na") // Unsure about sql statement
+//	@NamedQuery(name="getAircraftPropertyLastModifiedTimeStamp", query = "SELECT t.ModifiedTime from AircraftProperty t where t.na") // Unsure about sql statement
 })
 public class AircraftInfo extends BaseEntity {
 	private String tailNumber;

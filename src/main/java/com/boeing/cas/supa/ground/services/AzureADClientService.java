@@ -1839,7 +1839,7 @@ public class AzureADClientService {
 		}
 	}
 
-	private File getFileFromBlob(String containerName, String fileName, String airline) throws FileDownloadException {
+	public File getFileFromBlob(String containerName, String fileName, String airline) throws FileDownloadException {
 
 		File file = null;
 		try {
