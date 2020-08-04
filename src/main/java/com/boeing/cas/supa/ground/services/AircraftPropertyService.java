@@ -1,5 +1,11 @@
 package com.boeing.cas.supa.ground.services;
 
+import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import com.boeing.cas.supa.ground.dao.AircraftInfoDao;
 import com.boeing.cas.supa.ground.dao.TspDao;
 import com.boeing.cas.supa.ground.exceptions.FileDownloadException;
@@ -32,7 +38,6 @@ import java.util.zip.ZipOutputStream;
 public class AircraftPropertyService {
 	private static final Logger LOG = LoggerFactory.getLogger(AircraftPropertyService.class);
 	private static final String AircraftPropertyFailed = "AIRCRAFT_PROPERTY_FAILED";
-	private final Logger logger = LoggerFactory.getLogger(AircraftPropertyService.class);
 
 	@Autowired
 	private AircraftInfoDao aircraftInfoDao;
@@ -71,7 +76,7 @@ public class AircraftPropertyService {
 		}
 		return false;
 	}
-	
+
 	@Transactional(value = TxType.REQUIRES_NEW)
 	public Object getAircraftProperty(String authToken, String tailNumber) {
 		try {

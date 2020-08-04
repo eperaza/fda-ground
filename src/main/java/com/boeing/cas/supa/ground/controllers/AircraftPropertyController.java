@@ -52,28 +52,4 @@ public class AircraftPropertyController {
 
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
-
-//    @RequestMapping(path="/getAircraftProperty", method = { RequestMethod.GET })
-//    public ResponseEntity<Object> getAircraftProperty(@RequestHeader("Authorization") String authToken,
-//                                                      @RequestHeader(name = "tail", required = true) String tailNumber) {
-//
-//        Date lastModified = aircraftPropertyService.getLastModified(authToken, tailNumber);
-//
-//        Object result;
-//        if(aircraftPropertyService.isUpdated(authToken, tailNumber, lastModified)){
-//            result = aircraftPropertyService.getAircraftProperty(authToken, tailNumber);
-//
-//            // generate checksum
-////            String checkSum = CheckSumUtil.getSHA256(result)
-//            // return it w/ response
-//        }else{
-//            result = null;
-//        }
-//
-//        if (result instanceof ApiError) {
-//            return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
-//        }
-//
-//        return new ResponseEntity<>(result, HttpStatus.OK);
-//    }
 }

@@ -2006,7 +2006,6 @@ public class AzureADClientService {
 
 		logger.debug("Upload File method invoked -  Single file upload!");
 
-
 		String uploadFolder = null;
 		try {
 			uploadFolder = this.saveUploadedFile(uploadfile);
