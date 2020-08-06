@@ -1,11 +1,5 @@
 package com.boeing.cas.supa.ground.services;
 
-import javax.transaction.Transactional;
-import javax.transaction.Transactional.TxType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import com.boeing.cas.supa.ground.dao.AircraftInfoDao;
 import com.boeing.cas.supa.ground.dao.TspDao;
 import com.boeing.cas.supa.ground.exceptions.FileDownloadException;
@@ -36,7 +30,7 @@ import java.util.zip.ZipOutputStream;
 
 @Service
 public class AircraftPropertyService {
-	private static final Logger LOG = LoggerFactory.getLogger(AircraftPropertyService.class);
+	private final Logger logger = LoggerFactory.getLogger(AircraftPropertyService.class);
 	private static final String AircraftPropertyFailed = "AIRCRAFT_PROPERTY_FAILED";
 
 	@Autowired
@@ -79,20 +73,27 @@ public class AircraftPropertyService {
 
 	@Transactional(value = TxType.REQUIRES_NEW)
 	public Object getAircraftProperty(String authToken, String tailNumber) {
+
+		logger.debug("trying to get property for : " + tailNumber);
+
 		try {
 			String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
+
+			logger.debug("airlineName: " + airlineName);
+
 			if (Strings.isNullOrEmpty(airlineName)) {
 				return new ApiError(AircraftPropertyFailed, "User membership is ambiguous - cannot define user's airline", RequestFailureReason.UNAUTHORIZED); 
 			}
 			
-			AircraftConfiguration aircraftConfiguration = aircraftInfoDao.getAircarftPropertiesByAirlineAndTailNumber(airlineName, tailNumber);
+			AircraftConfiguration aircraftConfiguration = aircraftInfoDao.getAircraftPropertiesByAirlineAndTailNumber(airlineName, tailNumber);
 			if (aircraftConfiguration == null) {
+				logger.debug("!! UH OH WE DIDN:T GET AN AIRCRAFT PROPERTY");
 				return null;
 			}
 			
 			return new Gson().toJson(aircraftConfiguration);
 		} catch (Exception ex) {
-			LOG.error("Failed to get aircraft property. Error: " + ex);
+			logger.error("Failed to get aircraft property. Error: " + ex);
 		}
 		
 		return new ApiError(AircraftPropertyFailed, "Failed to get aircraft property", RequestFailureReason.INTERNAL_SERVER_ERROR);
@@ -113,7 +114,7 @@ public class AircraftPropertyService {
 			 */
 
 			// actually aircraft property
-			AircraftConfiguration aircraftConfiguration = aircraftInfoDao.getAircarftPropertiesByAirlineAndTailNumber(airlineName, tailNumber);
+			AircraftConfiguration aircraftConfiguration = aircraftInfoDao.getAircraftPropertiesByAirlineAndTailNumber(airlineName, tailNumber);
 			if (aircraftConfiguration == null) {
 				return null;
 			}
@@ -162,7 +163,7 @@ public class AircraftPropertyService {
 			return res;
 
 		} catch (Exception ex) {
-			LOG.error("Failed to get aircraft property. Error: " + ex);
+			logger.error("Failed to get aircraft property. Error: " + ex);
 		}
 
 		return new ApiError(AircraftPropertyFailed, "Failed to get aircraft property", RequestFailureReason.INTERNAL_SERVER_ERROR);

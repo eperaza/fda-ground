@@ -12,5 +12,5 @@ public interface AircraftInfoDao {
 	public AircraftInfo getAirlineTailById(int id);
 	public Date getAircraftPropertyLastModifiedTimeStamp(String airlineName, String tailNumber);
 	public AircraftInfo getTailByAirlineAndTailNumber(String airlineName, String tailNumber);
-	public AircraftConfiguration getAircarftPropertiesByAirlineAndTailNumber(String airlineName, String tailNumber);
+	public AircraftConfiguration getAircraftPropertiesByAirlineAndTailNumber(String airlineName, String tailNumber);
 }

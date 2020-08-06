@@ -11,7 +11,7 @@ import java.util.Set;
 @Table(name = "AircraftInfo")
 @NamedQueries({
 	@NamedQuery(name = "getTailByAirlineAndTailNumber", query = "SELECT al FROM AircraftInfo al WHERE al.airline.name = :name AND al.tailNumber = :tailNumber"),
-	@NamedQuery(name = "getAircarftPropertiesByAirlineAndTailNumber", query = "SELECT new com.boeing.cas.supa.ground.pojos.AircraftConfiguration(a) "
+	@NamedQuery(name = "getAircraftPropertiesByAirlineAndTailNumber", query = "SELECT new com.boeing.cas.supa.ground.pojos.AircraftConfiguration(a) "
 			+ "FROM AircraftInfo a WHERE a.airline.name = :name AND a.tailNumber = :tailNumber "),
 
 		// Truong for Review

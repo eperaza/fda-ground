@@ -18,6 +18,11 @@ target/
 *.iml
 *.ipr
 
+### Certs
+*.pfx
+*.crt
+*.pem
+
 ### NetBeans ###
 nbproject/private/
 build/

@@ -48,8 +48,8 @@ public class AircraftInfoDaoImpl extends BaseDaoImpl implements AircraftInfoDao 
 	}
 
 	@Override
-	public AircraftConfiguration getAircarftPropertiesByAirlineAndTailNumber(String airlineName, String tailNumber) {
-		Query query = getSession().getNamedQuery("getAircarftPropertiesByAirlineAndTailNumber");
+	public AircraftConfiguration getAircraftPropertiesByAirlineAndTailNumber(String airlineName, String tailNumber) {
+		Query query = getSession().getNamedQuery("getAircraftPropertiesByAirlineAndTailNumber");
 		query.setParameter("name", airlineName);
 		query.setParameter("tailNumber", tailNumber);
 		

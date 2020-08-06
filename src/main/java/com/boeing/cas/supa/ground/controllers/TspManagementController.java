@@ -6,10 +6,9 @@ import com.boeing.cas.supa.ground.services.AzureADClientService;
 import com.boeing.cas.supa.ground.services.TspManagementService;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
-import java.io.ByteArrayOutputStream;
-import java.util.List;
-import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,11 +18,16 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import java.io.ByteArrayOutputStream;
+import java.util.List;
+import java.util.Map;
+
 @Controller
 public class TspManagementController {
 	private static final String DefaultAircraftType = "B737-800";
-	
-	@Autowired
+    private final Logger logger = LoggerFactory.getLogger(TspManagementController.class);
+
+    @Autowired
 	private Map<String, String> appProps;
 	
     @Autowired
@@ -36,7 +40,10 @@ public class TspManagementController {
     public ResponseEntity<Object> getTspList(@RequestHeader("Authorization") String authToken, 
     		@RequestHeader(name = "airline", required = true) String airlineName,
     		@RequestHeader(name = "tail", required = true) String tailNumber) {
-    	
+
+        logger.debug("TSPList for airline: " + airlineName);
+        logger.debug("TSPList for tailNumber: " + tailNumber);
+
         List<Tsp> result = tspManagementService.getTsps(airlineName, tailNumber);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }

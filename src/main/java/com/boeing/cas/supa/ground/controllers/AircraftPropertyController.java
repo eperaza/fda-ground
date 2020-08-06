@@ -12,9 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 public class AircraftPropertyController {
@@ -43,9 +41,13 @@ public class AircraftPropertyController {
 
     @RequestMapping(path="/getAircraftProperty", method = { RequestMethod.GET })
     public ResponseEntity<Object> getAircraftProperty(@RequestHeader("Authorization") String authToken,
-                                                      @RequestHeader(name = "tail", required = true) String tailNumber) {
+                                                      @RequestHeader(name = "tailNumber", required = true) String tailNumber) {
+
+        logger.debug("got to endpoint with tail: " + tailNumber);
+
         Object result = aircraftPropertyService.getAircraftProperty(authToken, tailNumber);
 
+        logger.debug("aircraft prop: " + result);
         if (result instanceof ApiError) {
             return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
         }
