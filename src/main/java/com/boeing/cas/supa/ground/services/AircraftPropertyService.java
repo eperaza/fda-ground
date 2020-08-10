@@ -121,7 +121,7 @@ public class AircraftPropertyService {
 			logger.debug("aircraftProperty: " + aircraftConfiguration);
 
 			// get TSP from blob storage - it is json file tho?
-			File tsp = getTSPFromBlob(airlineName);
+			File tsp = getTSPFromBlob(airlineName, tailNumber);
 			// I am trying to cast generic 'Object' of AircraftConfiguration into File
 			File aircraftProperty = new File(new Gson().toJson(aircraftConfiguration));;
 
@@ -169,14 +169,21 @@ public class AircraftPropertyService {
 		return new ApiError(AircraftPropertyFailed, "Failed to get aircraft property", RequestFailureReason.INTERNAL_SERVER_ERROR);
 	}
 
-	public File getTSPFromBlob(String airlineName) throws FileDownloadException {
+	public File getTSPFromBlob(String airlineName, String tailNumber) throws FileDownloadException {
 		// get TSP from blob storage - it is json file tho?
 		logger.debug("Grabbing TSP from Blob");
-		File tsp = azureADClientService.getFileFromBlob("tsp", "", airlineName);
+
+		String fileName = tailNumber + ".json";
+		File tsp = azureADClientService.getFileFromBlob("tsp", fileName, airlineName);
+
 		ObjectMapper tspObj = new ObjectMapper();
 		try {
 			// convert TSP to json
-			String tspJson = tspObj.writeValueAsString(tsp);;
+			String tspJson = tspObj.writeValueAsString(tsp);
+
+			logger.debug("********** tsp JSON ======");
+			logger.debug(tspJson);
+
 		} catch (IOException e) {
 			e.printStackTrace();
 			logger.debug("exception caught converting TSP to json: " + e);

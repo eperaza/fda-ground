@@ -1,15 +1,19 @@
 package com.boeing.cas.supa.ground.controllers;
 
+import com.boeing.cas.supa.ground.exceptions.FileDownloadException;
 import com.boeing.cas.supa.ground.pojos.Tsp;
 import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
+import com.boeing.cas.supa.ground.services.FileManagementService;
 import com.boeing.cas.supa.ground.services.TspManagementService;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
+import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -18,20 +22,34 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Controller
+@RequestMapping(path="/tsp")
 public class TspManagementController {
 	private static final String DefaultAircraftType = "B737-800";
     private final Logger logger = LoggerFactory.getLogger(TspManagementController.class);
 
     @Autowired
 	private Map<String, String> appProps;
-	
+
+    @Autowired
+    ServletContext context;
+
     @Autowired
     private TspManagementService tspManagementService;
+
+    @Autowired
+    private FileManagementService fileManagementService;
     
     @Autowired
 	private AzureADClientService aadClient;
@@ -114,6 +132,32 @@ public class TspManagementController {
         }
 
         return new ResponseEntity<>("success", HttpStatus.OK);
+    }
+
+    @RequestMapping(path="/getTspFromBlob", method = {RequestMethod.GET}, produces="application/zip")
+    public void getTsp(HttpServletResponse response, @RequestHeader("Authorization") String authToken,
+                       @RequestHeader("airline") String airlineName,
+                       @RequestHeader("tailNumber") String tailNumber) throws FileDownloadException, IOException {
+        String type = "tsp";
+        String fileName = tailNumber + ".json";
+
+        logger.debug("fetching TSP for: " + airlineName + " " + tailNumber);
+
+        byte[] tspFile = fileManagementService.getFileFromStorage(fileName, type, authToken);
+        logger.debug("got TSP File");
+
+        HttpHeaders header = new HttpHeaders();
+        header.add("Content-Disposition", "attachment; filename=tsp-test.zip");
+
+        ZipOutputStream zipOutStream = new ZipOutputStream(response.getOutputStream());
+
+        zipOutStream.putNextEntry(new ZipEntry(fileName));
+        InputStream inputStream = new ByteArrayInputStream(tspFile);
+        IOUtils.copy(inputStream, zipOutStream);
+
+        inputStream.close();
+        zipOutStream.closeEntry();
+        zipOutStream.close();
     }
     
     private String getUserId(String authToken) {
