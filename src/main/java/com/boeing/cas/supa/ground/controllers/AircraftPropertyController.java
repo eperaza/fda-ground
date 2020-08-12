@@ -1,18 +1,21 @@
 package com.boeing.cas.supa.ground.controllers;
 
-import com.boeing.cas.supa.ground.pojos.AircraftConfigRes;
 import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.services.AircraftPropertyService;
+import com.boeing.cas.supa.ground.services.AzureADClientService;
+import com.boeing.cas.supa.ground.services.FileManagementService;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+import java.io.IOException;
 
 @Controller
 public class AircraftPropertyController {
@@ -21,27 +24,28 @@ public class AircraftPropertyController {
     private AircraftPropertyService aircraftPropertyService;
     private final Logger logger = LoggerFactory.getLogger(AircraftPropertyController.class);
 
-    @RequestMapping(path="/getAircraftConfiguration", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE, method={RequestMethod.GET})
-    public ResponseEntity<Object> getAircraftConfiguration(@RequestHeader("Authorization") String authToken,
-                                                           @RequestHeader(name = "tail", required = true) String tailNumber){
+    @Autowired
+    private AzureADClientService azureADClientService;
 
-        logger.debug("hit /getAircraftConfig with tailNo: " + tailNumber);
+    @Autowired
+    private FileManagementService fileManagementService;
+
+    @RequestMapping(path="/getAircraftConfiguration", method={RequestMethod.GET})
+    public ResponseEntity<Object> getAircraftConfiguration(@RequestHeader("Authorization") String authToken,
+                                         @RequestHeader(name = "tail", required = false) String tailNumber) {
+
+        String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
         // aircraft config is TSP + AircraftProperty
         // TSP is JSON, Aircraft Property PLAINTEXT
         // zip will have 2 files, json and plaintext
-        Object result = aircraftPropertyService.getAircraftConfig(authToken, tailNumber);
-
-        HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.setContentType(MediaType.valueOf("application/octet-stream"));
-        responseHeaders.add("Content-Disposition", "attachment;filename=download.zip");
-        responseHeaders.add("checkSum", ((AircraftConfigRes) result).getCheckSum());
+        Object result = aircraftPropertyService.getAircraftConfig(authToken);
 
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @RequestMapping(path="/getAircraftProperty", method = { RequestMethod.GET })
     public ResponseEntity<Object> getAircraftProperty(@RequestHeader("Authorization") String authToken,
-                                                      @RequestHeader(name = "tailNumber", required = true) String tailNumber) {
+                                                      @RequestHeader(name = "tailNumber", required = true) String tailNumber) throws IOException {
 
         logger.debug("got to endpoint with tail: " + tailNumber);
 

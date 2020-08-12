@@ -3,6 +3,7 @@ package com.boeing.cas.supa.ground.controllers;
 import com.boeing.cas.supa.ground.exceptions.FileDownloadException;
 import com.boeing.cas.supa.ground.pojos.Tsp;
 import com.boeing.cas.supa.ground.pojos.User;
+import com.boeing.cas.supa.ground.services.AircraftPropertyService;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
 import com.boeing.cas.supa.ground.services.FileManagementService;
 import com.boeing.cas.supa.ground.services.TspManagementService;
@@ -50,7 +51,10 @@ public class TspManagementController {
 
     @Autowired
     private FileManagementService fileManagementService;
-    
+
+    @Autowired
+    private AircraftPropertyService aircraftPropertyService;
+
     @Autowired
 	private AzureADClientService aadClient;
 
@@ -136,26 +140,37 @@ public class TspManagementController {
 
     @RequestMapping(path="/getTspFromBlob", method = {RequestMethod.GET}, produces="application/zip")
     public void getTsp(HttpServletResponse response, @RequestHeader("Authorization") String authToken,
-                       @RequestHeader("airline") String airlineName,
                        @RequestHeader("tailNumber") String tailNumber) throws FileDownloadException, IOException {
         String type = "tsp";
         String fileName = tailNumber + ".json";
 
-        logger.debug("fetching TSP for: " + airlineName + " " + tailNumber);
+        logger.debug("fetching TSP for:  " + tailNumber);
 
         byte[] tspFile = fileManagementService.getFileFromStorage(fileName, type, authToken);
         logger.debug("got TSP File");
+
+        List<Tsp> tspList = tspManagementService.getTsps("AMX");
+
+        // HARDCODED TAIL FOR NOW
+        String aircraftProp = aircraftPropertyService.getAircraftProperty(authToken, "N342AM");
 
         HttpHeaders header = new HttpHeaders();
         header.add("Content-Disposition", "attachment; filename=tsp-test.zip");
 
         ZipOutputStream zipOutStream = new ZipOutputStream(response.getOutputStream());
 
+        // tsp zipping
         zipOutStream.putNextEntry(new ZipEntry(fileName));
         InputStream inputStream = new ByteArrayInputStream(tspFile);
         IOUtils.copy(inputStream, zipOutStream);
-
         inputStream.close();
+
+        // aircraft prop zipping
+        zipOutStream.putNextEntry(new ZipEntry("aircraft.properties.json"));
+        InputStream apropStream = new ByteArrayInputStream(aircraftProp.getBytes());
+        IOUtils.copy(apropStream, zipOutStream);
+        apropStream.close();
+
         zipOutStream.closeEntry();
         zipOutStream.close();
     }

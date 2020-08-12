@@ -1,5 +1,24 @@
 package com.boeing.cas.supa.ground.services;
 
+import com.boeing.cas.supa.ground.dao.FlightRecordDao;
+import com.boeing.cas.supa.ground.exceptions.FileDownloadException;
+import com.boeing.cas.supa.ground.exceptions.FlightRecordException;
+import com.boeing.cas.supa.ground.exceptions.OnsCertificateException;
+import com.boeing.cas.supa.ground.exceptions.SupaSystemLogException;
+import com.boeing.cas.supa.ground.pojos.*;
+import com.boeing.cas.supa.ground.utils.ADWTransferUtil;
+import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
+import com.boeing.cas.supa.ground.utils.Constants;
+import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
+import com.boeing.cas.supa.ground.utils.ControllerUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -11,30 +30,8 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
-
-import com.boeing.cas.supa.ground.exceptions.*;
-import com.boeing.cas.supa.ground.pojos.*;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-import com.boeing.cas.supa.ground.dao.FlightRecordDao;
-import com.boeing.cas.supa.ground.utils.ADWTransferUtil;
-import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
-import com.boeing.cas.supa.ground.utils.Constants;
-import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
-import com.boeing.cas.supa.ground.utils.ControllerUtils;
 
 @Service
 public class FileManagementService {
@@ -56,6 +53,44 @@ public class FileManagementService {
 	@Autowired
 	private FlightRecordDao flightRecordDao;
 
+	public void getTspListFromStorage(String authToken) throws FileDownloadException, IOException {
+		byte[] fileInBytes = new byte[0];
+		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
+		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+		if (airlineGroups.size() != 1) {
+			throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
+		}
+		List<Group> roleGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
+		if (roleGroups.size() != 1) {
+			throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "Failed to associate user with a role", RequestFailureReason.UNAUTHORIZED));
+		}
+
+		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+
+		AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
+
+		String container = TSP_STORAGE_CONTAINER;
+		String filePath = new StringBuilder(container).append("/").append(airlineGroup.toUpperCase()).toString();
+
+		if(asu.blobContainerExists(filePath)){
+			throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "No TSP Blob exists for that airline", RequestFailureReason.BAD_REQUEST));
+		}
+		logger.debug("got to new Download All!!");
+		asu.downloadAllFromBlob(container, airlineGroup);
+
+//		try (ByteArrayOutputStream outputStream = asu.downloadBlobReferencedInMessage()) {
+//
+//			if (outputStream == null) {
+//				throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("No file corresponding to specified name %s and type %s", file, type), RequestFailureReason.NOT_FOUND));
+//			}
+//			outputStream.flush();
+//			fileInBytes = outputStream.toByteArray();
+//
+//		} catch (IOException e) {
+//			logger.error("Error retrieving file [{}] of type [{}]: {}", ControllerUtils.sanitizeString(file), ControllerUtils.sanitizeString(type), e.getMessage(), e);
+//			throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("Error retrieving file [%s] of type [%s]: %s", file, type, e.getMessage()), RequestFailureReason.INTERNAL_SERVER_ERROR));
+//		}
+	}
 
 	public byte[] getFileFromStorage(String file, String type, String authToken) throws FileDownloadException {
 
