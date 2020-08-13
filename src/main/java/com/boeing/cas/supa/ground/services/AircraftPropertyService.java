@@ -19,6 +19,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -74,8 +75,6 @@ public class AircraftPropertyService {
 	@Transactional(value = TxType.REQUIRES_NEW)
 	public String getAircraftProperty(String authToken, String tailNumber) {
 
-		logger.debug("trying to get property for : " + tailNumber);
-
 		try {
 			String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
 
@@ -86,16 +85,14 @@ public class AircraftPropertyService {
 				logger.debug("!! UH OH WE DIDN:T GET AN AIRCRAFT PROPERTY");
 				return null;
 			}
-			
 			return new Gson().toJson(aircraftConfiguration);
 		} catch (Exception ex) {
 			logger.error("Failed to get aircraft property. Error: " + ex);
 		}
 		return null;
-//		return new ApiError(AircraftPropertyFailed, "Failed to get aircraft property", RequestFailureReason.INTERNAL_SERVER_ERROR);
 	}
 
-	public Object getAircraftConfig(String authToken){
+	public byte[] getAircraftConfig(String authToken){
 		try {
 			String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
 			if (Strings.isNullOrEmpty(airlineName)) {
@@ -105,8 +102,16 @@ public class AircraftPropertyService {
 			/**
 			 *  **NOTE: currently getTSP from Azure blob storage - future state get from SQL
 			 */
-			fileManagementService.getTspListFromStorage(authToken);
+			 List<String> tspList = fileManagementService.getTspListFromStorage(authToken);
+			 byte[] zipFile = fileManagementService.zipFileList(tspList, authToken);
 
+			 if(zipFile!=null){
+			 	logger.debug("got a real zip file back");
+			 }else{
+			 	logger.debug("FFFFFFFFUUUUUUUUUU");
+			 }
+
+			 return zipFile;
 		} catch (Exception ex) {
 			logger.error("Failed to get aircraft property. Error: " + ex);
 		}

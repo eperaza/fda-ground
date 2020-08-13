@@ -11,6 +11,7 @@ import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
+import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -19,9 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -32,6 +31,8 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 public class FileManagementService {
@@ -51,10 +52,13 @@ public class FileManagementService {
 	private AzureADClientService aadClient;
 
 	@Autowired
+	private AircraftPropertyService aircraftPropertyService;
+
+	@Autowired
 	private FlightRecordDao flightRecordDao;
 
-	public void getTspListFromStorage(String authToken) throws FileDownloadException, IOException {
-		byte[] fileInBytes = new byte[0];
+	public List<String> getTspListFromStorage(String authToken) throws FileDownloadException, IOException {
+
 		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
 		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
 		if (airlineGroups.size() != 1) {
@@ -75,21 +79,45 @@ public class FileManagementService {
 		if(asu.blobContainerExists(filePath)){
 			throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "No TSP Blob exists for that airline", RequestFailureReason.BAD_REQUEST));
 		}
-		logger.debug("got to new Download All!!");
-		asu.downloadAllFromBlob(container, airlineGroup);
 
-//		try (ByteArrayOutputStream outputStream = asu.downloadBlobReferencedInMessage()) {
-//
-//			if (outputStream == null) {
-//				throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("No file corresponding to specified name %s and type %s", file, type), RequestFailureReason.NOT_FOUND));
-//			}
-//			outputStream.flush();
-//			fileInBytes = outputStream.toByteArray();
-//
-//		} catch (IOException e) {
-//			logger.error("Error retrieving file [{}] of type [{}]: {}", ControllerUtils.sanitizeString(file), ControllerUtils.sanitizeString(type), e.getMessage(), e);
-//			throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("Error retrieving file [%s] of type [%s]: %s", file, type, e.getMessage()), RequestFailureReason.INTERNAL_SERVER_ERROR));
-//		}
+		List<String> tspList = asu.getFilenamesFromBlob(container, airlineGroup);
+		return tspList;
+
+	}
+
+	public byte[] zipFileList(List<String> tspList, String authToken) throws FileDownloadException, IOException {
+		String container = TSP_STORAGE_CONTAINER;
+
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		BufferedOutputStream bufferOutputStream = new BufferedOutputStream(byteArrayOutputStream);
+		ZipOutputStream zipOutputStream = new ZipOutputStream(bufferOutputStream);
+
+		for(String tspFileName : tspList){
+			byte[] tspJsonFile = this.getFileFromStorage(tspFileName, container, authToken);
+			zipOutputStream.putNextEntry(new ZipEntry(tspFileName));
+			InputStream inputStream = new ByteArrayInputStream(tspJsonFile);
+			IOUtils.copy(inputStream, zipOutputStream);
+			inputStream.close();
+
+			int endStringIndex = tspFileName.length() - 4;
+			String tailNo = new StringBuilder(tspFileName.substring(0, endStringIndex)).toString();
+			logger.debug("trying to get aircraftProp tail: " + tailNo);
+
+			String aircraftProp = aircraftPropertyService.getAircraftProperty(authToken, tailNo);
+			if(aircraftProp != null){
+				String aircraftPropFileName = new StringBuilder(tailNo).append("properties.json").toString();
+				zipOutputStream.putNextEntry(new ZipEntry(aircraftPropFileName));
+				InputStream apropStream = new ByteArrayInputStream(aircraftProp.getBytes());
+				IOUtils.copy(apropStream, zipOutputStream);
+				apropStream.close();
+
+			}
+			zipOutputStream.closeEntry();
+		}
+		zipOutputStream.close();
+		byte[] zipFile = byteArrayOutputStream.toByteArray();
+		logger.debug("WE GOT THE ZIP OMG");
+		return zipFile;
 	}
 
 	public byte[] getFileFromStorage(String file, String type, String authToken) throws FileDownloadException {

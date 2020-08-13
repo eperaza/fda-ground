@@ -269,12 +269,12 @@ public class AzureStorageUtil {
         return tempFile;
     }
 
-    public void downloadAllFromBlob(String containerName, String airlineGroup){
+    public List<String> getFilenamesFromBlob(String containerName, String airlineGroup){
 
-	    logger.debug("***downloadAllFromBlob from container: " + containerName);
         CloudBlobClient blobClient = this.storageAccount.createCloudBlobClient();
-
         String airlineDir = new StringBuilder(airlineGroup.toUpperCase()).append("/").toString();
+
+        List<String> tspFileNames = new ArrayList<>();
 
         try{
 	        CloudBlobContainer container = blobClient.getContainerReference(containerName);
@@ -282,6 +282,7 @@ public class AzureStorageUtil {
 	        Iterable<ListBlobItem> blobs = container.listBlobs();
 
 	        logger.debug("airlineDir: " + airlineDir);
+	        int trimIndex = airlineDir.length();
 
             for(ListBlobItem blob: blobs){
                 CloudBlobDirectory directory = (CloudBlobDirectory) blob;
@@ -292,17 +293,19 @@ public class AzureStorageUtil {
                     for(ListBlobItem fileBlob : fileBlobs){
                         if(fileBlob instanceof CloudBlob){
                             CloudBlob cloudBlob = (CloudBlob) fileBlob;
-                            logger.debug(cloudBlob.getName());
+                            // trim the parent directory from the path
+                            String tspFileName = new StringBuilder(cloudBlob.getName().substring(trimIndex)).toString();
+                            tspFileNames.add(tspFileName);
                         }
                     }
                 }
             }
-
         } catch (StorageException e) {
             e.printStackTrace();
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
+        return tspFileNames;
     }
 
 
