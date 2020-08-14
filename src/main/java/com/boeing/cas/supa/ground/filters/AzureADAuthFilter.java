@@ -101,14 +101,34 @@ public class AzureADAuthFilter implements Filter {
 			sendResponse(responseCode, responseException, httpResponse);
 			return;
 		}
+		boolean isUsingPrimaryCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCertName"));
+		boolean isUsingSecondaryCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCert2Name"));
 
 		if (allowedPath) {
 
-			if (this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCertName"), httpRequest, false)) {
+			if (isUsingPrimaryCert || isUsingSecondaryCert) {
+				if (!appProps.get("FDAdvisorClientCert2Name").isEqual("") && isUsingPrimaryCert) {
+					// TODO: Send the client the secondary cert to use
+					logger.debug("Get Client cert using activation code [{}] for [{}]",
+					ControllerUtils.sanitizeString(activationCode),
+					ControllerUtils.sanitizeString(emailAddress));
+					Object result = aadClient.getClientCertFromActivationCode(emailAddress, activationCode);
+			
+					if (result instanceof ApiError) {
+			
+						ApiError error = (ApiError) result;
+						logger.error(error.getErrorLabel(), error.getErrorDescription());
+						return new ResponseEntity<>(result, HttpStatus.INTERNAL_SERVER_ERROR);
+					}
+			
+					return new ResponseEntity<>(result, HttpStatus.OK);
+				}
+				
 				logger.debug("{} cert is valid, moving request along", appProps.get("FDAdvisorClientCertName"));
 				chain.doFilter(request, response);
 				return;
-			}
+			} 
+
 			responseCode = 403;
 			responseException = new ApiError("certificate missing", "Must provide a valid client certificate");
 			sendResponse(responseCode, responseException, httpResponse);
@@ -118,7 +138,7 @@ public class AzureADAuthFilter implements Filter {
 		try {
 
 			logger.debug("Checking {} cert and OAuth2 token...", appProps.get("FDAdvisorClientCertName"));
-			boolean validClientCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCertName"), httpRequest, false);
+			boolean validClientCert = isUsingPrimaryCert || isUsingSecondaryCert;
 			boolean validOAuthToken = this.isValidOAuthToken(httpRequest.getHeader("Authorization"));
 			if (validClientCert && validOAuthToken) {
 				logger.debug("{} cert and OAuth2 token are good!", appProps.get("FDAdvisorClientCertName"));
