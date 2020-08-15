@@ -1,9 +1,10 @@
 package com.boeing.cas.supa.ground.services;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,6 +26,8 @@ import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
+import com.boeing.cas.supa.ground.utils.IOUtils;
+import com.boeing.cas.supa.ground.utils.KeyVaultRetriever;
 
 @Service
 public class SupaReleaseManagementService {
@@ -33,6 +36,11 @@ public class SupaReleaseManagementService {
 
 	private static String SUPA_RELEASE_CONTAINER = "supa-releases";
 	private static String WAR_RELEASE_CONTAINER = "war-releases";
+	private static final String SUPA_WAR = "supa.war";
+	private static final String SUPA_WAR_CHECKSUM = "supa.war.sha256";
+	private static final String START_ENCRYPT_SUPA_VERSION = "5.10";
+	private static final String VERSION_SEPERATOR = "\\.";
+	private static final String ZUPPA_SECRET_PREFIX = "zuppa-";
 
 	@Autowired
 	private Map<String, String> appProps;
@@ -42,6 +50,12 @@ public class SupaReleaseManagementService {
 
 	@Autowired
 	private SupaReleaseManagementDao supaReleaseManagementDao;
+	
+	@Autowired
+	private KeyVaultRetriever keyVaultRetriever;
+	
+	@Autowired
+	private ZipService zipService;
 
 	public List<SupaRelease> listSupaReleases(String authToken, short versions) throws SupaReleaseException {
 
@@ -275,7 +289,7 @@ public class SupaReleaseManagementService {
 
 						if (outputStream != null) {
 							outputStream.flush();
-							supaRelease.setFile(outputStream.toByteArray());
+							getWarReleaseContent(airlineGroup, supaRelease, outputStream);
 							return supaRelease;
 						}
 					}
@@ -295,5 +309,51 @@ public class SupaReleaseManagementService {
 		}
 		return null;
 	}
-
+	
+	private void getWarReleaseContent(String airlineName, SupaRelease supaRelease, ByteArrayOutputStream warFileContent) throws IOException {
+		boolean needEncryptedContent = compareSupaVersions(supaRelease.getRelease(), START_ENCRYPT_SUPA_VERSION) > 0;
+		if (!needEncryptedContent) {
+			supaRelease.setFile(warFileContent.toByteArray());
+			return;
+		}
+		
+		// do checksum, encrypted zip up content
+		File downloadedFile = IOUtils.writeToTempFile(warFileContent, SUPA_WAR);
+		File tempDir = downloadedFile.getParentFile();
+		File checksumFile = new File(tempDir, SUPA_WAR_CHECKSUM);
+		IOUtils.writeToFile(IOUtils.getChecksumSHA256InByteArray(downloadedFile), checksumFile, false);
+		
+		File encryptedFile = new File(tempDir, "supa.zip");
+		String password = keyVaultRetriever.getSecretByKey(String.format("%s%s", ZUPPA_SECRET_PREFIX, airlineName));
+		encryptedFile = zipService.zipFilesEncrypted(password, encryptedFile.toString(), null, downloadedFile, checksumFile);
+		
+		supaRelease.setFile(Files.readAllBytes(encryptedFile.toPath()));
+		
+		// delete temp folder
+		IOUtils.deleteDirQuietly(tempDir);
+	}
+	
+	private int compareSupaVersions(String version1, String version2) {
+		String[] versionParts1 = version1.split(VERSION_SEPERATOR);
+		String[] versionParts2 = version2.split(VERSION_SEPERATOR);
+		return compareSupaVersions(versionParts1, versionParts2, 0);
+	}
+	
+	private int compareSupaVersions(String[] versionParts1, String[] versionParts2, int index) {
+		if (versionParts1.length <= index) {
+			return versionParts2.length >= index ? -1 : 0;
+		}
+		
+		if (versionParts2.length <= index) {
+			return versionParts1.length >= index ? 1 : 0;
+		}
+		
+		int versionNumber1 = Integer.valueOf(versionParts1[index]);
+		int versionNumber2 = Integer.valueOf(versionParts2[index]);
+		if (versionNumber1 != versionNumber2) {
+			return Integer.compare(versionNumber1, versionNumber2);
+		}
+		
+		return compareSupaVersions(versionParts1, versionParts2, index + 1);
+	}
 }
