@@ -43,10 +43,13 @@ public class AircraftPropertyController {
         // TSP is JSON, Aircraft Property PLAINTEXT
         // zip will have 2 files, json and plaintext
         byte[] zipFile = aircraftPropertyService.getAircraftConfig(authToken);
-        logger.debug("WE DID IT FAM!!!!!");
+        long checkSum = aircraftPropertyService.generateCheckSum(zipFile);
+
         String fileName = new StringBuilder(airlineName).append("-config.zip").toString();
+
         HttpHeaders header = new HttpHeaders();
         header.add("Content-Disposition", "attachment; filename=" + fileName);
+        header.add("CheckSum", String.valueOf(checkSum));
 
         OutputStream outStream = response.getOutputStream();
         outStream.write(zipFile);

@@ -101,7 +101,6 @@ public class FileManagementService {
 
 			int endStringIndex = tspFileName.length() - 4;
 			String tailNo = new StringBuilder(tspFileName.substring(0, endStringIndex)).toString();
-			logger.debug("trying to get aircraftProp tail: " + tailNo);
 
 			String aircraftProp = aircraftPropertyService.getAircraftProperty(authToken, tailNo);
 			if(aircraftProp != null){
@@ -116,7 +115,6 @@ public class FileManagementService {
 		}
 		zipOutputStream.close();
 		byte[] zipFile = byteArrayOutputStream.toByteArray();
-		logger.debug("WE GOT THE ZIP OMG");
 		return zipFile;
 	}
 

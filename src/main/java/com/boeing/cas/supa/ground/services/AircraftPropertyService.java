@@ -20,6 +20,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.zip.Adler32;
+import java.util.zip.Checksum;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -92,11 +94,17 @@ public class AircraftPropertyService {
 		return null;
 	}
 
+	public long generateCheckSum(byte[] zipFile){
+		Checksum checksum = new Adler32();
+		checksum.update(zipFile, 0, zipFile.length);
+		long res = checksum.getValue();
+		return res;
+	}
+
 	public byte[] getAircraftConfig(String authToken){
 		try {
 			String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
 			if (Strings.isNullOrEmpty(airlineName)) {
-//				throw new ApiError(AircraftPropertyFailed, "User membership is ambiguous - cannot define user's airline", RequestFailureReason.UNAUTHORIZED);
 				throw new IllegalArgumentException("Bad Input");
 			}
 			/**
