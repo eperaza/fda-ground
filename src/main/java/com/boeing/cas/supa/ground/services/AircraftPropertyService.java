@@ -14,13 +14,17 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
+import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.List;
-import java.util.zip.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 public class AircraftPropertyService {
@@ -91,11 +95,11 @@ public class AircraftPropertyService {
 		return null;
 	}
 
-	public long generateCheckSum(byte[] zipFile){
-		Checksum checksum = new CRC32();
-		checksum.update(zipFile, 0, zipFile.length);
-		long res = checksum.getValue();
-		return res;
+	public String generateCheckSum(byte[] zipFile) throws NoSuchAlgorithmException {
+		MessageDigest md = MessageDigest.getInstance("SHA-256");
+		byte[] utf8 = md.digest(zipFile);
+		String checkSum = DatatypeConverter.printHexBinary(utf8);
+		return checkSum;
 	}
 
 	public byte[] getAircraftConfig(String authToken){

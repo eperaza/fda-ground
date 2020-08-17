@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.security.NoSuchAlgorithmException;
 
 @Controller
 public class AircraftPropertyController {
@@ -36,20 +37,20 @@ public class AircraftPropertyController {
     @RequestMapping(path="/getAircraftConfiguration", method={RequestMethod.GET}, produces="application/zip")
     public void getAircraftConfiguration(HttpServletResponse response,
                                          @RequestHeader("Authorization") String authToken,
-                                         @RequestHeader(name = "tail", required = false) String tailNumber) throws IOException {
+                                         @RequestHeader(name = "tail", required = false) String tailNumber) throws IOException, NoSuchAlgorithmException {
 
         String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
         // aircraft config is TSP + AircraftProperty
         // TSP is JSON, Aircraft Property PLAINTEXT
         // zip will have 2 files, json and plaintext
         byte[] zipFile = aircraftPropertyService.getAircraftConfig(authToken);
-        long checkSum = aircraftPropertyService.generateCheckSum(zipFile);
+        String checkSum = aircraftPropertyService.generateCheckSum(zipFile);
 
         String fileName = new StringBuilder(airlineName).append("-config.zip").toString();
 
         HttpHeaders header = new HttpHeaders();
         header.add("Content-Disposition", "attachment; filename=" + fileName);
-        header.add("CheckSum", String.valueOf(checkSum));
+        header.add("CheckSum", checkSum);
 
         OutputStream outStream = response.getOutputStream();
         outStream.write(zipFile);
