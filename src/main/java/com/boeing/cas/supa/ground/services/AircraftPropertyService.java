@@ -20,10 +20,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
-import java.util.zip.Adler32;
-import java.util.zip.Checksum;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+import java.util.zip.*;
 
 @Service
 public class AircraftPropertyService {
@@ -95,7 +92,7 @@ public class AircraftPropertyService {
 	}
 
 	public long generateCheckSum(byte[] zipFile){
-		Checksum checksum = new Adler32();
+		Checksum checksum = new CRC32();
 		checksum.update(zipFile, 0, zipFile.length);
 		long res = checksum.getValue();
 		return res;
