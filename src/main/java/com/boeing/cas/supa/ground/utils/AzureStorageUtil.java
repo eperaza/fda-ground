@@ -1,25 +1,7 @@
 package com.boeing.cas.supa.ground.utils;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URISyntaxException;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.InvalidKeyException;
-
-import com.boeing.cas.supa.ground.exceptions.SupaSystemLogException;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.boeing.cas.supa.ground.exceptions.FlightRecordException;
+import com.boeing.cas.supa.ground.exceptions.SupaSystemLogException;
 import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.AzureStorageMessage;
 import com.boeing.cas.supa.ground.pojos.User;
@@ -30,13 +12,22 @@ import com.microsoft.azure.storage.AccessCondition;
 import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.blob.BlobRequestOptions;
-import com.microsoft.azure.storage.blob.CloudBlobClient;
-import com.microsoft.azure.storage.blob.CloudBlobContainer;
-import com.microsoft.azure.storage.blob.CloudBlockBlob;
+import com.microsoft.azure.storage.blob.*;
 import com.microsoft.azure.storage.queue.CloudQueue;
 import com.microsoft.azure.storage.queue.CloudQueueClient;
 import com.microsoft.azure.storage.queue.CloudQueueMessage;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.InvalidKeyException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AzureStorageUtil {
 
@@ -149,7 +140,6 @@ public class AzureStorageUtil {
 		boolean rval = false;
 
 		try {
-
 			CloudBlobClient serviceClient = this.storageAccount.createCloudBlobClient();
             // NOTE: Container name must be lower case.
             CloudBlobContainer container = serviceClient.getContainerReference(containerName);
@@ -197,6 +187,15 @@ public class AzureStorageUtil {
 		return rval;
 	}
 
+
+	public boolean blobContainerExists(String containerName){
+	    try{
+	        CloudBlobClient serviceClient = storageAccount.createCloudBlobClient();
+	        return serviceClient.getContainerReference(containerName).exists();
+        } catch (Exception e) {
+           return false;
+        }
+    }
 
     public boolean blobExistsOnCloud(String containerName, String fileName) {
     	try {
@@ -270,6 +269,45 @@ public class AzureStorageUtil {
         return tempFile;
     }
 
+    public List<String> getFilenamesFromBlob(String containerName, String airlineGroup){
+
+        CloudBlobClient blobClient = this.storageAccount.createCloudBlobClient();
+        String airlineDir = new StringBuilder(airlineGroup.toUpperCase()).append("/").toString();
+
+        List<String> tspFileNames = new ArrayList<>();
+
+        try{
+	        CloudBlobContainer container = blobClient.getContainerReference(containerName);
+
+	        Iterable<ListBlobItem> blobs = container.listBlobs();
+
+	        logger.debug("airlineDir: " + airlineDir);
+	        int trimIndex = airlineDir.length();
+
+            for(ListBlobItem blob: blobs){
+                CloudBlobDirectory directory = (CloudBlobDirectory) blob;
+
+                if(airlineDir.equals(directory.getPrefix())){
+
+                    Iterable<ListBlobItem> fileBlobs = directory.listBlobs();
+                    for(ListBlobItem fileBlob : fileBlobs){
+                        if(fileBlob instanceof CloudBlob){
+                            CloudBlob cloudBlob = (CloudBlob) fileBlob;
+                            // trim the parent directory from the path
+                            String tspFileName = new StringBuilder(cloudBlob.getName().substring(trimIndex)).toString();
+                            tspFileNames.add(tspFileName);
+                        }
+                    }
+                }
+            }
+        } catch (StorageException e) {
+            e.printStackTrace();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        return tspFileNames;
+    }
+
 
     public ByteArrayOutputStream downloadFile(String containerName, String fileName) {
 
@@ -321,4 +359,36 @@ public class AzureStorageUtil {
         	throw new IllegalArgumentException();
         }
     }
+	
+	public List<String> getAllBlobNamesInTheContainer(String containerName, String prefix) {
+		List<String> blobNames = new ArrayList<String>();
+		CloudBlobClient cloudBlobClient = this.storageAccount.createCloudBlobClient();
+		try {
+			CloudBlobContainer container = cloudBlobClient.getContainerReference(containerName);
+			Iterable<ListBlobItem> items;
+			if (prefix == null) {
+				items = container.listBlobs();
+			} else {
+				items = container.listBlobs(prefix);
+			}
+			
+			for (ListBlobItem item : items) {
+				if (item instanceof CloudBlobDirectory) {
+					blobNames.addAll(getAllBlobNamesInTheContainer(containerName, ((CloudBlobDirectory)item).getPrefix()));
+				} else {
+					String itemUrl = item.getUri().toString();
+					String itemName = itemUrl.substring(itemUrl.lastIndexOf("/") + 1);
+					if (prefix == null) {
+						blobNames.add(itemName);
+					} else {
+						blobNames.add(String.format("%s%s", prefix, itemName));
+					}
+				}
+			}
+		} catch (Exception e) {
+			logger.error("Failed to list the blobs in a container " + containerName);
+		}
+		
+		return blobNames;
+	}
 }

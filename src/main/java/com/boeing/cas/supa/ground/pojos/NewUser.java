@@ -2,6 +2,7 @@ package com.boeing.cas.supa.ground.pojos;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class NewUser {
@@ -16,6 +17,24 @@ public class NewUser {
 	public String airlineGroupName;
 	private String roleGroupName;
 	private List<String> otherMails;
+
+	public NewUser(){
+		this.otherMails = new ArrayList<String>();
+	}
+
+	public NewUser(String userPrincipalName, String givenName, String surname, String password, String email, Group airlineGroup, String roleGroupName){
+		this.otherMails = new ArrayList<String>();
+		this.userPrincipalName = userPrincipalName;
+		this.givenName = givenName;
+		this.displayName = userPrincipalName;
+		this.accountEnabled = true;
+		this.forceChangePasswordNextLogin = false;
+		this.surname = surname;
+		this.password = password;
+		this.otherMails.add(email);
+		this.airlineGroupName = airlineGroup.description;
+		this.roleGroupName = roleGroupName;
+	}
 
 	public String getUserPrincipalName() {
 		return userPrincipalName;

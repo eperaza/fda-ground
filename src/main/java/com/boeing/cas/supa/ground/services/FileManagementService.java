@@ -1,27 +1,17 @@
 package com.boeing.cas.supa.ground.services;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.channels.FileChannel;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeParseException;
-import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import com.boeing.cas.supa.ground.exceptions.*;
+import com.boeing.cas.supa.ground.dao.FlightRecordDao;
+import com.boeing.cas.supa.ground.exceptions.FileDownloadException;
+import com.boeing.cas.supa.ground.exceptions.FlightRecordException;
+import com.boeing.cas.supa.ground.exceptions.OnsCertificateException;
+import com.boeing.cas.supa.ground.exceptions.SupaSystemLogException;
 import com.boeing.cas.supa.ground.pojos.*;
+import com.boeing.cas.supa.ground.utils.ADWTransferUtil;
+import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
+import com.boeing.cas.supa.ground.utils.Constants;
+import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
+import com.boeing.cas.supa.ground.utils.ControllerUtils;
+import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -30,12 +20,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.boeing.cas.supa.ground.dao.FlightRecordDao;
-import com.boeing.cas.supa.ground.utils.ADWTransferUtil;
-import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
-import com.boeing.cas.supa.ground.utils.Constants;
-import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
-import com.boeing.cas.supa.ground.utils.ControllerUtils;
+import java.io.*;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 public class FileManagementService {
@@ -55,8 +52,71 @@ public class FileManagementService {
 	private AzureADClientService aadClient;
 
 	@Autowired
+	private AircraftPropertyService aircraftPropertyService;
+
+	@Autowired
 	private FlightRecordDao flightRecordDao;
 
+	public List<String> getTspListFromStorage(String authToken) throws FileDownloadException, IOException {
+
+		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
+		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+		if (airlineGroups.size() != 1) {
+			throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
+		}
+		List<Group> roleGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).collect(Collectors.toList());
+		if (roleGroups.size() != 1) {
+			throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "Failed to associate user with a role", RequestFailureReason.UNAUTHORIZED));
+		}
+
+		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+
+		AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
+
+		String container = TSP_STORAGE_CONTAINER;
+		String filePath = new StringBuilder(container).append("/").append(airlineGroup.toUpperCase()).toString();
+
+		if(asu.blobContainerExists(filePath)){
+			throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "No TSP Blob exists for that airline", RequestFailureReason.BAD_REQUEST));
+		}
+
+		List<String> tspList = asu.getFilenamesFromBlob(container, airlineGroup);
+		return tspList;
+
+	}
+
+	public byte[] zipFileList(List<String> tspList, String authToken) throws FileDownloadException, IOException {
+		String container = TSP_STORAGE_CONTAINER;
+
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		BufferedOutputStream bufferOutputStream = new BufferedOutputStream(byteArrayOutputStream);
+		ZipOutputStream zipOutputStream = new ZipOutputStream(bufferOutputStream);
+
+		for(String tspFileName : tspList){
+			byte[] tspJsonFile = this.getFileFromStorage(tspFileName, container, authToken);
+			zipOutputStream.putNextEntry(new ZipEntry(tspFileName));
+			InputStream inputStream = new ByteArrayInputStream(tspJsonFile);
+			IOUtils.copy(inputStream, zipOutputStream);
+			inputStream.close();
+
+			int endStringIndex = tspFileName.length() - 4;
+			String tailNo = new StringBuilder(tspFileName.substring(0, endStringIndex)).toString();
+
+			String aircraftProp = aircraftPropertyService.getAircraftProperty(authToken, tailNo);
+			if(aircraftProp != null){
+				String aircraftPropFileName = new StringBuilder(tailNo).append("properties.json").toString();
+				zipOutputStream.putNextEntry(new ZipEntry(aircraftPropFileName));
+				InputStream apropStream = new ByteArrayInputStream(aircraftProp.getBytes());
+				IOUtils.copy(apropStream, zipOutputStream);
+				apropStream.close();
+
+			}
+			zipOutputStream.closeEntry();
+		}
+		zipOutputStream.close();
+		byte[] zipFile = byteArrayOutputStream.toByteArray();
+		return zipFile;
+	}
 
 	public byte[] getFileFromStorage(String file, String type, String authToken) throws FileDownloadException {
 
@@ -76,7 +136,6 @@ public class FileManagementService {
 			}
 
 			String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
-			String userRole = roleGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_USER_ROLE_PREFIX, StringUtils.EMPTY);
 
 			AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
 			if (StringUtils.isBlank(file) || StringUtils.isBlank(type)) {
