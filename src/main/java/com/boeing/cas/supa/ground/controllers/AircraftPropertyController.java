@@ -4,6 +4,7 @@ import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.services.AircraftPropertyService;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
 import com.boeing.cas.supa.ground.services.FileManagementService;
+import com.boeing.cas.supa.ground.utils.CheckSumUtil;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,9 @@ public class AircraftPropertyController {
     private AzureADClientService azureADClientService;
 
     @Autowired
+    private CheckSumUtil checkSumUtil;
+
+    @Autowired
     private FileManagementService fileManagementService;
 
     @RequestMapping(path="/getAircraftConfiguration", method={RequestMethod.GET}, produces="application/zip")
@@ -40,11 +44,9 @@ public class AircraftPropertyController {
                                          @RequestHeader(name = "tail", required = false) String tailNumber) throws IOException, NoSuchAlgorithmException {
 
         String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
-        // aircraft config is TSP + AircraftProperty
-        // TSP is JSON, Aircraft Property PLAINTEXT
-        // zip will have 2 files, json and plaintext
+
         byte[] zipFile = aircraftPropertyService.getAircraftConfig(authToken);
-        String checkSum = aircraftPropertyService.generateCheckSum(zipFile);
+        String checkSum = checkSumUtil.generateCheckSum(zipFile);
 
         String fileName = new StringBuilder(airlineName).append("-config.zip").toString();
 

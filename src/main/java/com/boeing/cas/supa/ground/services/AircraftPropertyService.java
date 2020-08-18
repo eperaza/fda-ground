@@ -14,13 +14,10 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
-import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -81,8 +78,6 @@ public class AircraftPropertyService {
 		try {
 			String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
 
-			logger.debug("airlineName: " + airlineName);
-
 			AircraftConfiguration aircraftConfiguration = aircraftInfoDao.getAircraftPropertiesByAirlineAndTailNumber(airlineName, tailNumber);
 			if (aircraftConfiguration == null) {
 				logger.debug("!! UH OH WE DIDN:T GET AN AIRCRAFT PROPERTY");
@@ -95,13 +90,6 @@ public class AircraftPropertyService {
 		return null;
 	}
 
-	public String generateCheckSum(byte[] zipFile) throws NoSuchAlgorithmException {
-		MessageDigest md = MessageDigest.getInstance("SHA-256");
-		byte[] utf8 = md.digest(zipFile);
-		String checkSum = DatatypeConverter.printHexBinary(utf8);
-		return checkSum;
-	}
-
 	public byte[] getAircraftConfig(String authToken){
 		try {
 			String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
@@ -110,19 +98,14 @@ public class AircraftPropertyService {
 			}
 			/**
 			 *  **NOTE: currently getTSP from Azure blob storage - future state get from SQL
+			 *  Zip Package contains all TSPs (.json) for an airline, in addition to all properties files
 			 */
 			 List<String> tspList = fileManagementService.getTspListFromStorage(authToken);
 			 byte[] zipFile = fileManagementService.zipFileList(tspList, authToken);
 
-			 if(zipFile!=null){
-			 	logger.debug("got a real zip file back");
-			 }else{
-			 	logger.debug("FFFFFFFFUUUUUUUUUU");
-			 }
-
 			 return zipFile;
 		} catch (Exception ex) {
-			logger.error("Failed to get aircraft property. Error: " + ex);
+			logger.error("Failed create TSP package" + ex);
 		}
 		return null;
 	}
