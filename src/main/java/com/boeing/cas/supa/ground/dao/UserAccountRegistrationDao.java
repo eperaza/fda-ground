@@ -31,5 +31,7 @@ public interface UserAccountRegistrationDao {
 	public List<ActivationCode> getActivationCode(String email_address, String activation_code) throws UserAccountRegistrationException;
 
 	public void removeActivationCode(String email_address, String activation_code) throws UserAccountRegistrationException;
+	
+	public List<ActivationCode> getNewClientCert() throws UserAccountRegistrationException;
 
 }

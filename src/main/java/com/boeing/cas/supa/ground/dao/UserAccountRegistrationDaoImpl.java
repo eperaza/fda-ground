@@ -257,6 +257,13 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 		}
 	}
 
+	@Override
+	public List<ActivationCode> getNewClientCert() throws UserAccountRegistrationException {
+
+		// TO IMPLEMENT
+
+	}
+
 
 	private static final class ActivationCodeMapper implements RowMapper<ActivationCode> {
 

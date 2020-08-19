@@ -40,6 +40,9 @@ import com.boeing.cas.supa.ground.utils.ControllerUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWTParser;
 
+@Autowired
+private UserAccountRegistrationDao userAccountRegister;
+
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class AzureADAuthFilter implements Filter {
@@ -109,10 +112,9 @@ public class AzureADAuthFilter implements Filter {
 			if (isUsingPrimaryCert || isUsingSecondaryCert) {
 				if (!appProps.get("FDAdvisorClientCert2Name").isEqual("") && isUsingPrimaryCert) {
 					// TODO: Send the client the secondary cert to use
-					logger.debug("Get Client cert using activation code [{}] for [{}]",
-					ControllerUtils.sanitizeString(activationCode),
-					ControllerUtils.sanitizeString(emailAddress));
-					Object result = aadClient.getClientCertFromActivationCode(emailAddress, activationCode);
+					logger.debug("Sending user secondary client cert",
+
+					Object result = userAccountRegister.getNewClientCert(); // TODO: I Don't know how to pull the new cert.
 			
 					if (result instanceof ApiError) {
 			
