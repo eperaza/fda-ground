@@ -214,13 +214,14 @@ public class AzureStorageUtil {
     public boolean uploadTspZipConfig(String containerName, StringBuilder fileName, String sourceFilePath) throws TspConfigLogException {
 	    boolean rval = false;
 
+	    logger.debug("got to uploading TSP Zip File! ");
 	    try{
             CloudBlobClient serviceClient = this.storageAccount.createCloudBlobClient();
             // NOTE: Container name must be lower case.
             CloudBlobContainer container = serviceClient.getContainerReference(containerName);
             container.createIfNotExists();
             // Upload the file as a Blob.
-            CloudBlockBlob blob = container.getBlockBlobReference(fileName);
+            CloudBlockBlob blob = container.getBlockBlobReference(String.valueOf(fileName));
             // NOTE: If the Blob exists currently we are overriding the existing blob.
             // possibly never be an issue since most file names are uniquely identifiable.
             File sourceFile = new File(sourceFilePath);
