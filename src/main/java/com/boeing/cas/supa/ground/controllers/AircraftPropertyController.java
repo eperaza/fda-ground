@@ -1,5 +1,6 @@
 package com.boeing.cas.supa.ground.controllers;
 
+import com.boeing.cas.supa.ground.exceptions.TspConfigLogException;
 import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.services.AircraftPropertyService;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
@@ -21,6 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 
 @Controller
 public class AircraftPropertyController {
@@ -41,13 +43,18 @@ public class AircraftPropertyController {
     @RequestMapping(path="/getAircraftConfiguration", method={RequestMethod.GET}, produces="application/zip")
     public void getAircraftConfiguration(HttpServletResponse response,
                                          @RequestHeader("Authorization") String authToken,
-                                         @RequestHeader(name = "tail", required = false) String tailNumber) throws IOException, NoSuchAlgorithmException {
+                                         @RequestHeader(name = "lastUpdated", required = true) Date lastUpdated) throws IOException, NoSuchAlgorithmException, TspConfigLogException {
 
         String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
 
+        // get TSP Config zip package
         byte[] zipFile = aircraftPropertyService.getAircraftConfig(authToken);
-        String checkSum = checkSumUtil.generateCheckSum(zipFile);
+        // insert into DB
+        fileManagementService.uploadTspConfigPackage(zipFile, "test-aircraft-config.zip", authToken);
 
+        Date updatedDate = new Date();
+
+        String checkSum = checkSumUtil.generateCheckSum(zipFile);
         String fileName = new StringBuilder(airlineName).append("-config.zip").toString();
 
         HttpHeaders header = new HttpHeaders();

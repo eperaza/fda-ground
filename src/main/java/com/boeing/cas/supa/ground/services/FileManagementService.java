@@ -1,10 +1,7 @@
 package com.boeing.cas.supa.ground.services;
 
 import com.boeing.cas.supa.ground.dao.FlightRecordDao;
-import com.boeing.cas.supa.ground.exceptions.FileDownloadException;
-import com.boeing.cas.supa.ground.exceptions.FlightRecordException;
-import com.boeing.cas.supa.ground.exceptions.OnsCertificateException;
-import com.boeing.cas.supa.ground.exceptions.SupaSystemLogException;
+import com.boeing.cas.supa.ground.exceptions.*;
 import com.boeing.cas.supa.ground.pojos.*;
 import com.boeing.cas.supa.ground.utils.ADWTransferUtil;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
@@ -41,6 +38,7 @@ public class FileManagementService {
 
 	private final static String FLIGHT_RECORDS_STORAGE_CONTAINER = "flight-records";
 	private final static String SUPA_SYSTEM_LOGS_STORAGE_CONTAINER = "supa-system-logs";
+	private final static String TSP_CONFIG_ZIP_CONTAINER = "aircraft-config-package";
 	private final static String TSP_STORAGE_CONTAINER = "tsp";
 	private final static String MOBILECONFIG_STORAGE_CONTAINER = "config";
 	private final static String CERTIFICATES_STORAGE_CONTAINER = "certificates";
@@ -454,6 +452,97 @@ public class FileManagementService {
 		}
         
 		return flightRecordUploadResponse;
+	}
+
+	public FileManagementMessage uploadTspConfigPackage(byte[] zipFile, String fileName, String authToken) throws TspConfigLogException {
+		logger.debug("Uploading TSP Config Package");
+
+		final Map<String, String> properties = this.appProps;
+		final FileManagementMessage tspUploadResponse = new FileManagementMessage(fileName);
+
+		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
+		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+		if (airlineGroups.size() != 1) {
+			throw new TspConfigLogException(new ApiError("TSP_CONFIG_PACKAGE_UPLOAD_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
+		}
+		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+		ExecutorService es = Executors.newFixedThreadPool(3);
+		List<Future<Boolean>> futures = new ArrayList<>();
+
+		String uploadFolder = null;
+		Path _uploadPath = null;
+		long _fileSizeKb = 0L;
+		String _storagePath = null;
+
+		try {
+				_storagePath = new StringBuilder(airlineGroup).toString();
+
+			// Store the uploaded file in TEMP, in preparation for uploading to Azure and ADW
+			uploadFolder = ControllerUtils.saveUploadedZip(zipFile, fileName);
+			if (StringUtils.isBlank(uploadFolder)) {
+				throw new IOException("Failed to establish upload folder");
+			}
+			_uploadPath = Paths.get(new StringBuilder(uploadFolder)
+					.append(File.separator)
+					.append(fileName)
+					.toString());
+			try (FileChannel fileChannel = FileChannel.open(_uploadPath)) {
+				_fileSizeKb = fileChannel.size();
+			}
+		} catch (IndexOutOfBoundsException ioobe) {
+			throw new TspConfigLogException(new ApiError("TSP_CONFIG_PACKAGE_UPLOAD_FAILURE", "Failed to extract identifying tokens from flight record filename", RequestFailureReason.BAD_REQUEST));
+		} catch (IOException ioe) {
+			throw new TspConfigLogException(new ApiError("TSP_CONFIG_PACKAGE_UPLOAD_FAILURE", String.format("I/O exception encountered %s", ioe.getMessage()), RequestFailureReason.INTERNAL_SERVER_ERROR));
+		}
+
+		final String storagePath = _storagePath;
+		final Path uploadPath = _uploadPath;
+		final String filePath = new StringBuilder(storagePath).append('/').append(airlineGroup).toString();
+		// ------- Adding file to Azure Storage -------
+		logger.debug("Adding file to Azure Storage");
+		Future<Boolean> azureFuture = es.submit(new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+
+				Boolean upload = false;
+				try {
+					logger.info("Starting Azure upload");
+					AzureStorageUtil asu = new AzureStorageUtil(properties.get("StorageAccountName"), properties.get("StorageKey"));
+					upload = asu.uploadTspZipConfig(TSP_CONFIG_ZIP_CONTAINER, new StringBuilder(storagePath).append('/')
+							.append(filePath), uploadPath.toFile().getAbsolutePath());
+					logger.info("Upload to Azure complete: {}", upload);
+				} catch (TspConfigLogException ex) {
+					logger.error("Failed to upload to Azure Storage: {}", ex.getMessage());
+					tspUploadResponse.setMessage(ex.getMessage());
+				} catch(Exception e) {
+					logger.error("ApiError in Azure upload: {}", e.getMessage(), e);
+				}
+				return upload;
+			}
+		});
+		futures.add(azureFuture);
+		boolean azureBool = false;
+		try {
+			azureBool = azureFuture.get();
+		} catch (InterruptedException | ExecutionException e) {
+			logger.error("ApiError in running executionservice: {}", e.getMessage(), e);
+		}
+		es.shutdown();
+
+		try {
+			if (!es.awaitTermination(1, TimeUnit.MINUTES)) {
+				es.shutdownNow();
+			}
+		} catch (InterruptedException e) {
+
+			Thread.currentThread().interrupt();
+			logger.error("ApiError in shuttingdown executionservice: {}", e.getMessage(), e);
+			es.shutdownNow();
+		}
+
+		tspUploadResponse.setUploaded(true);
+
+		return tspUploadResponse;
 	}
 
 
