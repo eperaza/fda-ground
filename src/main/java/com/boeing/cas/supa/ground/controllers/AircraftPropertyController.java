@@ -26,9 +26,10 @@ import java.util.Date;
 @Controller
 public class AircraftPropertyController {
 
+    private final Logger logger = LoggerFactory.getLogger(AircraftPropertyController.class);
+
     @Autowired
     private AircraftPropertyService aircraftPropertyService;
-    private final Logger logger = LoggerFactory.getLogger(AircraftPropertyController.class);
 
     @Autowired
     private AzureADClientService azureADClientService;
@@ -72,6 +73,19 @@ public class AircraftPropertyController {
 
         logger.debug("aircraft prop: " + result);
         if (result instanceof ApiError) {
+            return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
+        }
+
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @RequestMapping(path="/getAircraftPropertiesByAirline", method={ RequestMethod.GET })
+    public ResponseEntity<Object> getAircraftPropertiesByAirline(@RequestHeader("Authorization") String authToken){
+
+        logger.debug("hit new getACProperties Endpoing %%%%%%% ");
+
+        Object result = aircraftPropertyService.getAircraftPropertiesByAirline(authToken);
+        if(result instanceof ApiError){
             return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
         }
 

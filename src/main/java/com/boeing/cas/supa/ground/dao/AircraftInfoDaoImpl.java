@@ -55,4 +55,11 @@ public class AircraftInfoDaoImpl extends BaseDaoImpl implements AircraftInfoDao 
 		
 		return (AircraftConfiguration)query.uniqueResult();
 	}
+
+	@Override
+	public AircraftConfiguration getAircraftPropertiesByAirline(String airlineName) {
+		Query query = getSession().getNamedQuery("getAircraftPropertiesByAirline");
+		query.setParameter("name", airlineName);
+		return null;
+	}
 }

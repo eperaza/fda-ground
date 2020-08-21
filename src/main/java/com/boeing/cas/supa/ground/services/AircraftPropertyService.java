@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -90,6 +91,29 @@ public class AircraftPropertyService {
 		return null;
 	}
 
+	@Transactional
+	public List<String> getAircraftPropertiesByAirline(String authToken){
+		try {
+			String airlineName = azureADClientService.validateAndGetAirlineName(authToken);
+
+			logger.debug("got to new method with airlineName: " + airlineName);
+
+			List<AircraftConfiguration> aircraftConfigList = (List<AircraftConfiguration>) aircraftInfoDao.getAircraftPropertiesByAirline(airlineName);
+			if(aircraftConfigList == null){
+				logger.debug("Something wrong getting AP list");
+				return null;
+			}
+			List<String> results = new ArrayList<>();
+			for(AircraftConfiguration apConfig: aircraftConfigList){
+				results.add(new Gson().toJson(apConfig));
+			}
+			return results;
+		}catch(Exception ex){
+			logger.error("failed to retrieve APs: " + ex);
+		}
+		return null;
+	}
+
 	public byte[] getAircraftConfig(String authToken){
 		try {
 
@@ -107,13 +131,6 @@ public class AircraftPropertyService {
 			 byte[] zipFile = fileManagementService.zipFileList(tspList, authToken);
 
 			 logger.debug(" GOOD - zip successful in aircraft property service....");
-//			 FileManagementMessage zipMsg = fileManagementService.uploadTspConfigPackage(zipFile, "did-it-work.zip", authToken);
-
-//			 if(zipMsg.isUploaded()){
-//			 	logger.debug(" OMG     YES!!!!");
-//			 }else{
-//			 	logger.debug(" FUUUUUUUUUUUUUUUUU");
-//			 }
 
 			 return zipFile;
 		} catch (Exception ex) {
