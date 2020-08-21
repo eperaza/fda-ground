@@ -2,6 +2,7 @@ package com.boeing.cas.supa.ground.controllers;
 
 import com.boeing.cas.supa.ground.exceptions.TspConfigLogException;
 import com.boeing.cas.supa.ground.pojos.ApiError;
+import com.boeing.cas.supa.ground.pojos.FileManagementMessage;
 import com.boeing.cas.supa.ground.services.AircraftPropertyService;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
 import com.boeing.cas.supa.ground.services.FileManagementService;
@@ -18,9 +19,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
@@ -41,30 +40,26 @@ public class AircraftPropertyController {
     private FileManagementService fileManagementService;
 
     @RequestMapping(path="/getAircraftConfiguration", method={RequestMethod.GET}, produces="application/zip")
-    public void getAircraftConfiguration(HttpServletResponse response,
+    public ResponseEntity<byte[]> getAircraftConfiguration(
                                          @RequestHeader("Authorization") String authToken,
-                                         @RequestHeader(name = "lastUpdated", required = true) Date lastUpdated) throws IOException, NoSuchAlgorithmException, TspConfigLogException {
+                                         @RequestHeader(name = "lastUpdated", required = false) Date lastUpdated) throws IOException, NoSuchAlgorithmException, TspConfigLogException {
 
         String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
 
         // get TSP Config zip package
         byte[] zipFile = aircraftPropertyService.getAircraftConfig(authToken);
         // insert into DB
-        fileManagementService.uploadTspConfigPackage(zipFile, "test-aircraft-config.zip", authToken);
-
-        Date updatedDate = new Date();
+        FileManagementMessage zipUploadmsg = fileManagementService.uploadTspConfigPackage(zipFile, "test-aircraft-config.zip", authToken);
 
         String checkSum = checkSumUtil.generateCheckSum(zipFile);
         String fileName = new StringBuilder(airlineName).append("-config.zip").toString();
 
         HttpHeaders header = new HttpHeaders();
-        header.add("Content-Disposition", "attachment; filename=" + fileName);
+        header.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+        header.add(HttpHeaders.CONTENT_TYPE, "application/octet-stream");
         header.add("CheckSum", checkSum);
 
-        OutputStream outStream = response.getOutputStream();
-        outStream.write(zipFile);
-        outStream.close();
-        response.flushBuffer();
+        return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
     }
 
     @RequestMapping(path="/getAircraftProperty", method = { RequestMethod.GET })

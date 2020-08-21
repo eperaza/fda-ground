@@ -107,12 +107,12 @@ public class FileManagementService {
 				InputStream apropStream = new ByteArrayInputStream(aircraftProp.getBytes());
 				IOUtils.copy(apropStream, zipOutputStream);
 				apropStream.close();
-
 			}
 			zipOutputStream.closeEntry();
 		}
 		zipOutputStream.close();
 		byte[] zipFile = byteArrayOutputStream.toByteArray();
+		logger.debug("FINISHED WRITING ZIP FILE");
 		return zipFile;
 	}
 
@@ -455,7 +455,7 @@ public class FileManagementService {
 	}
 
 	public FileManagementMessage uploadTspConfigPackage(byte[] zipFile, String fileName, String authToken) throws TspConfigLogException {
-		logger.debug("Uploading TSP Config Package");
+		logger.debug("Uploading package: " + fileName);
 
 		final Map<String, String> properties = this.appProps;
 		final FileManagementMessage tspUploadResponse = new FileManagementMessage(fileName);

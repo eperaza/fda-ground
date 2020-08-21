@@ -92,6 +92,9 @@ public class AircraftPropertyService {
 
 	public byte[] getAircraftConfig(String authToken){
 		try {
+
+			logger.debug("DO WE EVEN GET HERE 2");
+
 			String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
 			if (Strings.isNullOrEmpty(airlineName)) {
 				throw new IllegalArgumentException("Bad Input");
@@ -102,6 +105,15 @@ public class AircraftPropertyService {
 			 */
 			 List<String> tspList = fileManagementService.getTspListFromStorage(authToken);
 			 byte[] zipFile = fileManagementService.zipFileList(tspList, authToken);
+
+			 logger.debug(" GOOD - zip successful in aircraft property service....");
+//			 FileManagementMessage zipMsg = fileManagementService.uploadTspConfigPackage(zipFile, "did-it-work.zip", authToken);
+
+//			 if(zipMsg.isUploaded()){
+//			 	logger.debug(" OMG     YES!!!!");
+//			 }else{
+//			 	logger.debug(" FUUUUUUUUUUUUUUUUU");
+//			 }
 
 			 return zipFile;
 		} catch (Exception ex) {
