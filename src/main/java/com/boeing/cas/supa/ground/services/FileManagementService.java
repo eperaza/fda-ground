@@ -36,15 +36,16 @@ public class FileManagementService {
 
 	private final Logger logger = LoggerFactory.getLogger(FileManagementService.class);
 
+	@Autowired
+	private Map<String, String> appProps;
+
 	private final static String FLIGHT_RECORDS_STORAGE_CONTAINER = "flight-records";
 	private final static String SUPA_SYSTEM_LOGS_STORAGE_CONTAINER = "supa-system-logs";
 	private final static String TSP_CONFIG_ZIP_CONTAINER = "aircraft-config-package";
 	private final static String TSP_STORAGE_CONTAINER = "tsp";
 	private final static String MOBILECONFIG_STORAGE_CONTAINER = "config";
 	private final static String CERTIFICATES_STORAGE_CONTAINER = "certificates";
-
-	@Autowired
-	private Map<String, String> appProps;
+	private final Map<String, String> properties = appProps;
 
 	@Autowired
 	private AzureADClientService aadClient;
@@ -338,7 +339,6 @@ public class FileManagementService {
 		// Set up executor pool for performing ADW and Azure uploads concurrently
 		ExecutorService es = Executors.newFixedThreadPool(3);
 		List<Future<Boolean>> futures = new ArrayList<>();
-		final Map<String, String> properties = this.appProps;
 
 		Future<Boolean> adwFuture = null;
 		// Suppress ADW upload (set via application properties, typically false for non-Production environments)
@@ -454,12 +454,7 @@ public class FileManagementService {
 		return flightRecordUploadResponse;
 	}
 
-	public FileManagementMessage uploadTspConfigPackage(byte[] zipFile, String fileName, String authToken) throws TspConfigLogException {
-		logger.debug("Uploading package: " + fileName);
-
-		final Map<String, String> properties = this.appProps;
-		final FileManagementMessage tspUploadResponse = new FileManagementMessage(fileName);
-
+	public FileManagementMessage uploadTspConfigPackage(byte[] zipFile, String authToken) throws TspConfigLogException {
 		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
 		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
 		if (airlineGroups.size() != 1) {
@@ -469,13 +464,19 @@ public class FileManagementService {
 		ExecutorService es = Executors.newFixedThreadPool(3);
 		List<Future<Boolean>> futures = new ArrayList<>();
 
+		String fileName = new StringBuilder(airlineGroup).append("-config-pkg.zip").toString();
+
+
+		final FileManagementMessage tspUploadResponse = new FileManagementMessage(fileName);
+
 		String uploadFolder = null;
 		Path _uploadPath = null;
 		long _fileSizeKb = 0L;
 		String _storagePath = null;
 
 		try {
-				_storagePath = new StringBuilder(airlineGroup).toString();
+			// creates directory in blob, uppercase airline name
+				_storagePath = new StringBuilder(airlineGroup.toUpperCase()).toString();
 
 			// Store the uploaded file in TEMP, in preparation for uploading to Azure and ADW
 			uploadFolder = ControllerUtils.saveUploadedZip(zipFile, fileName);
@@ -489,15 +490,16 @@ public class FileManagementService {
 			try (FileChannel fileChannel = FileChannel.open(_uploadPath)) {
 				_fileSizeKb = fileChannel.size();
 			}
-		} catch (IndexOutOfBoundsException ioobe) {
+		} catch (IndexOutOfBoundsException | IOException ioe) {
 			throw new TspConfigLogException(new ApiError("TSP_CONFIG_PACKAGE_UPLOAD_FAILURE", "Failed to extract identifying tokens from flight record filename", RequestFailureReason.BAD_REQUEST));
-		} catch (IOException ioe) {
-			throw new TspConfigLogException(new ApiError("TSP_CONFIG_PACKAGE_UPLOAD_FAILURE", String.format("I/O exception encountered %s", ioe.getMessage()), RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 
 		final String storagePath = _storagePath;
 		final Path uploadPath = _uploadPath;
-		final String filePath = new StringBuilder(storagePath).append('/').append(airlineGroup).toString();
+
+		final String filePath = new StringBuilder(storagePath).append('/').append(fileName).toString();
+		logger.debug("FILE Path is: " + filePath);
+
 		// ------- Adding file to Azure Storage -------
 		logger.debug("Adding file to Azure Storage");
 		Future<Boolean> azureFuture = es.submit(new Callable<Boolean>() {
@@ -508,8 +510,7 @@ public class FileManagementService {
 				try {
 					logger.info("Starting Azure upload");
 					AzureStorageUtil asu = new AzureStorageUtil(properties.get("StorageAccountName"), properties.get("StorageKey"));
-					upload = asu.uploadTspZipConfig(TSP_CONFIG_ZIP_CONTAINER, new StringBuilder(storagePath).append('/')
-							.append(filePath), uploadPath.toFile().getAbsolutePath());
+					upload = asu.uploadTspZipConfig(TSP_CONFIG_ZIP_CONTAINER, filePath, uploadPath.toFile().getAbsolutePath());
 					logger.info("Upload to Azure complete: {}", upload);
 				} catch (TspConfigLogException ex) {
 					logger.error("Failed to upload to Azure Storage: {}", ex.getMessage());
@@ -545,6 +546,24 @@ public class FileManagementService {
 		return tspUploadResponse;
 	}
 
+//	public Date getBlobLastModifiedTimeStamp(String authToken) throws TspConfigLogException, IOException {
+//		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
+//		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+//		if (airlineGroups.size() != 1) {
+//			throw new TspConfigLogException(new ApiError("TSP_CONFIG_PACKAGE_GET_LAST_MODIFIED_FAILURE", "FAILED TO RETRIEVE UPDATED TIMESTAMP FROM BLOB - No Valid Airline Group", RequestFailureReason.UNAUTHORIZED));
+//		}
+//		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+//
+//		logger.info("Fetching Last Modified TimeStamp From Blob ... ");
+//		try{
+//			AzureStorageUtil asu = new AzureStorageUtil(properties.get("StorageAccountName"), properties.get("StorageKey"));
+//			Date lastModified = asu.getLastModifiedTimeStampFromBlob();
+//			return lastModified;
+//		}catch(IOException ex){
+//			throw new TspConfigLogException(new ApiError("TSP_CONFIG_PACKAGE_GET_LAST_MODIFIED_FAILURE", "FAILED TO RETRIEVE UPDATED TIMESTAMP FROM BLOB", RequestFailureReason.UNAUTHORIZED));
+//		}
+//		return null;
+//	}
 
 	public FileManagementMessage uploadSupaSystemLog(final MultipartFile uploadSupaSystemLog, String authToken) throws SupaSystemLogException {
 
@@ -607,10 +626,8 @@ public class FileManagementService {
 			try (FileChannel fileChannel = FileChannel.open(_uploadPath)) {
 				_fileSizeKb = fileChannel.size();
 			}
-		} catch (IndexOutOfBoundsException ioobe) {
+		} catch (IndexOutOfBoundsException | IOException ioe) {
 			throw new SupaSystemLogException(new ApiError("SUPA_SYSTEM_LOG_UPLOAD_FAILURE", "Failed to extract identifying tokens from flight log filename", RequestFailureReason.BAD_REQUEST));
-		} catch (IOException ioe) {
-			throw new SupaSystemLogException(new ApiError("SUPA_SYSTEM_LOG_UPLOAD_FAILURE", String.format("I/O exception encountered %s", ioe.getMessage()), RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 
 		final long fileSizeKb = _fileSizeKb;
@@ -641,7 +658,6 @@ public class FileManagementService {
 		// Set up executor pool for performing ADW and Azure uploads concurrently
 		ExecutorService es = Executors.newFixedThreadPool(3);
 		List<Future<Boolean>> futures = new ArrayList<>();
-		final Map<String, String> properties = this.appProps;
 
 		// ------- Adding file to Azure Storage -------
 		logger.debug("Adding file to Azure Storage");

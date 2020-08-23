@@ -4,6 +4,8 @@ import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.HtmlUtils;
@@ -16,6 +18,9 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class ControllerUtils {
+
+
+	private static Logger logger = LoggerFactory.getLogger(ControllerUtils.class);
 
 	public static HttpStatus translateRequestFailureReasonToHttpErrorCode(RequestFailureReason failureReason) {
 
@@ -91,6 +96,9 @@ public class ControllerUtils {
 		Path tempDirPath = Files.createTempDirectory(StringUtils.EMPTY);
 		String uploadFolder = tempDirPath.toString();
 		Path path = Paths.get(uploadFolder + File.separator + fileName);
+
+		logger.debug("saveUploadedZip path: " + path.toString());
+
 		Files.write(path, zipFile);
 		return uploadFolder;
 	}

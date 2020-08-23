@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -98,7 +99,7 @@ public class AircraftPropertyService {
 
 			logger.debug("got to new method with airlineName: " + airlineName);
 
-			List<AircraftConfiguration> aircraftConfigList = (List<AircraftConfiguration>) aircraftInfoDao.getAircraftPropertiesByAirline(airlineName);
+			Set<AircraftConfiguration> aircraftConfigList = (Set<AircraftConfiguration>) aircraftInfoDao.getAircraftPropertiesByAirline(airlineName);
 			if(aircraftConfigList == null){
 				logger.debug("Something wrong getting AP list");
 				return null;

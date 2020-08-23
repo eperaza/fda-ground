@@ -50,10 +50,10 @@ public class AircraftPropertyController {
         // get TSP Config zip package
         byte[] zipFile = aircraftPropertyService.getAircraftConfig(authToken);
         // insert into DB
-        FileManagementMessage zipUploadmsg = fileManagementService.uploadTspConfigPackage(zipFile, "test-aircraft-config.zip", authToken);
+        FileManagementMessage zipUploadmsg = fileManagementService.uploadTspConfigPackage(zipFile, authToken);
 
         String checkSum = checkSumUtil.generateCheckSum(zipFile);
-        String fileName = new StringBuilder(airlineName).append("-config.zip").toString();
+        String fileName = new StringBuilder(airlineName).append("-config-pkg.zip").toString();
 
         HttpHeaders header = new HttpHeaders();
         header.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);

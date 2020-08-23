@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class AzureStorageUtil {
@@ -210,8 +211,21 @@ public class AzureStorageUtil {
     	}
     }
 
+    public Date getLastModifiedTimeStampFromBlob(String containerName, String fileName){
+	    try {
+	        CloudBlobClient serviceClient = storageAccount.createCloudBlobClient();
 
-    public boolean uploadTspZipConfig(String containerName, StringBuilder fileName, String sourceFilePath) throws TspConfigLogException {
+	        return serviceClient.getContainerReference(containerName)
+                    .getBlockBlobReference(fileName)
+                    .getProperties()
+                    .getLastModified(); // returns Date
+        }catch(Exception ex){
+	        logger.debug("!! FAILED - could not retrieve LastModifiedTimestamp");
+        }
+	    return null;
+    }
+
+    public boolean uploadTspZipConfig(String containerName, String fileName, String sourceFilePath) throws TspConfigLogException {
 	    boolean rval = false;
 
 	    logger.debug("got to uploading TSP Zip File! ");
