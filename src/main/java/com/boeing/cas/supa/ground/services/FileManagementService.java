@@ -544,22 +544,15 @@ public class FileManagementService {
 
 		tspUploadResponse.setUploaded(true);
 
-		Date lastModified = getBlobLastModifiedTimeStamp(authToken, TSP_CONFIG_ZIP_CONTAINER, filePath);
+		Date lastModified = getBlobLastModifiedTimeStamp(TSP_CONFIG_ZIP_CONTAINER, filePath);
 		logger.debug("!!! last Modified: " + lastModified.toString());
 
 		return tspUploadResponse;
 	}
 
-	public Date getBlobLastModifiedTimeStamp(String authToken, String containerName, String fileName) throws TspConfigLogException, IOException {
-//		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
-//		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
-//		if (airlineGroups.size() != 1) {
-//			throw new TspConfigLogException(new ApiError("TSP_CONFIG_PACKAGE_GET_LAST_MODIFIED_FAILURE", "FAILED TO RETRIEVE UPDATED TIMESTAMP FROM BLOB - No Valid Airline Group", RequestFailureReason.UNAUTHORIZED));
-//		}
-//		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+	public Date getBlobLastModifiedTimeStamp(String containerName, String fileName) throws TspConfigLogException, IOException {
 		final Map<String, String> properties = this.appProps;
 		logger.info("Fetching Last Modified TimeStamp From Blob ... " + containerName);
-		logger.info("file... " + fileName);
 		try{
 			AzureStorageUtil asu = new AzureStorageUtil(properties.get("StorageAccountName"), properties.get("StorageKey"));
 
