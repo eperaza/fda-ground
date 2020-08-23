@@ -214,13 +214,19 @@ public class AzureStorageUtil {
     public Date getLastModifiedTimeStampFromBlob(String containerName, String fileName){
 	    try {
 	        CloudBlobClient serviceClient = storageAccount.createCloudBlobClient();
+            CloudBlobContainer container = serviceClient.getContainerReference(containerName);
+            CloudBlockBlob blob = container.getBlockBlobReference(fileName);
+            // NOTE: MUST call downloadAttributes or your properties will return null
+            blob.downloadAttributes();
+            BlobProperties blobProps = blob.getProperties();
 
-	        return serviceClient.getContainerReference(containerName)
-                    .getBlockBlobReference(fileName)
-                    .getProperties()
-                    .getLastModified(); // returns Date
+            logger.info("Last Modified TimeStamp: " + blobProps.getLastModified());
+
+            Date lastModified = blobProps.getLastModified();
+
+            return lastModified;
         }catch(Exception ex){
-	        logger.debug("!! FAILED - could not retrieve LastModifiedTimestamp");
+	        logger.debug("!! FAILED - could not retrieve LastModifiedTimestamp - " + ex);
         }
 	    return null;
     }
@@ -240,9 +246,11 @@ public class AzureStorageUtil {
             // possibly never be an issue since most file names are uniquely identifiable.
             File sourceFile = new File(sourceFilePath);
             try (InputStream sourceStream = new FileInputStream(sourceFile)) {
-                AccessCondition accessCondition = AccessCondition.generateIfNotExistsCondition();
+                AccessCondition accessCondition = AccessCondition.generateIfExistsCondition();
+
                 BlobRequestOptions options = null;
                 OperationContext context = new OperationContext();
+
                 blob.upload(sourceStream, sourceFile.length(), accessCondition, options, context);
             }
             rval = true;
