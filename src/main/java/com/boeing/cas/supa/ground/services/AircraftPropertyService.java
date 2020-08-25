@@ -15,7 +15,6 @@ import javax.transaction.Transactional.TxType;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 @Service
 public class AircraftPropertyService {
@@ -91,7 +90,7 @@ public class AircraftPropertyService {
 
 			logger.debug("got to new method with airlineName: " + airlineName);
 
-			Set<AircraftConfiguration> aircraftConfigList = (Set<AircraftConfiguration>) aircraftInfoDao.getAircraftPropertiesByAirline(airlineName);
+			List<AircraftConfiguration> aircraftConfigList = (List<AircraftConfiguration>) aircraftInfoDao.getAircraftPropertiesByAirline(airlineName);
 			if(aircraftConfigList == null){
 				logger.debug("Something wrong getting AP list");
 				return null;
@@ -109,6 +108,8 @@ public class AircraftPropertyService {
 
 	public byte[] getAircraftConfig(String authToken){
 		try {
+
+			logger.debug("DO WE EVEN GET HERE 2");
 
 			String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
 			if (Strings.isNullOrEmpty(airlineName)) {
@@ -129,5 +130,4 @@ public class AircraftPropertyService {
 		}
 		return null;
 	}
-
 };
