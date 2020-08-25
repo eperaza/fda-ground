@@ -76,13 +76,13 @@ public class CertificateVerifierUtil {
             x509ServerCert = this.appRegistrationCertificates.get(certHolder);
         } else {
             x509ServerCert = this.appCertificates.get(certHolder);
-            x509NewServerCert = this.appNewCertificates.get(certHolder)
+            x509NewServerCert = this.appNewCertificates.get(certHolder);
         }
 
-        if (this.certCompare(x509ClientCert)) {
+        if (this.certCompare(x509ClientCert, certHolder, registrationProcess)) {
             return true;
         } else if (x509NewServerCert != null) {
-            return (this.certCompare(x509NewServerCert));
+            return (this.certCompare(x509NewServerCert, certHolder, registrationProcess));
         }
 
         return false;
@@ -92,9 +92,9 @@ public class CertificateVerifierUtil {
 	 * Checks whether given X.509 certificate is valid.
 	 * @param cert 
 	 */
-    private boolean certCompare(X509Certificate x509ClientCert) {
+    private boolean certCompare(X509Certificate x509ClientCert, String certHolder, boolean registrationProcess) throws SecurityException {
         try {
-            //X509Certificate x509ServerCert = this.appCertificates.get(certHolder);
+            X509Certificate x509ServerCert = this.appCertificates.get(certHolder);
             Map<String, String> x509ClientCertSubjectDn = this.getMap(x509ClientCert.getSubjectDN().getName());
             Map<String, String> x509ClientCertIssuerDn = this.getMap(x509ClientCert.getIssuerDN().getName());
             String x509ClientCertThumbPrint = this.getThumbprint(x509ClientCert);
@@ -135,7 +135,7 @@ public class CertificateVerifierUtil {
         catch (Exception e) {
         this.logger.error("Certificate verification failure: {}", (Object)e.getMessage());
         }
-        return false
+        return false;
     }
 
     /**

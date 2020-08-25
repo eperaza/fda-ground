@@ -23,6 +23,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.boeing.cas.supa.ground.exceptions.UserAccountRegistrationException;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -37,11 +38,9 @@ import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.utils.CertificateVerifierUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
+import com.boeing.cas.supa.ground.dao.UserAccountRegistrationDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWTParser;
-
-@Autowired
-private UserAccountRegistrationDao userAccountRegister;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -54,6 +53,9 @@ public class AzureADAuthFilter implements Filter {
 	
 	@Autowired
 	private Map<String, String> appProps;
+
+	@Autowired
+	private UserAccountRegistrationDao userAccountRegister;
 
 	private static final Set<String> ALLOWED_PATHS = Collections.unmodifiableSet(
 			new HashSet<>(
@@ -112,10 +114,14 @@ public class AzureADAuthFilter implements Filter {
 			if (isUsingPrimaryCert || isUsingSecondaryCert) {
 				if (!appProps.get("FDAdvisorClientCert2Name").isEqual("") && isUsingPrimaryCert) {
 					// TODO: Send the client the secondary cert to use
-					logger.debug("Sending user secondary client cert",
+					try {
+						logger.debug("Sending user secondary client cert");
 
-					Object result = userAccountRegister.getNewClientCert(); // TODO: I Don't know how to pull the new cert.
-			
+						Object result = userAccountRegister.getNewClientCert();// .getNewClientCert(); // TODO: I Don't know how to pull the new cert.
+					} catch (UserAccountRegistrationException e) {
+						e.printStackTrace();
+					}
+
 					if (result instanceof ApiError) {
 			
 						ApiError error = (ApiError) result;
