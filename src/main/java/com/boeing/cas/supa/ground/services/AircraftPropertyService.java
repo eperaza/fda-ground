@@ -34,6 +34,9 @@ public class AircraftPropertyService {
 	private TspDao tspDao;
 
 	@Autowired
+	private AzureADClientService aadClient;
+
+	@Autowired
 	private AzureADClientService azureADClientService;
 
 	public Date getLastModified(String authToken, String tailNumber){
@@ -108,9 +111,6 @@ public class AircraftPropertyService {
 
 	public byte[] getAircraftConfig(String authToken){
 		try {
-
-			logger.debug("DO WE EVEN GET HERE 2");
-
 			String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
 			if (Strings.isNullOrEmpty(airlineName)) {
 				throw new IllegalArgumentException("Bad Input");

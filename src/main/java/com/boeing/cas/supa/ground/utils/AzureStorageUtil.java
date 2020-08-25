@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class AzureStorageUtil {
@@ -211,7 +212,7 @@ public class AzureStorageUtil {
     }
 
 
-    public boolean uploadTspZipConfig(String containerName, StringBuilder fileName, String sourceFilePath) throws TspConfigLogException {
+    public boolean uploadTspZipConfig(String containerName, String fileName, String sourceFilePath) throws TspConfigLogException {
 	    boolean rval = false;
 
 	    logger.debug("got to uploading TSP Zip File! ");
@@ -248,6 +249,27 @@ public class AzureStorageUtil {
         }
 
         return rval;
+    }
+
+
+    public Date getLastModifiedTimeStampFromBlob(String containerName, String fileName){
+        try {
+            CloudBlobClient serviceClient = storageAccount.createCloudBlobClient();
+            CloudBlobContainer container = serviceClient.getContainerReference(containerName);
+            CloudBlockBlob blob = container.getBlockBlobReference(fileName);
+            // NOTE: MUST call downloadAttributes or your properties will return null
+            blob.downloadAttributes();
+            BlobProperties blobProps = blob.getProperties();
+
+            logger.info("Last Modified TimeStamp: " + blobProps.getLastModified());
+
+            Date lastModified = blobProps.getLastModified();
+
+            return lastModified;
+        }catch(Exception ex){
+            logger.debug("!! FAILED - could not retrieve LastModifiedTimestamp - " + ex);
+        }
+        return null;
     }
 
     public boolean uploadSupaSystemLog(String containerName, String fileName, String sourceFilePath) throws SupaSystemLogException {

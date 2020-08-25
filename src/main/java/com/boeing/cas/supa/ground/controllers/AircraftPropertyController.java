@@ -46,19 +46,20 @@ public class AircraftPropertyController {
                                          @RequestHeader(name = "lastUpdated", required = false) Date lastUpdated) throws IOException, NoSuchAlgorithmException, TspConfigLogException {
 
         String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
+        String fileName = new StringBuilder(airlineName).append("-config-pkg.zip").toString();
 
         // get TSP Config zip package
         byte[] zipFile = aircraftPropertyService.getAircraftConfig(authToken);
         // insert into DB
         FileManagementMessage zipUploadmsg = fileManagementService.uploadTspConfigPackage(zipFile, "test-aircraft-config.zip", authToken);
-
         String checkSum = checkSumUtil.generateCheckSum(zipFile);
-        String fileName = new StringBuilder(airlineName).append("-config.zip").toString();
+        String lastModifiedStamp = zipUploadmsg.getLastModified().toString();
 
         HttpHeaders header = new HttpHeaders();
         header.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
         header.add(HttpHeaders.CONTENT_TYPE, "application/octet-stream");
         header.add("CheckSum", checkSum);
+        header.add("lastModifiedDate", lastModifiedStamp);
 
         return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
     }

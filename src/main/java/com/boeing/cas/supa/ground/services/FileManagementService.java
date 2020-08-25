@@ -3,11 +3,8 @@ package com.boeing.cas.supa.ground.services;
 import com.boeing.cas.supa.ground.dao.FlightRecordDao;
 import com.boeing.cas.supa.ground.exceptions.*;
 import com.boeing.cas.supa.ground.pojos.*;
-import com.boeing.cas.supa.ground.utils.ADWTransferUtil;
-import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
-import com.boeing.cas.supa.ground.utils.Constants;
+import com.boeing.cas.supa.ground.utils.*;
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
-import com.boeing.cas.supa.ground.utils.ControllerUtils;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -454,7 +451,7 @@ public class FileManagementService {
 		return flightRecordUploadResponse;
 	}
 
-	public FileManagementMessage uploadTspConfigPackage(byte[] zipFile, String fileName, String authToken) throws TspConfigLogException {
+	public FileManagementMessage uploadTspConfigPackage(byte[] zipFile, String fileName, String authToken) throws TspConfigLogException, IOException {
 		logger.debug("Uploading package: " + fileName);
 
 		final Map<String, String> properties = this.appProps;
@@ -469,10 +466,7 @@ public class FileManagementService {
 		ExecutorService es = Executors.newFixedThreadPool(3);
 		List<Future<Boolean>> futures = new ArrayList<>();
 
-		String fileName = new StringBuilder(airlineGroup).append("-config-pkg.zip").toString();
-
-
-		final FileManagementMessage tspUploadResponse = new FileManagementMessage(fileName);
+		fileName = new StringBuilder(airlineGroup).append("-config-pkg.zip").toString();
 
 		String uploadFolder = null;
 		Path _uploadPath = null;
@@ -543,12 +537,28 @@ public class FileManagementService {
 			logger.error("ApiError in shuttingdown executionservice: {}", e.getMessage(), e);
 			es.shutdownNow();
 		}
-
+		// get last modified timestamp after upload
+		AzureStorageUtil asu = new AzureStorageUtil(properties.get("StorageAccountName"), properties.get("StorageKey"));
+		Date lastModified = asu.getLastModifiedTimeStampFromBlob(TSP_CONFIG_ZIP_CONTAINER, filePath);
+		tspUploadResponse.setLastModified(lastModified);
 		tspUploadResponse.setUploaded(true);
 
 		return tspUploadResponse;
 	}
 
+	public Date getBlobLastModifiedTimeStamp(String containerName, String fileName) throws TspConfigLogException, IOException {
+		final Map<String, String> properties = this.appProps;
+		logger.info("Fetching Last Modified TimeStamp From Blob ... " + containerName);
+		try{
+			AzureStorageUtil asu = new AzureStorageUtil(properties.get("StorageAccountName"), properties.get("StorageKey"));
+
+			Date lastModified = asu.getLastModifiedTimeStampFromBlob(containerName, fileName);
+
+			return lastModified;
+		}catch(IOException ex){
+			throw new TspConfigLogException(new ApiError("TSP_CONFIG_PACKAGE_GET_LAST_MODIFIED_FAILURE", "FAILED TO RETRIEVE UPDATED TIMESTAMP FROM BLOB", RequestFailureReason.UNAUTHORIZED));
+		}
+	}
 
 	public FileManagementMessage uploadSupaSystemLog(final MultipartFile uploadSupaSystemLog, String authToken) throws SupaSystemLogException {
 
