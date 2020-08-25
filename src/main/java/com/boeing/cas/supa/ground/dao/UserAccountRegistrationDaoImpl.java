@@ -261,7 +261,7 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 	public List<ActivationCode> getNewClientCert() throws UserAccountRegistrationException {
 
 		// TO IMPLEMENT
-
+		return null;
 	}
 
 

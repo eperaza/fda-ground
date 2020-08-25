@@ -106,18 +106,18 @@ public class AzureADAuthFilter implements Filter {
 			sendResponse(responseCode, responseException, httpResponse);
 			return;
 		}
-		boolean isUsingPrimaryCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCertName"));
-		boolean isUsingSecondaryCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCert2Name"));
+		boolean isUsingPrimaryCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCertName"), httpRequest, false);
+		boolean isUsingSecondaryCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCert2Name"), httpRequest, false);
 
 		if (allowedPath) {
-
+			Object result = null;
 			if (isUsingPrimaryCert || isUsingSecondaryCert) {
-				if (!appProps.get("FDAdvisorClientCert2Name").isEqual("") && isUsingPrimaryCert) {
+				if (!appProps.get("FDAdvisorClientCert2Name").isEmpty() && isUsingPrimaryCert) {
 					// TODO: Send the client the secondary cert to use
 					try {
 						logger.debug("Sending user secondary client cert");
 
-						Object result = userAccountRegister.getNewClientCert();// .getNewClientCert(); // TODO: I Don't know how to pull the new cert.
+						result = userAccountRegister.getNewClientCert();// .getNewClientCert(); // TODO: I Don't know how to pull the new cert.
 					} catch (UserAccountRegistrationException e) {
 						e.printStackTrace();
 					}
@@ -126,10 +126,11 @@ public class AzureADAuthFilter implements Filter {
 			
 						ApiError error = (ApiError) result;
 						logger.error(error.getErrorLabel(), error.getErrorDescription());
-						return new ResponseEntity<>(result, HttpStatus.INTERNAL_SERVER_ERROR);
+						sendResponse(500, error, httpResponse);
+						return;
 					}
-			
-					return new ResponseEntity<>(result, HttpStatus.OK);
+					sendResponse(200, null, httpResponse);
+					return;
 				}
 				
 				logger.debug("{} cert is valid, moving request along", appProps.get("FDAdvisorClientCertName"));
