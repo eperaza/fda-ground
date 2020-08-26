@@ -35,7 +35,7 @@ public class FileManagementService {
 
 	private final static String FLIGHT_RECORDS_STORAGE_CONTAINER = "flight-records";
 	private final static String SUPA_SYSTEM_LOGS_STORAGE_CONTAINER = "supa-system-logs";
-	private final static String TSP_CONFIG_ZIP_CONTAINER = "aircraft-config-package";
+	public final static String TSP_CONFIG_ZIP_CONTAINER = "aircraft-config-package";
 	private final static String TSP_STORAGE_CONTAINER = "tsp";
 	private final static String MOBILECONFIG_STORAGE_CONTAINER = "config";
 	private final static String CERTIFICATES_STORAGE_CONTAINER = "certificates";
@@ -549,6 +549,7 @@ public class FileManagementService {
 	public Date getBlobLastModifiedTimeStamp(String containerName, String fileName) throws TspConfigLogException, IOException {
 		final Map<String, String> properties = this.appProps;
 		logger.info("Fetching Last Modified TimeStamp From Blob ... " + containerName);
+		logger.info("fileName: " + fileName);
 		try{
 			AzureStorageUtil asu = new AzureStorageUtil(properties.get("StorageAccountName"), properties.get("StorageKey"));
 
