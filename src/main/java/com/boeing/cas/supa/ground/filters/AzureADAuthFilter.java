@@ -4,14 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.cert.X509Certificate;
 import java.text.ParseException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.servlet.Filter;
@@ -107,32 +100,13 @@ public class AzureADAuthFilter implements Filter {
 			return;
 		}
 		boolean isUsingPrimaryCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCertName"), httpRequest, false);
-		boolean isUsingSecondaryCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCert2Name"), httpRequest, false);
+		boolean isUsingSecondaryCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCert1Name"), httpRequest, false);
 
+		Object base64EncodedPayload = null;
 		if (allowedPath) {
 			Object result = null;
 			if (isUsingPrimaryCert || isUsingSecondaryCert) {
-				if (!appProps.get("FDAdvisorClientCert2Name").isEmpty() && isUsingPrimaryCert) {
-					// TODO: Send the client the secondary cert to use
-					try {
-						logger.debug("Sending user secondary client cert");
 
-						result = userAccountRegister.getNewClientCert();// .getNewClientCert(); // TODO: I Don't know how to pull the new cert.
-					} catch (UserAccountRegistrationException e) {
-						e.printStackTrace();
-					}
-
-					if (result instanceof ApiError) {
-			
-						ApiError error = (ApiError) result;
-						logger.error(error.getErrorLabel(), error.getErrorDescription());
-						sendResponse(500, error, httpResponse);
-						return;
-					}
-					sendResponse(200, null, httpResponse);
-					return;
-				}
-				
 				logger.debug("{} cert is valid, moving request along", appProps.get("FDAdvisorClientCertName"));
 				chain.doFilter(request, response);
 				return;

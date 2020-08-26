@@ -48,6 +48,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.Base64;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
@@ -763,6 +764,28 @@ public class AzureADClientService {
 			logger.error("Failed to query groups: {}", e.getMessage(), e);
 		}
 
+		return resultObj;
+	}
+
+	public Object getUpdatedClientCert(String accessTokenInRequest) {
+		Object resultObj = null;
+
+		User currentUser = getUserInfoFromJwtAccessToken(accessTokenInRequest);
+		String registrationToken = "";  // NEED THE TOKEN
+
+		logger.debug(" ===========FDAClientCert2=======");
+		String fdadvisorClient1CertBase64 = new StringBuilder(appProps.get("FDAdvisorClient1CertName")).append("base64").toString();
+		if (fdadvisorClient1CertBase64 != "") {
+			logger.info("CERT IS: {}", fdadvisorClient1CertBase64);
+
+			Object base64EncodedPayload = Base64.getEncoder().encodeToString(
+					new StringBuilder(currentUser.getUserPrincipalName()).append(' ').append(registrationToken)
+							.append(' ').append(this.appProps.get(fdadvisorClient1CertBase64)).toString().getBytes());
+
+			resultObj = base64EncodedPayload;
+		} else {
+			resultObj = new ApiError("NO_NEW_CERT", "No new certificate available.");
+		}
 		return resultObj;
 	}
 
