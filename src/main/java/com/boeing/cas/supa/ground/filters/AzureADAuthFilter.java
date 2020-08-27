@@ -100,7 +100,7 @@ public class AzureADAuthFilter implements Filter {
 			return;
 		}
 		boolean isUsingPrimaryCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCertName"), httpRequest, false);
-		boolean isUsingSecondaryCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCert1Name"), httpRequest, false);
+		boolean isUsingSecondaryCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisor1ClientCertName"), httpRequest, false);
 
 		Object base64EncodedPayload = null;
 		if (allowedPath) {

@@ -770,21 +770,34 @@ public class AzureADClientService {
 	public Object getUpdatedClientCert(String accessTokenInRequest) {
 		Object resultObj = null;
 
-		User currentUser = getUserInfoFromJwtAccessToken(accessTokenInRequest);
-		String registrationToken = "";  // NEED THE TOKEN
+		try {
+			User currentUser = getUserInfoFromJwtAccessToken(accessTokenInRequest);
 
-		logger.debug(" ===========FDAClientCert2=======");
-		String fdadvisorClient1CertBase64 = new StringBuilder(appProps.get("FDAdvisorClient1CertName")).append("base64").toString();
-		if (fdadvisorClient1CertBase64 != "") {
-			logger.info("CERT IS: {}", fdadvisorClient1CertBase64);
+			List<UserAccountRegistration> registrations = userAccountRegister.getNewClientCert(currentUser.getUserPrincipalName());
+			if (registrations.isEmpty()) {
+				return new ApiError("GET_REGISTRATION_TOKEN_FAILURE",
+						"Missing or Invalid Registration Token, Missing or Invalid Email Address", RequestFailureReason.BAD_REQUEST);
+			}
 
-			Object base64EncodedPayload = Base64.getEncoder().encodeToString(
-					new StringBuilder(currentUser.getUserPrincipalName()).append(' ').append(registrationToken)
-							.append(' ').append(this.appProps.get(fdadvisorClient1CertBase64)).toString().getBytes());
+			// Valid code, get activation information
 
-			resultObj = base64EncodedPayload;
-		} else {
-			resultObj = new ApiError("NO_NEW_CERT", "No new certificate available.");
+			String registrationToken = registrations.get(0).getRegistrationToken();
+
+			logger.debug(" ===========FDAClientCert2=======");
+			String fdadvisorClient1CertBase64 = new StringBuilder(appProps.get("FDAdvisor1ClientCertName")).append("base64").toString();
+			if (fdadvisorClient1CertBase64 != "") {
+				logger.info("CERT IS: {}", fdadvisorClient1CertBase64);
+
+				Object base64EncodedPayload = Base64.getEncoder().encodeToString(
+						new StringBuilder(currentUser.getUserPrincipalName()).append(' ').append(registrationToken)
+								.append(' ').append(this.appProps.get(fdadvisorClient1CertBase64)).toString().getBytes());
+
+				resultObj = base64EncodedPayload;
+			} else {
+				resultObj = new ApiError("NO_NEW_CERT", "No new certificate available.");
+			}
+		} catch (Exception e) {
+			logger.error("Failed to query groups: {}", e.getMessage(), e);
 		}
 		return resultObj;
 	}
