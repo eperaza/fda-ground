@@ -13,7 +13,7 @@ import java.util.Set;
 	@NamedQuery(name = "getTailByAirlineAndTailNumber", query = "SELECT al FROM AircraftInfo al WHERE al.airline.name = :name AND al.tailNumber = :tailNumber"),
 	@NamedQuery(name = "getAircraftPropertiesByAirlineAndTailNumber", query = "SELECT new com.boeing.cas.supa.ground.pojos.AircraftConfiguration(a) "
 			+ "FROM AircraftInfo a WHERE a.airline.name = :name AND a.tailNumber = :tailNumber "),
-
+	@NamedQuery(name = "getAircraftPropertiesByAirline", query = "SELECT new com.boeing.cas.supa.ground.pojos.AircraftConfiguration(a) FROM AircraftInfo a WHERE a.airline.name = :name")
 		// Truong for Review
 //	@NamedQuery(name="getAircraftPropertyLastModifiedTimeStamp", query = "SELECT t.ModifiedTime from AircraftProperty t where t.na") // Unsure about sql statement
 })

@@ -1,9 +1,9 @@
 package com.boeing.cas.supa.ground.exceptions;
 
-import java.util.Optional;
-
 import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
+
+import java.util.Optional;
 
 public class SupaSystemLogException extends Exception {
 

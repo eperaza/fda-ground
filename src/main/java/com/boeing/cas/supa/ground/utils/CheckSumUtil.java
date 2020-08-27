@@ -1,6 +1,8 @@
 package com.boeing.cas.supa.ground.utils;
 
 
+import org.springframework.stereotype.Component;
+
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,7 +10,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.zip.ZipInputStream;
 
+@Component
 public class CheckSumUtil {
+    public CheckSumUtil(){
+    }
 
     public static String getSHA256(InputStream file) throws NoSuchAlgorithmException, IOException {
         try (ZipInputStream is = new ZipInputStream(file)) {

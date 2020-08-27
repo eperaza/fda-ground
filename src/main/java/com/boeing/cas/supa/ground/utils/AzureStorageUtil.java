@@ -2,6 +2,7 @@ package com.boeing.cas.supa.ground.utils;
 
 import com.boeing.cas.supa.ground.exceptions.FlightRecordException;
 import com.boeing.cas.supa.ground.exceptions.SupaSystemLogException;
+import com.boeing.cas.supa.ground.exceptions.TspConfigLogException;
 import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.AzureStorageMessage;
 import com.boeing.cas.supa.ground.pojos.User;
@@ -27,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class AzureStorageUtil {
@@ -209,6 +211,66 @@ public class AzureStorageUtil {
     	}
     }
 
+
+    public boolean uploadTspZipConfig(String containerName, String fileName, String sourceFilePath) throws TspConfigLogException {
+	    boolean rval = false;
+
+	    logger.debug("got to uploading TSP Zip File! ");
+	    try{
+            CloudBlobClient serviceClient = this.storageAccount.createCloudBlobClient();
+            // NOTE: Container name must be lower case.
+            CloudBlobContainer container = serviceClient.getContainerReference(containerName);
+            container.createIfNotExists();
+            // Upload the file as a Blob.
+            CloudBlockBlob blob = container.getBlockBlobReference(String.valueOf(fileName));
+            // NOTE: If the Blob exists currently we are overriding the existing blob.
+            // possibly never be an issue since most file names are uniquely identifiable.
+            File sourceFile = new File(sourceFilePath);
+            try (InputStream sourceStream = new FileInputStream(sourceFile)) {
+                AccessCondition accessCondition = AccessCondition.generateIfExistsCondition();
+
+                BlobRequestOptions options = null;
+                OperationContext context = new OperationContext();
+
+                blob.upload(sourceStream, sourceFile.length(), accessCondition, options, context);
+            }
+            rval = true;
+        }  catch (FileNotFoundException fnfe) {
+            logger.error("FileNotFoundException encountered: {}", fnfe.getMessage(), fnfe);
+            throw new TspConfigLogException(new ApiError("TSP_CONFIG_SYSTEM_LOG_FAILURE", fnfe.getMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR));
+        }
+        catch (StorageException se) {
+            logger.error("StorageException encountered: {}", se.getMessage(), se);
+            throw new TspConfigLogException(new ApiError("TSP_CONFIG_SYSTEM_LOG_FAILURE", se.getMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR));
+        }
+        catch (Exception e) {
+            logger.error("Exception encountered: {}", e.getMessage(), e);
+            throw new TspConfigLogException(new ApiError("TSP_CONFIG_SYSTEM_LOG_FAILURE", ExceptionUtils.getRootCause(e).getMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR));
+        }
+
+        return rval;
+    }
+
+
+    public Date getLastModifiedTimeStampFromBlob(String containerName, String fileName){
+        try {
+            CloudBlobClient serviceClient = storageAccount.createCloudBlobClient();
+            CloudBlobContainer container = serviceClient.getContainerReference(containerName);
+            CloudBlockBlob blob = container.getBlockBlobReference(fileName);
+            // NOTE: MUST call downloadAttributes or your properties will return null
+            blob.downloadAttributes();
+            BlobProperties blobProps = blob.getProperties();
+
+            logger.info("Last Modified TimeStamp: " + blobProps.getLastModified());
+
+            Date lastModified = blobProps.getLastModified();
+
+            return lastModified;
+        }catch(Exception ex){
+            logger.debug("!! FAILED - could not retrieve LastModifiedTimestamp - " + ex);
+        }
+        return null;
+    }
 
     public boolean uploadSupaSystemLog(String containerName, String fileName, String sourceFilePath) throws SupaSystemLogException {
 
