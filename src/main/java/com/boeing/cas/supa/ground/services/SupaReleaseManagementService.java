@@ -38,7 +38,7 @@ public class SupaReleaseManagementService {
 	private static String WAR_RELEASE_CONTAINER = "war-releases";
 	private static final String SUPA_WAR = "supa.war";
 	private static final String SUPA_WAR_CHECKSUM = "supa.war.sha256";
-	private static final String START_ENCRYPT_SUPA_VERSION = "5.10";
+	private static final String START_ENCRYPT_SUPA_VERSION = "6.0";
 	private static final String VERSION_SEPERATOR = "\\.";
 	private static final String ZUPPA_SECRET_PREFIX = "zuppa-";
 
