@@ -93,7 +93,7 @@ public class AircraftPropertyService {
 
 			logger.debug("got to new method with airlineName: " + airlineName);
 
-			List<AircraftConfiguration> aircraftConfigList = (List<AircraftConfiguration>) aircraftInfoDao.getAircraftPropertiesByAirline(airlineName);
+			List<AircraftConfiguration> aircraftConfigList = aircraftInfoDao.getAircraftPropertiesByAirline(airlineName);
 			if(aircraftConfigList == null){
 				logger.debug("Something wrong getting AP list");
 				return null;
