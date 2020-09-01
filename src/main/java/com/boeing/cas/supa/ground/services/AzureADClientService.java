@@ -652,7 +652,7 @@ public class AzureADClientService {
 		} finally {
 
 			if (resultObj instanceof ApiError) {
-				logger.error("Failed to retrieve Power Bi Information  {}");
+				logger.error("Failed to retrieve Power Bi Information");
 			}
 		}
 
