@@ -4,14 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.cert.X509Certificate;
 import java.text.ParseException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.servlet.Filter;
@@ -23,6 +16,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.boeing.cas.supa.ground.exceptions.UserAccountRegistrationException;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -37,6 +31,7 @@ import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.utils.CertificateVerifierUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
+import com.boeing.cas.supa.ground.dao.UserAccountRegistrationDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWTParser;
 
@@ -51,6 +46,9 @@ public class AzureADAuthFilter implements Filter {
 	
 	@Autowired
 	private Map<String, String> appProps;
+
+	@Autowired
+	private UserAccountRegistrationDao userAccountRegister;
 
 	private static final Set<String> ALLOWED_PATHS = Collections.unmodifiableSet(
 			new HashSet<>(
@@ -101,14 +99,19 @@ public class AzureADAuthFilter implements Filter {
 			sendResponse(responseCode, responseException, httpResponse);
 			return;
 		}
+		boolean isUsingPrimaryCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCertName"), httpRequest, false);
+		boolean isUsingSecondaryCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisor1ClientCertName"), httpRequest, false);
 
+		Object base64EncodedPayload = null;
 		if (allowedPath) {
+			Object result = null;
+			if (isUsingPrimaryCert || isUsingSecondaryCert) {
 
-			if (this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCertName"), httpRequest, false)) {
 				logger.debug("{} cert is valid, moving request along", appProps.get("FDAdvisorClientCertName"));
 				chain.doFilter(request, response);
 				return;
-			}
+			} 
+
 			responseCode = 403;
 			responseException = new ApiError("certificate missing", "Must provide a valid client certificate");
 			sendResponse(responseCode, responseException, httpResponse);
@@ -118,7 +121,7 @@ public class AzureADAuthFilter implements Filter {
 		try {
 
 			logger.debug("Checking {} cert and OAuth2 token...", appProps.get("FDAdvisorClientCertName"));
-			boolean validClientCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCertName"), httpRequest, false);
+			boolean validClientCert = isUsingPrimaryCert || isUsingSecondaryCert;
 			boolean validOAuthToken = this.isValidOAuthToken(httpRequest.getHeader("Authorization"));
 			if (validClientCert && validOAuthToken) {
 				logger.debug("{} cert and OAuth2 token are good!", appProps.get("FDAdvisorClientCertName"));

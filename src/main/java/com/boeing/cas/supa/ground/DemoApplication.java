@@ -73,6 +73,7 @@ public class DemoApplication {
 		appSecrets.put("AzureADTenantName", keyVaultRetriever.getSecretByKey("AzureADTenantName"));
 		appSecrets.put("EmailMpAttachmentLocation", keyVaultRetriever.getSecretByKey("EmailMpAttachmentLocation"));
 		appSecrets.put("FDAdvisorClientCertName", keyVaultRetriever.getSecretByKey("FDAdvisorClientCertName"));
+		appSecrets.put("FDAdvisorClient1CertName", keyVaultRetriever.getSecretByKey("FDAdvisor1ClientCertName"));
 		//not ready for this yet
 //		appSecrets.put("FDAdvisorRegistrationCertName", keyVaultRetriever.getSecretByKey("FDAdvisorRegistrationCertName"));
 		appSecrets.put("FDAdvisorClientCertBundlePassword", keyVaultRetriever.getSecretByKey("FDAdvisorClientCertBundlePassword"));
@@ -106,6 +107,15 @@ public class DemoApplication {
 
 		Map<String, X509Certificate> appCertificates = new ConcurrentHashMap<String, X509Certificate>();
 		String fdaClientCertName = keyVaultRetriever.getSecretByKey("FDAdvisorClientCertName");
+		appCertificates.put(fdaClientCertName, keyVaultRetriever.getCertificateByCertName(fdaClientCertName));
+		return appCertificates;
+	}
+
+	@Bean(name = "appNewCertificates")
+	public Map<String, X509Certificate> getAppNewCertificates(KeyVaultRetriever keyVaultRetriever) {
+
+		Map<String, X509Certificate> appCertificates = new ConcurrentHashMap<String, X509Certificate>();
+		String fdaClientCertName = keyVaultRetriever.getSecretByKey("FDAdvisor1ClientCertName");
 		appCertificates.put(fdaClientCertName, keyVaultRetriever.getCertificateByCertName(fdaClientCertName));
 		return appCertificates;
 	}

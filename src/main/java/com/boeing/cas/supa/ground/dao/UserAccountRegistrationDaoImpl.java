@@ -38,6 +38,8 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 	private static final String USER_ACTIVATION_CODE_SQL_SELECT = "SELECT * FROM user_activation_codes WHERE activation_code = :activation_code AND email_address = :email_address";
 	private static final String USER_ACTIVATION_CODE_SQL_DELETE = "DELETE FROM user_activation_codes WHERE activation_code = :activation_code AND email_address = :email_address";
 
+	private static final String USER_REGISTRATION_TOKEN_SELECT_SQL = "SELECT registration_token FROM user_account_registrations WHERE user_principal_name = :user_principal_name ORDER BY created_ts DESC";
+
 	@Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;
 
@@ -257,6 +259,35 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 		}
 	}
 
+	@Override
+	public List<UserAccountRegistration> getNewClientCert(String userPrincipalName) throws UserAccountRegistrationException {
+		List<UserAccountRegistration> registrations = new ArrayList<>();
+
+		Map<String,Object> namedParameters = new HashMap<>();
+		namedParameters.put("user_principal_name", userPrincipalName);
+
+		try {
+			registrations = jdbcTemplate.query(USER_REGISTRATION_TOKEN_SELECT_SQL, namedParameters, new UserAccountRegistrationMapper());
+			return registrations;
+		}
+		catch (DataAccessException dae) {
+
+			logger.warn("Failed to obtain registration token: {}", dae.getMessage(), dae);
+			throw new UserAccountRegistrationException(new ApiError("GET_REGISTRATION_TOKEN_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
+		}
+	}
+
+
+	private static final class UserAccountRegistrationMapper implements RowMapper<UserAccountRegistration> {
+
+		@Override
+		public UserAccountRegistration mapRow(ResultSet resultSet, int rowNum) throws SQLException {
+
+			UserAccountRegistration userAccountRegistration = new UserAccountRegistration();
+			userAccountRegistration.setRegistrationToken(resultSet.getString("REGISTRATION_TOKEN"));
+			return userAccountRegistration;
+		}
+	}
 
 	private static final class ActivationCodeMapper implements RowMapper<ActivationCode> {
 
