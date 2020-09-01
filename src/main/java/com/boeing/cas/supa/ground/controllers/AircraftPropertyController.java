@@ -2,17 +2,16 @@ package com.boeing.cas.supa.ground.controllers;
 
 import com.boeing.cas.supa.ground.exceptions.FileDownloadException;
 import com.boeing.cas.supa.ground.exceptions.TspConfigLogException;
-import com.boeing.cas.supa.ground.pojos.ApiError;
-import com.boeing.cas.supa.ground.pojos.FileManagementMessage;
-import com.boeing.cas.supa.ground.pojos.Group;
-import com.boeing.cas.supa.ground.pojos.User;
+import com.boeing.cas.supa.ground.pojos.*;
 import com.boeing.cas.supa.ground.services.AircraftPropertyService;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
 import com.boeing.cas.supa.ground.services.FileManagementService;
+import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
 import com.boeing.cas.supa.ground.utils.CheckSumUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +27,7 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.boeing.cas.supa.ground.services.FileManagementService.TSP_CONFIG_ZIP_CONTAINER;
@@ -47,6 +47,9 @@ public class AircraftPropertyController {
     private CheckSumUtil checkSumUtil;
 
     @Autowired
+    private Map<String, String> appProps;
+
+    @Autowired
     private FileManagementService fileManagementService;
 
     @RequestMapping(path="/getAircraftConfiguration", method={RequestMethod.GET}, produces="application/zip")
@@ -62,12 +65,17 @@ public class AircraftPropertyController {
         }
         String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
 
+        AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
+
+        String container = TSP_CONFIG_ZIP_CONTAINER;
+
         // file path name to retrieve from blob - it is not truly a real directory
         String fileName = new StringBuilder(airlineGroup).append("/").append(airlineGroup).append("-config-pkg.zip").toString();
+        boolean tspExists = asu.blobExistsOnCloud(container, fileName);
 
-        if(lastUpdated != null){
+        if(lastUpdated != null && tspExists){
             logger.debug("DATE WAS PASSED IN!!!");
-            Date lastModified = fileManagementService.getBlobLastModifiedTimeStamp(TSP_CONFIG_ZIP_CONTAINER, fileName);
+            Date lastModified = fileManagementService.getBlobLastModifiedTimeStamp(container, fileName);
             logger.debug("retrieved timestamp: " + lastModified.toString());
 
             // both dates are equal
@@ -75,7 +83,7 @@ public class AircraftPropertyController {
                 // do nothing, return
                 return new ResponseEntity<>(HttpStatus.OK);
             }else{
-                // get TSP Config zip package
+                // Dates NOT equal - get latest TSP Config zip package
                 byte[] zipFile = aircraftPropertyService.getAircraftConfig(authToken);
                 // insert into DB
                 FileManagementMessage zipUploadmsg = fileManagementService.uploadTspConfigPackage(zipFile, "test-aircraft-config.zip", authToken);
@@ -90,21 +98,45 @@ public class AircraftPropertyController {
 
                 return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
             }
+        }else if(lastUpdated == null && tspExists){
+            // no date passed in, new FDA app, just grab the existing package
+            logger.debug("NO DATE passed in, tspExists for that airline in blob");
+
+            try{
+                byte[] zipFile = aircraftPropertyService.getAircraftConfigFromBlob(authToken, fileName);
+                Date lastModifiedTimeStamp = fileManagementService.getBlobLastModifiedTimeStamp(container, fileName);
+                String lastModifiedStamp = lastModifiedTimeStamp.toString();
+                String checkSum = checkSumUtil.generateCheckSum(zipFile);
+
+                HttpHeaders header = new HttpHeaders();
+                header.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+                header.add(HttpHeaders.CONTENT_TYPE, "application/octet-stream");
+                header.add("CheckSum", checkSum);
+                header.add("lastModifiedDate", lastModifiedStamp);
+
+                return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
+            } catch (Exception ex){
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        }else if(lastUpdated == null && !tspExists){
+            // No date passed, no TSPconfig created yet, create a new one for the airline and upload it to Azure Blob
+            byte[] zipFile = aircraftPropertyService.getAircraftConfig(authToken);
+            // insert into DB
+            FileManagementMessage zipUploadmsg = fileManagementService.uploadTspConfigPackage(zipFile, "test-aircraft-config.zip", authToken);
+            String checkSum = checkSumUtil.generateCheckSum(zipFile);
+            String lastModifiedStamp = zipUploadmsg.getLastModified().toString();
+
+            HttpHeaders header = new HttpHeaders();
+            header.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+            header.add(HttpHeaders.CONTENT_TYPE, "application/octet-stream");
+            header.add("CheckSum", checkSum);
+            header.add("lastModifiedDate", lastModifiedStamp);
+
+            return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
         }
-        // get TSP Config zip package
-        byte[] zipFile = aircraftPropertyService.getAircraftConfig(authToken);
-        // insert into DB
-        FileManagementMessage zipUploadmsg = fileManagementService.uploadTspConfigPackage(zipFile, "test-aircraft-config.zip", authToken);
-        String checkSum = checkSumUtil.generateCheckSum(zipFile);
-        String lastModifiedStamp = zipUploadmsg.getLastModified().toString();
 
-        HttpHeaders header = new HttpHeaders();
-        header.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
-        header.add(HttpHeaders.CONTENT_TYPE, "application/octet-stream");
-        header.add("CheckSum", checkSum);
-        header.add("lastModifiedDate", lastModifiedStamp);
-
-        return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
+        // shouldn't get here
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     @RequestMapping(path="/getAircraftProperty", method = { RequestMethod.GET })
@@ -124,15 +156,10 @@ public class AircraftPropertyController {
     }
 
     @RequestMapping(path="/getAircraftPropertiesByAirline", method={ RequestMethod.GET })
-    public ResponseEntity<Object> getAircraftPropertiesByAirline(@RequestHeader("Authorization") String authToken){
+    public ResponseEntity<Object> getAircraftPropertiesByAirline(@RequestHeader("Authorization") String authToken) throws JSONException, IOException {
 
-        logger.debug("hit new getACProperties Endpoing %%%%%%% ");
+        List<AircraftConfiguration> aircraftProps = aircraftPropertyService.getAircraftPropertiesByAirline(authToken);
 
-        Object result = aircraftPropertyService.getAircraftPropertiesByAirline(authToken);
-        if(result instanceof ApiError){
-            return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
-        }
-
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return new ResponseEntity<>(aircraftProps, HttpStatus.OK);
     }
 }

@@ -12,9 +12,10 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import static com.boeing.cas.supa.ground.services.FileManagementService.TSP_CONFIG_ZIP_CONTAINER;
 
 @Service
 public class AircraftPropertyService {
@@ -87,22 +88,20 @@ public class AircraftPropertyService {
 	}
 
 	@Transactional
-	public List<String> getAircraftPropertiesByAirline(String authToken){
+	public List<AircraftConfiguration> getAircraftPropertiesByAirline(String authToken){
 		try {
 			String airlineName = azureADClientService.validateAndGetAirlineName(authToken);
 
-			logger.debug("got to new method with airlineName: " + airlineName);
-
 			List<AircraftConfiguration> aircraftConfigList = aircraftInfoDao.getAircraftPropertiesByAirline(airlineName);
+
 			if(aircraftConfigList == null){
 				logger.debug("Something wrong getting AP list");
 				return null;
 			}
-			List<String> results = new ArrayList<>();
-			for(AircraftConfiguration apConfig: aircraftConfigList){
-				results.add(new Gson().toJson(apConfig));
-			}
-			return results;
+			logger.debug("we got the list....");
+			logger.debug(aircraftConfigList.toString());
+
+			return aircraftConfigList;
 		}catch(Exception ex){
 			logger.error("failed to retrieve APs: " + ex);
 		}
@@ -120,6 +119,8 @@ public class AircraftPropertyService {
 			 *  Zip Package contains all TSPs (.json) for an airline, in addition to all properties files
 			 */
 			 List<String> tspList = fileManagementService.getTspListFromStorage(authToken);
+			 // JSON String?
+//			 String aircraftPropertiesList = this.getAircraftPropertiesByAirline(authToken);
 			 byte[] zipFile = fileManagementService.zipFileList(tspList, authToken);
 
 			 logger.debug(" GOOD - zip successful in aircraft property service....");
@@ -127,6 +128,30 @@ public class AircraftPropertyService {
 			 return zipFile;
 		} catch (Exception ex) {
 			logger.error("Failed create TSP package" + ex);
+		}
+		return null;
+	}
+
+	public byte[] getAircraftConfigFromBlob(String authToken, String fileName){
+		try {
+			String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
+			if (Strings.isNullOrEmpty(airlineName)) {
+				throw new IllegalArgumentException("Bad Input");
+			}
+			/**
+			 *  **NOTE: currently getTSP from Azure blob storage - future state get from SQL
+			 *  Zip Package contains all TSPs (.json) for an airline, in addition to all properties files
+			 */
+//			List<String> tspList = fileManagementService.getTspListFromStorage(authToken);
+//			byte[] zipFile = fileManagementService.zipFileList(tspList, authToken);
+
+			byte[] tspConfig = fileManagementService.getFileFromStorage(fileName, TSP_CONFIG_ZIP_CONTAINER, authToken);
+
+			logger.debug(" GOOD - Zip package Downloaded");
+
+			return tspConfig;
+		} catch (Exception ex) {
+			logger.error("Failed to Download Zip Package" + ex);
 		}
 		return null;
 	}

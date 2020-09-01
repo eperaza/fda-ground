@@ -3,8 +3,12 @@ package com.boeing.cas.supa.ground.services;
 import com.boeing.cas.supa.ground.dao.FlightRecordDao;
 import com.boeing.cas.supa.ground.exceptions.*;
 import com.boeing.cas.supa.ground.pojos.*;
-import com.boeing.cas.supa.ground.utils.*;
+import com.boeing.cas.supa.ground.utils.ADWTransferUtil;
+import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
+import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
+import com.boeing.cas.supa.ground.utils.ControllerUtils;
+import com.google.gson.Gson;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -80,6 +84,7 @@ public class FileManagementService {
 
 	}
 
+	// generates zip file
 	public byte[] zipFileList(List<String> tspList, String authToken) throws FileDownloadException, IOException {
 		String container = TSP_STORAGE_CONTAINER;
 
@@ -87,6 +92,7 @@ public class FileManagementService {
 		BufferedOutputStream bufferOutputStream = new BufferedOutputStream(byteArrayOutputStream);
 		ZipOutputStream zipOutputStream = new ZipOutputStream(bufferOutputStream);
 
+		// get TSP files
 		for(String tspFileName : tspList){
 			byte[] tspJsonFile = this.getFileFromStorage(tspFileName, container, authToken);
 			zipOutputStream.putNextEntry(new ZipEntry(tspFileName));
@@ -94,19 +100,22 @@ public class FileManagementService {
 			IOUtils.copy(inputStream, zipOutputStream);
 			inputStream.close();
 
-			int endStringIndex = tspFileName.length() - 4;
-			String tailNo = new StringBuilder(tspFileName.substring(0, endStringIndex)).toString();
-
-			String aircraftProp = aircraftPropertyService.getAircraftProperty(authToken, tailNo);
-			if(aircraftProp != null){
-				String aircraftPropFileName = new StringBuilder(tailNo).append("properties.json").toString();
-				zipOutputStream.putNextEntry(new ZipEntry(aircraftPropFileName));
-				InputStream apropStream = new ByteArrayInputStream(aircraftProp.getBytes());
-				IOUtils.copy(apropStream, zipOutputStream);
-				apropStream.close();
-			}
 			zipOutputStream.closeEntry();
 		}
+		// get AircraftProperty files
+		List<AircraftConfiguration> aircraftProps = aircraftPropertyService.getAircraftPropertiesByAirline(authToken);
+		for(AircraftConfiguration aircraftConfig: aircraftProps){
+			String acFileName = new StringBuilder(aircraftConfig.tailNumber).append(".aircraft.properties").toString();
+			zipOutputStream.putNextEntry(new ZipEntry(acFileName));
+
+			String acConfig = new Gson().toJson(aircraftConfig);
+
+			InputStream acpropStream = new ByteArrayInputStream(acConfig.getBytes());
+			IOUtils.copy(acpropStream, zipOutputStream);
+			acpropStream.close();
+			zipOutputStream.closeEntry();
+		}
+
 		zipOutputStream.close();
 		byte[] zipFile = byteArrayOutputStream.toByteArray();
 		logger.debug("FINISHED WRITING ZIP FILE");
@@ -155,7 +164,24 @@ public class FileManagementService {
 													.append(file.substring(1)).toString();
 					}
 				}
-			} else if (MOBILECONFIG_STORAGE_CONTAINER.equals(type)) {
+			}
+			else if (TSP_CONFIG_ZIP_CONTAINER.equals(type)){
+				container = TSP_CONFIG_ZIP_CONTAINER;
+				filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/').append(file).toString();
+				if (asu.blobExistsOnCloud(container, filePath) != true) {
+					// in case the file is not exist, try to upper case the file name
+					String tailNumberPart = file.substring(0, file.indexOf(".json"));
+					filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/').append(tailNumberPart.toUpperCase()).append(".json").toString();
+
+					if (asu.blobExistsOnCloud(container, filePath) != true) {
+						// in case the file is not exist, try to upper case the first letter to support camel file name
+						filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/')
+								.append(file.substring(0, 1).toUpperCase())
+								.append(file.substring(1)).toString();
+					}
+				}
+			}
+			else if (MOBILECONFIG_STORAGE_CONTAINER.equals(type)) {
 				container = MOBILECONFIG_STORAGE_CONTAINER;
 				filePath = file;
 			} else {
