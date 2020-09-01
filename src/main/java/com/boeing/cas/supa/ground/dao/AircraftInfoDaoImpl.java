@@ -57,9 +57,9 @@ public class AircraftInfoDaoImpl extends BaseDaoImpl implements AircraftInfoDao 
 	}
 
 	@Override
-	public AircraftConfiguration getAircraftPropertiesByAirline(String airlineName) {
+	public List<AircraftConfiguration> getAircraftPropertiesByAirline(String airlineName) {
 		Query query = getSession().getNamedQuery("getAircraftPropertiesByAirline");
 		query.setParameter("name", airlineName);
-		return null;
+		return query.list();
 	}
 }
