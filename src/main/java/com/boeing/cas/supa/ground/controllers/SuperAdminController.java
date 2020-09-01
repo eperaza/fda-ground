@@ -5,6 +5,7 @@ import com.boeing.cas.supa.ground.pojos.NewUser;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
+import com.boeing.cas.supa.ground.utils.OldEmailRegistrations;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,9 @@ public class SuperAdminController {
 
 	@Autowired
 	private AzureADClientService aadClient;
+
+	@Autowired
+	public OldEmailRegistrations oldEmailList;
 
 	@RequestMapping(path="/users", method = { RequestMethod.POST })
 	public ResponseEntity<Object> createUser(@RequestBody NewUser newUserPayload, @RequestHeader("Authorization") String authToken) {
@@ -48,7 +52,9 @@ public class SuperAdminController {
 
 		Object result;
 
-		if(newUserPayload.getAirlineGroupName().trim().equalsIgnoreCase("airline-amx")){
+		String airline = newUserPayload.getAirlineGroupName().trim().toLowerCase();
+
+		if(oldEmailList.containsAirline(airline)){
 			 result = aadClient.createUser(newUserPayload, accessTokenInRequest, null, newUserPayload.getRoleGroupName(), false);
 		}else{
 			result = aadClient.createUser(newUserPayload, accessTokenInRequest, null, newUserPayload.getRoleGroupName(), true);
