@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -186,7 +187,7 @@ public class DemoApplication {
 		return javaMailSender;
 	}
 
-	@RequestMapping("/")
+	@RequestMapping("/", method = {RequestMethod.GET})
 	public ResponseEntity<Map<String, String>> getGreeting(HttpServletRequest httpRequest) {
 
 		logger.info("Pinging the service");
