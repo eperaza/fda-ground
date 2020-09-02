@@ -80,9 +80,6 @@ public class EmailRegistrationService {
         emailMessageBody.append("Thank you, ").append("FliteDeck Advisor Support");
         emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
 
-        BufferedReader reader = null;
-        BufferedWriter writer = null;
-
         try{
             logger.debug("NewRegistrationProcess: emailAddress [{}]", emailAddress);
             logger.debug("NewRegistrationProcess: activationCode [{}]", activationCode);
@@ -90,21 +87,8 @@ public class EmailRegistrationService {
             logger.debug("NewRegistrationProcess: airline [{}]", airline);
             userAccountRegister.insertActivationCode(emailAddress, activationCode, base64EncodedPayload, airline);
 
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException io) {
-                    //ignore
-                }
-            }
-            if (writer != null) {
-                try {
-                    writer.close();
-                } catch (IOException io) {
-                    //ignore
-                }
-            }
+        }catch(Exception ex){
+            logger.debug("!!! New Email Registration Failed: {}", ex.getMessage());
         }
 
         logger.info("Registered {} using ", newUser.getUserPrincipalName(), "NewRegistrationProcess");

@@ -1,14 +1,14 @@
 package com.boeing.cas.supa.ground.services;
 
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.util.Zip4jConstants;
+import org.springframework.stereotype.Service;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import org.springframework.stereotype.Service;
-
-import net.lingala.zip4j.core.ZipFile;
-import net.lingala.zip4j.model.ZipParameters;
-import net.lingala.zip4j.util.Zip4jConstants;
 
 @Service
 public class ZipService {
@@ -30,15 +30,13 @@ public class ZipService {
 	}
 	
 	private ZipParameters ZIP_PARAMS(String pw) {
-        return new ZipParameters() {
-            {
-                setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
-                setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
-                setEncryptFiles(true);
-                setEncryptionMethod(Zip4jConstants.ENC_METHOD_AES);
-                setAesKeyStrength(Zip4jConstants.AES_STRENGTH_256);
-                setPassword(pw);
-            }
-        };
+	    ZipParameters zipParams = new ZipParameters();
+	    zipParams.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
+	    zipParams.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
+	    zipParams.setEncryptFiles(true);
+	    zipParams.setEncryptionMethod(Zip4jConstants.ENC_METHOD_AES);
+	    zipParams.setAesKeyStrength(Zip4jConstants.AES_STRENGTH_256);
+	    zipParams.setPassword(pw);
+	    return zipParams;
     }
 }

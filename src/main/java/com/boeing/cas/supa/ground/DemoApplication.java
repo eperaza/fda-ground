@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -178,7 +179,7 @@ public class DemoApplication {
 		mailProperties.put("mail.transport.protocol", MAIL_TRANSPORT_PROTOCOL);
 		mailProperties.put("mail.smtp.auth", true);
 		mailProperties.put("mail.smtp.starttls.enable", true);
-		mailProperties.put("mail.smtp.socketFactory.port", MAIL_SERVER_PORT);
+		mailProperties.put("mail.smtp.socketFactory.port", true);
 		mailProperties.put("mail.debug", true);
 		mailProperties.put("mail.smtp.socketFactory.class", SSL_FACTORY);
 		mailProperties.put("mail.smtp.connectiontimeout", 20_000);
@@ -196,7 +197,7 @@ public class DemoApplication {
 		return javaMailSender;
 	}
 
-	@RequestMapping("/")
+	@RequestMapping(path="/", method = {RequestMethod.GET})
 	public ResponseEntity<Map<String, String>> getGreeting(HttpServletRequest httpRequest) {
 
 		logger.info("Pinging the service");

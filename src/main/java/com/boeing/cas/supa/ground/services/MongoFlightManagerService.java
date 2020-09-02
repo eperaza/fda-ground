@@ -1,25 +1,23 @@
 package com.boeing.cas.supa.ground.services;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
+import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.CosmosDbFlightPlanSource;
+import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
+import com.mongodb.BasicDBObject;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.boeing.cas.supa.ground.pojos.ApiError;
-import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
-
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
-import com.mongodb.BasicDBObject;
-import com.mongodb.client.MongoCursor;
-import org.bson.Document;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class MongoFlightManagerService {
@@ -29,7 +27,6 @@ public class MongoFlightManagerService {
 
 	@Autowired
 	private Map<String, String> appProps;
-
 
     public Object getAllFlightObjectsFromCosmosDB(Optional<String> flightId, Optional<String> departureAirport,
                                                    Optional<String> arrivalAirport, CosmosDbFlightPlanSource source)
@@ -108,8 +105,7 @@ public class MongoFlightManagerService {
     }
 
 
-
-	private Object searchGeneric(Map<String, String> query, CosmosDbFlightPlanSource source) throws Exception {
+	private Object searchGeneric(Map<String, String> query, CosmosDbFlightPlanSource source) {
 
         Map<String, Integer> labels = new HashMap<String, Integer>();
         labels.put("id", 1);
@@ -176,7 +172,9 @@ public class MongoFlightManagerService {
                 response.append(dbo.toJson().replace("+00:00", "") + ",");
             }
 
-        } finally {
+        } catch(NullPointerException ex){
+            logger.debug("NullPointer Ex with Cursor or MongoClient: {}", ex.getMessage());
+        } finally{
             cursor.close();
             mongoClient.close();
         }
@@ -188,7 +186,7 @@ public class MongoFlightManagerService {
 		return response.toString();
 	}
 
-    private Object searchid(String id, CosmosDbFlightPlanSource source) throws Exception {
+    private Object searchid(String id, CosmosDbFlightPlanSource source) {
 
         Map<String, String> query = new HashMap<String, String>();
             query.put("id", id);
@@ -263,6 +261,8 @@ public class MongoFlightManagerService {
             // add metadata
             response.append(",\"metadata\":{" + sbMetaData + "}}}}}");
 
+        }catch(NullPointerException ex){
+            logger.debug("NullPointer Ex with Cursor or MongoClient: {}", ex.getMessage());
         } finally {
             cursor.close();
             mongoClient.close();
@@ -271,7 +271,7 @@ public class MongoFlightManagerService {
     }
 
 
-    private Object searchOFP(Map<String, String> query, CosmosDbFlightPlanSource source) throws Exception {
+    private Object searchOFP(Map<String, String> query, CosmosDbFlightPlanSource source) {
 
         Map<String, Integer> labels = new HashMap<String, Integer>();
         labels.put("flightPlan", 1);
@@ -318,6 +318,9 @@ public class MongoFlightManagerService {
                 Document dbo = cursor.next();
                 sbtmp.append(dbo.toJson());
             }
+        }
+        catch(NullPointerException ex){
+            logger.debug("NullPointer Ex with Cursor or MongoClient: {}", ex.getMessage());
         } finally {
             cursor.close();
             mongoClient.close();
