@@ -73,7 +73,7 @@ public class UserAccountRegistration {
 	@Override
 	public String toString() {
 
-		return new StringBuilder('[').append(this.getClass().getSimpleName()).append(']').append(':')
+		return new StringBuilder("[").append(this.getClass().getSimpleName()).append(']').append(':')
 				.append("registrationToken=").append(this.registrationToken).append(',')
 				.append("userObjectId=").append(this.userObjectId).append(',')
 				.append("userPrincipalName=").append(this.userPrincipalName).append(',')

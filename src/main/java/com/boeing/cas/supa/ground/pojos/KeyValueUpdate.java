@@ -46,7 +46,7 @@ public class KeyValueUpdate {
 	@Override
 	public String toString() {
 
-		return new StringBuilder('[').append(this.getClass().getSimpleName()).append(']').append(':')
+		return new StringBuilder("[").append(this.getClass().getSimpleName()).append("]").append(":")
 				.append(this.key).append(',')
 				.append(this.role).append(',')
 				.append(this.value)

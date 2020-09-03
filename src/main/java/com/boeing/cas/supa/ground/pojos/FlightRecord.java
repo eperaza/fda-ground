@@ -151,7 +151,7 @@ public class FlightRecord implements Comparable<FlightRecord> {
 	@Override
 	public String toString() {
 
-		return new StringBuilder('[').append(this.getClass().getSimpleName()).append(']').append(':')
+		return new StringBuilder("[").append(this.getClass().getSimpleName()).append(']').append(':')
 				.append("flightRecordName=").append(this.flightRecordName).append(',')
 				.append("storagePath=").append(this.storagePath).append(',')
 				.append("fileSizeKb=").append(this.fileSizeKb).append(',')
