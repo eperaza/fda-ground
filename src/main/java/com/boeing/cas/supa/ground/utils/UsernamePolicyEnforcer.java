@@ -9,7 +9,7 @@ public class UsernamePolicyEnforcer {
 			.append("The period can be used anywhere within the username except at the beginning or immediately preceding the @domain portion of the username.")
 			.toString();
 
-	private static final String PATTERN_USERNAME_REGEX = new StringBuilder('^')
+	private static final String PATTERN_USERNAME_REGEX = new StringBuilder("^")
 			// the string should contain 3 to 10 chars
 			.append("(?=.{3,64}$)")
 			// the string should start with a lowercase ASCII letter

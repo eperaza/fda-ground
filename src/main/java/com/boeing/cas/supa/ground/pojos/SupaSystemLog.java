@@ -83,7 +83,7 @@ public class SupaSystemLog {
 	@Override
 	public String toString() {
 
-		return new StringBuilder('[').append(this.getClass().getSimpleName()).append(']').append(':')
+		return new StringBuilder("[").append(this.getClass().getSimpleName()).append(']').append(':')
 				.append("supaSystemLogName=").append(this.supaSystemLogName).append(',')
 				.append("storagePath=").append(this.storagePath).append(',')
 				.append("fileSizeKb=").append(this.fileSizeKb).append(',')

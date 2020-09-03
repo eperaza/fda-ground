@@ -25,7 +25,7 @@ public class Group extends DirectoryObject {
 
     public String toString() {
 
-		return new StringBuilder('[').append(this.getClass().getSimpleName()).append(']').append(':')
+		return new StringBuilder("[").append(this.getClass().getSimpleName()).append(']').append(':')
         		.append("objectId=").append(this.objectId).append(',')
         		.append("objectType=").append(this.objectType).append(',')
         		.append("displayName=").append(this.displayName).append(',')

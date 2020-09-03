@@ -1,9 +1,9 @@
 package com.boeing.cas.supa.ground.pojos;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
 
 public class User extends DirectoryObject {
 
@@ -288,7 +288,7 @@ public class User extends DirectoryObject {
     @Override
 	public String toString() {
 
-		return new StringBuilder('[').append(this.getClass().getSimpleName()).append(']').append(':')
+		return new StringBuilder("[").append(this.getClass().getSimpleName()).append(']').append(':')
 				.append("objectId=").append(this.objectId).append(',')
 				.append("objectType=").append(this.objectType).append(',')
 				.append("displayName=").append(this.displayName).append(',')

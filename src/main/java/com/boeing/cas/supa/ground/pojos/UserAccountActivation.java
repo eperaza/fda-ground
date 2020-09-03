@@ -59,7 +59,7 @@ public class UserAccountActivation {
 	@Override
 	public String toString() {
 
-		return new StringBuilder('[').append(this.getClass().getSimpleName()).append(']').append(':')
+		return new StringBuilder("[").append(this.getClass().getSimpleName()).append(']').append(':')
 				.append(this.registrationToken).append(',')
 				.append(this.username).append(',')
 				.append(this.password).append(',')

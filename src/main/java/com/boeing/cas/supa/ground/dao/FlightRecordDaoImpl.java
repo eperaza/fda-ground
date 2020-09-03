@@ -1,15 +1,12 @@
 package com.boeing.cas.supa.ground.dao;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.boeing.cas.supa.ground.exceptions.FlightRecordException;
+import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.FlightCount;
+import com.boeing.cas.supa.ground.pojos.FlightRecord;
+import com.boeing.cas.supa.ground.utils.Constants;
+import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
+import microsoft.sql.DateTimeOffset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,13 +16,14 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import com.boeing.cas.supa.ground.exceptions.FlightRecordException;
-import com.boeing.cas.supa.ground.pojos.ApiError;
-import com.boeing.cas.supa.ground.pojos.FlightRecord;
-import com.boeing.cas.supa.ground.utils.Constants;
-import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
-
-import microsoft.sql.DateTimeOffset;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Repository
 public class FlightRecordDaoImpl implements FlightRecordDao {
@@ -65,7 +63,6 @@ public class FlightRecordDaoImpl implements FlightRecordDao {
 		namedParameters.put("flight_record_name", flightRecord.getFlightRecordName());
 		namedParameters.put("storage_path", flightRecord.getStoragePath());
 		namedParameters.put("file_size_kb", flightRecord.getFileSizeKb());
-		namedParameters.put("flight_datetime", flightRecord.getFlightDatetime());
 		namedParameters.put("flight_datetime", DateTimeOffset.valueOf(Timestamp.from(flightRecord.getFlightDatetime()), 0));
 		namedParameters.put("aid_id", flightRecord.getAidId());
 		namedParameters.put("airline", flightRecord.getAirline());
