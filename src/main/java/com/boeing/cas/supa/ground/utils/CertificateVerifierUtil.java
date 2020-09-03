@@ -101,7 +101,12 @@ public class CertificateVerifierUtil {
 	 */
     private boolean certCompare(X509Certificate x509ClientCert, String certHolder, boolean registrationProcess) throws SecurityException {
         try {
+            logger.debug("Cert Compare");
             X509Certificate x509ServerCert = this.appCertificates.get(certHolder);
+            if (x509ServerCert == null) {
+                logger.debug("Getting from AppNewCertificates instead");
+                x509ServerCert = this.appNewCertificates.get(certHolder);
+            }
             Map<String, String> x509ClientCertSubjectDn = this.getMap(x509ClientCert.getSubjectDN().getName());
             Map<String, String> x509ClientCertIssuerDn = this.getMap(x509ClientCert.getIssuerDN().getName());
             String x509ClientCertThumbPrint = this.getThumbprint(x509ClientCert);

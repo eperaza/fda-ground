@@ -38,7 +38,7 @@ public class UserAccountRegistrationDaoImpl implements UserAccountRegistrationDa
 	private static final String USER_ACTIVATION_CODE_SQL_SELECT = "SELECT * FROM user_activation_codes WHERE activation_code = :activation_code AND email_address = :email_address";
 	private static final String USER_ACTIVATION_CODE_SQL_DELETE = "DELETE FROM user_activation_codes WHERE activation_code = :activation_code AND email_address = :email_address";
 
-	private static final String USER_REGISTRATION_TOKEN_SELECT_SQL = "SELECT registration_token FROM user_account_registrations WHERE user_principal_name = :user_principal_name ORDER BY created_ts DESC";
+	private static final String USER_REGISTRATION_TOKEN_SELECT_SQL = "SELECT registration_token FROM user_account_registrations WHERE user_principal_name = :user_principal_name ORDER BY create_ts DESC";
 
 	@Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;

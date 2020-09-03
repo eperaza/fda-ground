@@ -102,12 +102,20 @@ public class AzureADAuthFilter implements Filter {
 		boolean isUsingPrimaryCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCertName"), httpRequest, false);
 		boolean isUsingSecondaryCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisor1ClientCertName"), httpRequest, false);
 
+		if (isUsingPrimaryCert) {
+			logger.debug("Primary cert is valid {}", appProps.get("FDAdvisorClientCertName"));
+		} else if (isUsingSecondaryCert) {
+			logger.debug("Secondary cert is valid {}", appProps.get("FDAdvisor1ClientCertName"));
+		} else {
+			logger.debug("neither cert was valid");
+		}
+
 		Object base64EncodedPayload = null;
 		if (allowedPath) {
 			Object result = null;
 			if (isUsingPrimaryCert || isUsingSecondaryCert) {
 
-				logger.debug("{} cert is valid, moving request along", appProps.get("FDAdvisorClientCertName"));
+				logger.debug("moving request along");
 				chain.doFilter(request, response);
 				return;
 			} 
@@ -120,16 +128,16 @@ public class AzureADAuthFilter implements Filter {
 
 		try {
 
-			logger.debug("Checking {} cert and OAuth2 token...", appProps.get("FDAdvisorClientCertName"));
+			logger.debug("Checking cert and OAuth2 token...");
 			boolean validClientCert = isUsingPrimaryCert || isUsingSecondaryCert;
 			boolean validOAuthToken = this.isValidOAuthToken(httpRequest.getHeader("Authorization"));
 			if (validClientCert && validOAuthToken) {
-				logger.debug("{} cert and OAuth2 token are good!", appProps.get("FDAdvisorClientCertName"));
+				logger.debug("cert and OAuth2 token are good!");
 				chain.doFilter(request, response);
 				return;
 			}
 			else if (!validClientCert) {
-				logger.error("{} cert failed!", appProps.get("FDAdvisorClientCertName"));
+				logger.error("cert failed!");
 				responseCode = 403;
 				responseException = new ApiError("Invalid client certificate", "Must provide a valid client certificate");
 			}
