@@ -57,7 +57,6 @@ public class AircraftPropertyController {
                                          @RequestHeader("Authorization") String authToken,
                                          @RequestHeader(name = "lastUpdated", required = false) Date lastUpdated) throws IOException, NoSuchAlgorithmException, TspConfigLogException, FileDownloadException {
 
-        String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
         final User user = azureADClientService.getUserInfoFromJwtAccessToken(authToken);
         List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
         if (airlineGroups.size() != 1) {
@@ -133,10 +132,23 @@ public class AircraftPropertyController {
             header.add("lastModifiedDate", lastModifiedStamp);
 
             return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
-        }
+        }else{
 
-        // shouldn't get here
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            logger.debug("STRANGE TO GET HERE");
+            byte[] zipFile = aircraftPropertyService.getAircraftConfig(authToken);
+            // insert into DB
+            FileManagementMessage zipUploadmsg = fileManagementService.uploadTspConfigPackage(zipFile, "test-aircraft-config.zip", authToken);
+            String checkSum = checkSumUtil.generateCheckSum(zipFile);
+            String lastModifiedStamp = zipUploadmsg.getLastModified().toString();
+
+            HttpHeaders header = new HttpHeaders();
+            header.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+            header.add(HttpHeaders.CONTENT_TYPE, "application/octet-stream");
+            header.add("CheckSum", checkSum);
+            header.add("lastModifiedDate", lastModifiedStamp);
+
+            return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
+        }
     }
 
     @RequestMapping(path="/getAircraftProperty", method = { RequestMethod.GET })
@@ -153,6 +165,27 @@ public class AircraftPropertyController {
         }
 
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @RequestMapping(path="/aircraftconfigpkg", method = { RequestMethod.GET})
+    public ResponseEntity<Object> forceUpdateAircraftConfigPackage(@RequestHeader("Authorization") String authToken,
+                                                                   @RequestHeader(name="airline", required=false) String airline) throws IOException, TspConfigLogException, FileDownloadException {
+
+        final User user = azureADClientService.getUserInfoFromJwtAccessToken(authToken);
+        List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+        if (airlineGroups.size() != 1) {
+            throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "Failed to associate user with an airline", Constants.RequestFailureReason.UNAUTHORIZED));
+        }
+        String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+
+        // file path name to retrieve from blob - it is not truly a real directory
+        String fileName = new StringBuilder(airlineGroup).append("/").append(airlineGroup).append("-config-pkg.zip").toString();
+
+        byte[] zipFile = aircraftPropertyService.getAircraftConfig(authToken);
+        // insert into DB
+        FileManagementMessage zipUploadmsg = fileManagementService.uploadTspConfigPackage(zipFile, fileName, authToken);
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @RequestMapping(path="/getAircraftPropertiesByAirline", method={ RequestMethod.GET })
