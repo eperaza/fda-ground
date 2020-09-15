@@ -1,28 +1,11 @@
 package com.boeing.cas.supa.ground.filters;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.security.cert.X509Certificate;
-import java.text.ParseException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import com.boeing.cas.supa.ground.pojos.ApiError;
+import com.boeing.cas.supa.ground.utils.CertificateVerifierUtil;
+import com.boeing.cas.supa.ground.utils.Constants;
+import com.boeing.cas.supa.ground.utils.ControllerUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jwt.JWTParser;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -33,12 +16,15 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import com.boeing.cas.supa.ground.pojos.ApiError;
-import com.boeing.cas.supa.ground.utils.CertificateVerifierUtil;
-import com.boeing.cas.supa.ground.utils.Constants;
-import com.boeing.cas.supa.ground.utils.ControllerUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jwt.JWTParser;
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.security.cert.X509Certificate;
+import java.text.ParseException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
