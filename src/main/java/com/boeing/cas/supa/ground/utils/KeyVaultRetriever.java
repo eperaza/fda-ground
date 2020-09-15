@@ -1,19 +1,20 @@
 package com.boeing.cas.supa.ground.utils;
 
-import com.microsoft.azure.keyvault.KeyVaultClient;
-import com.microsoft.azure.keyvault.models.CertificateBundle;
-import com.microsoft.azure.keyvault.models.KeyBundle;
-import com.microsoft.azure.keyvault.models.SecretBundle;
-import com.microsoft.azure.keyvault.webkey.JsonWebKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.KeyPair;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.microsoft.azure.keyvault.KeyVaultClient;
+import com.microsoft.azure.keyvault.models.CertificateBundle;
+import com.microsoft.azure.keyvault.models.KeyBundle;
+import com.microsoft.azure.keyvault.models.SecretBundle;
+import com.microsoft.azure.keyvault.webkey.JsonWebKey;
 
 public class KeyVaultRetriever {
 
@@ -27,11 +28,6 @@ public class KeyVaultRetriever {
 
 		this.keyVaultUri = keyVaultUri;
 		this.kvc = KeyVaultAuthenticator.getAuthenticatedClient(clientId, clientKey);
-
-		System.setProperty("http.proxyHost", "www-only-ewa-proxy.web.boeing.com");
-		System.setProperty("http.proxyPort", "31061");
-		System.setProperty("https.proxyHost", "www-only-ewa-proxy.web.boeing.com");
-		System.setProperty("https.proxyPort", "31061");
 	}
 
 	public String getSecretByKey(String secretName) {

@@ -187,7 +187,7 @@ public class DemoApplication {
 		return javaMailSender;
 	}
 
-	@RequestMapping(path="/", method = {RequestMethod.GET})
+	@RequestMapping("/", method = {RequestMethod.GET})
 	public ResponseEntity<Map<String, String>> getGreeting(HttpServletRequest httpRequest) {
 
 		logger.info("Pinging the service");

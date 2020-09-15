@@ -125,7 +125,7 @@ public class FileManagementService {
 	public byte[] getFileFromStorage(String file, String type, String authToken) throws FileDownloadException {
 
 		byte[] fileInBytes = new byte[0];
-		logger.debug("Made it to getFileFromStorage!");
+
 		try {
 
 			// Determine the airline from the user's membership; this is specifically for TSP files.
@@ -166,12 +166,8 @@ public class FileManagementService {
 				}
 			}
 			else if (TSP_CONFIG_ZIP_CONTAINER.equals(type)){
-
 				container = TSP_CONFIG_ZIP_CONTAINER;
-				filePath = file; // tech debt fix later
-
-				logger.debug("filepath: " + filePath);
-
+				filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/').append(file).toString();
 				if (asu.blobExistsOnCloud(container, filePath) != true) {
 					// in case the file is not exist, try to upper case the file name
 					String tailNumberPart = file.substring(0, file.indexOf(".json"));
@@ -194,9 +190,6 @@ public class FileManagementService {
 
 			// Once container and file path are established, retrieve the file contents in bytes
 			try (ByteArrayOutputStream outputStream = asu.downloadFile(container, filePath)) {
-
-				logger.debug("container: " + container);
-				logger.debug("final file path: " + filePath);
 
 				if (outputStream == null) {
 					throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("No file corresponding to specified name %s and type %s", file, type), RequestFailureReason.NOT_FOUND));
