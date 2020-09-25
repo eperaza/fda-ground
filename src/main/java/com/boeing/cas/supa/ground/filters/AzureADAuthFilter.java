@@ -110,7 +110,7 @@ public class AzureADAuthFilter implements Filter {
 				logger.debug("{} cert is valid, moving request along", appProps.get("FDAdvisorClientCertName"));
 				chain.doFilter(request, response);
 				return;
-			} 
+			}
 
 			responseCode = 403;
 			responseException = new ApiError("certificate missing", "Must provide a valid client certificate");

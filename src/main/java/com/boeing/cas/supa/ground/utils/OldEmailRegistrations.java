@@ -13,6 +13,7 @@ public class OldEmailRegistrations {
         this.oldRegistrationAirlines = new HashSet<>();
         this.oldRegistrationAirlines.add("airline-amx");
         this.oldRegistrationAirlines.add("airline-cnd");
+        this.oldRegistrationAirlines.add("airline-qan");
     }
 
     public boolean containsAirline(String airline) {
