@@ -192,7 +192,6 @@ public class AzureADAuthFilter implements Filter {
 
 		String certHeader = httpRequest.getHeader("X-ARR-ClientCert");
 		logger.debug("registration cert? {}", registrationProcess?"yes":"no");
-		logger.debug("certificate header in request: {}", certHeader);
 		if (StringUtils.isNotBlank(certHeader)) {
 			return this.certVerify.isValidClientCertificate(certHeader, certHolder, registrationProcess);
 		}

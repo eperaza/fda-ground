@@ -119,6 +119,9 @@ public class DemoApplication {
 
 		Map<String, X509Certificate> appCertificates = new ConcurrentHashMap<String, X509Certificate>();
 		String fdaClientCertName = keyVaultRetriever.getSecretByKey("FDAdvisor1ClientCertName");
+		if (fdaClientCertName.isEmpty() || (fdaClientCertName == null)) {
+			fdaClientCertName = keyVaultRetriever.getSecretByKey("FDAdvisorClientCertName");
+		}
 		appCertificates.put(fdaClientCertName, keyVaultRetriever.getCertificateByCertName(fdaClientCertName));
 		return appCertificates;
 	}
