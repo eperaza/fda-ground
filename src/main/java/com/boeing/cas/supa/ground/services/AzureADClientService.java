@@ -782,9 +782,10 @@ public class AzureADClientService {
 			// Valid code, get activation information
 
 			String registrationToken = registrations.get(0).getRegistrationToken();
-
+			
 			logger.debug(" ===========FDAClientCert2=======");
-			String fdadvisorClient1CertBase64 = new StringBuilder(appProps.get("FDAdvisor1ClientCertName")).append("base64").toString();
+
+			String fdadvisorClient1CertBase64 = new StringBuilder(this.appProps.get("FDAdvisor1ClientCertName")).append("base64").toString();
 			if (fdadvisorClient1CertBase64 != "") {
 				logger.info("CERT IS: {}", fdadvisorClient1CertBase64);
 

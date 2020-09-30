@@ -10,12 +10,10 @@ import org.springframework.stereotype.Component;
 import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
 import java.security.*;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
+import java.security.cert.*;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,7 +37,7 @@ public class CertificateVerifierUtil {
 
     private X509Certificate getCertFromHeader(String certHeader) {
 
-		logger.debug("Get certificate from header: {}", certHeader);
+		//logger.debug("Get certificate from header: {}", certHeader);
 		X509Certificate cert = null;
 		if (StringUtils.isNotBlank(certHeader)) {
 
@@ -95,20 +93,52 @@ public class CertificateVerifierUtil {
         return false;
     }
 
+    public boolean shouldUpdateCertificate(String x509ClientCertString) {
+
+        logger.debug("Getting Client Cert from header");
+        X509Certificate x509ClientCert = this.getCertFromHeader(x509ClientCertString);
+        logger.debug("Client cert null? {}", (x509ClientCert == null) ? "yes" : "no");
+
+//        this.appProps.get("FDAdvisor1ClientCertName").append("base64").toString()
+        X509Certificate x509ServerSecondaryCert = this.appNewCertificates.get("fdadvisor1base64");
+        if (x509ServerSecondaryCert == null) {
+            logger.debug("no new cert available");
+            return false;
+        }
+        if (certCompare(x509ClientCert, "fdadvisor1base64", false) ) {
+            logger.debug("Already updated certificate");
+            return false;
+        }
+
+        X509Certificate x509ServerPrimaryCert = this.appCertificates.get("fdadvisorbase64");
+        if (certCompare(x509ClientCert, "FDAdvisorClientCertName", false) ) {
+            logger.debug("Using primary cert, secondary available");
+            return true;
+        }
+
+        return false;
+    }
+
     /**
 	 * Checks whether given X.509 certificate is valid.
 	 * @param cert 
 	 */
     private boolean certCompare(X509Certificate x509ClientCert, String certHolder, boolean registrationProcess) throws SecurityException {
         try {
+            logger.debug("Cert Compare");
+            logger.debug("cert holder: {}", certHolder);
             X509Certificate x509ServerCert = this.appCertificates.get(certHolder);
+            if (x509ServerCert == null) {
+                logger.debug("Getting from AppNewCertificates instead");
+                x509ServerCert = this.appNewCertificates.get(certHolder);
+            }
             Map<String, String> x509ClientCertSubjectDn = this.getMap(x509ClientCert.getSubjectDN().getName());
             Map<String, String> x509ClientCertIssuerDn = this.getMap(x509ClientCert.getIssuerDN().getName());
             String x509ClientCertThumbPrint = this.getThumbprint(x509ClientCert);
             Map<String, String> x509ServerCertSubjectDn = this.getMap(x509ServerCert.getSubjectDN().getName());
             Map<String, String> x509ServerCertIssuerDn = this.getMap(x509ServerCert.getIssuerDN().getName());
             String x509ServerCertThumbPrint = this.getThumbprint(x509ServerCert);
-            x509ClientCert.checkValidity(new Date());
+
             logger.debug("registration cert? {}", registrationProcess?"yes":"no");
             logger.debug("client cert subject DN: {}", x509ClientCert.getSubjectDN().getName());
             logger.debug("server cert subject DN: {}", x509ServerCert.getSubjectDN().getName());
@@ -133,6 +163,13 @@ public class CertificateVerifierUtil {
                 logger.info("client cert thumbprint = {}", x509ClientCertThumbPrint);
                 logger.info("server cert thumbprint = {}", x509ServerCertThumbPrint);
                 throw new SecurityException("Thumbprint mismatch");
+            }
+            try {
+                Calendar calNow = Calendar.getInstance();
+                calNow.add(Calendar.MONTH, 6);
+                x509ClientCert.checkValidity(calNow.getTime());
+            } catch (CertificateExpiredException e) {
+                logger.debug("Using expired cert that matches server cert checksum, will allow re-registration");
             }
             return true;
         }

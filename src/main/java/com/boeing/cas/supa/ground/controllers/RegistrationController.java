@@ -2,9 +2,11 @@ package com.boeing.cas.supa.ground.controllers;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.Map;
 
+import com.boeing.cas.supa.ground.utils.CertificateVerifierUtil;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +41,9 @@ public class RegistrationController {
 
 	@Autowired
 	private AzureADClientService aadClient;
+
+	@Autowired
+	private CertificateVerifierUtil certificateVerifierUtil;
 
 	@RequestMapping(path="/register", method = { RequestMethod.POST })
 	public ResponseEntity<Object> getAccessToken(@RequestBody Credential cred) {
@@ -94,10 +99,21 @@ public class RegistrationController {
 	}
 
 	@RequestMapping(path="/updateCert", method = { RequestMethod.GET })
-	public ResponseEntity<Object> getUpdatedCert(@RequestHeader("Authorization") String authToken) {
+	public ResponseEntity<Object> getUpdatedCert(@RequestHeader("Authorization") String authToken,
+												 @RequestHeader("X-ARR-ClientCert") String certificate) {
+
+
+		if (!certificateVerifierUtil.shouldUpdateCertificate(certificate)) {
+			return new ResponseEntity<>(null, HttpStatus.OK);
+		}
 
 		// Extract the access token from the authorization request header
 		String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
+
+		//logger.debug("Credential: {}", cred);
+		logger.debug("updateCert Auth Header: {}", authToken);
+
+		logger.debug("updateCert cert x509: {}", certificate);
 
 		// Create user with the received payload/parameters defining the new account.
 		Object result = aadClient.getUpdatedClientCert(accessTokenInRequest);

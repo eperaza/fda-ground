@@ -74,12 +74,14 @@ public class DemoApplication {
 		appSecrets.put("AzureADTenantName", keyVaultRetriever.getSecretByKey("AzureADTenantName"));
 		appSecrets.put("EmailMpAttachmentLocation", keyVaultRetriever.getSecretByKey("EmailMpAttachmentLocation"));
 		appSecrets.put("FDAdvisorClientCertName", keyVaultRetriever.getSecretByKey("FDAdvisorClientCertName"));
-		appSecrets.put("FDAdvisorClient1CertName", keyVaultRetriever.getSecretByKey("FDAdvisor1ClientCertName"));
+		appSecrets.put("FDAdvisor1ClientCertName", keyVaultRetriever.getSecretByKey("FDAdvisor1ClientCertName"));
 		//not ready for this yet
 //		appSecrets.put("FDAdvisorRegistrationCertName", keyVaultRetriever.getSecretByKey("FDAdvisorRegistrationCertName"));
 		appSecrets.put("FDAdvisorClientCertBundlePassword", keyVaultRetriever.getSecretByKey("FDAdvisorClientCertBundlePassword"));
 		String fdaClientCertBase64 = new StringBuilder(appSecrets.get("FDAdvisorClientCertName")).append("base64").toString();
 		appSecrets.put(fdaClientCertBase64, keyVaultRetriever.getSecretByKey(fdaClientCertBase64));
+		String fdaClient1CertBase64 = new StringBuilder(appSecrets.get("FDAdvisor1ClientCertName")).append("base64").toString();
+		appSecrets.put(fdaClient1CertBase64, keyVaultRetriever.getSecretByKey(fdaClient1CertBase64));
 		appSecrets.put("MailServerAuthPassword", keyVaultRetriever.getSecretByKey("MailServerAuthPassword"));
 		appSecrets.put("MailServerAuthUsername", keyVaultRetriever.getSecretByKey("MailServerAuthUsername"));
 		appSecrets.put("MailServerHost", keyVaultRetriever.getSecretByKey("MailServerHost"));
@@ -117,6 +119,9 @@ public class DemoApplication {
 
 		Map<String, X509Certificate> appCertificates = new ConcurrentHashMap<String, X509Certificate>();
 		String fdaClientCertName = keyVaultRetriever.getSecretByKey("FDAdvisor1ClientCertName");
+		if (fdaClientCertName.isEmpty() || (fdaClientCertName == null)) {
+			fdaClientCertName = keyVaultRetriever.getSecretByKey("FDAdvisorClientCertName");
+		}
 		appCertificates.put(fdaClientCertName, keyVaultRetriever.getCertificateByCertName(fdaClientCertName));
 		return appCertificates;
 	}
