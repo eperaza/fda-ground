@@ -1,13 +1,17 @@
 package com.boeing.cas.supa.ground.pojos;
 
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Entity
 @Table(name = "AircraftProperty")
+@NamedQueries({
+	@NamedQuery(name="getAircraftPropertyLastModifiedTimeStamp", query = "SELECT CASE " +
+			"WHEN MAX(ap.modifiedTime) > MAX(ai.modifiedTime) " +
+			"THEN  MAX(ap.modifiedTime) ELSE MAX(ai.modifiedTime) " +
+			"END as MostRecentTime " +
+			"FROM AircraftProperty ap,	AircraftInfo ai, Airline a " +
+			"WHERE ap.aircraftInfo.airline.name = :name"	)
+})
 public class AircraftProperty extends BaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "AircraftInfoID", nullable = false)

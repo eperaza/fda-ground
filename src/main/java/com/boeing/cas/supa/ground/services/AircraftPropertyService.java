@@ -40,18 +40,17 @@ public class AircraftPropertyService {
 	@Autowired
 	private AzureADClientService azureADClientService;
 
-	public Date getLastModified(String authToken, String tailNumber){
+	public Date getLastModified(String authToken){
 		try{
 			String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
 			if (Strings.isNullOrEmpty(airlineName)) {
 				logger.debug(":::UNAUTHORIZED - User membership is ambiguous - cannot define user's airline");
 			}
 
-			// Convert to UTC string?
-			Date modifiedTime = aircraftInfoDao.getAircraftPropertyLastModifiedTimeStamp(airlineName, tailNumber);
+			logger.debug("getLastModified airline name: " + airlineName);
+			Date modifiedTime = aircraftInfoDao.getAircraftPropertyLastModifiedTimeStamp(airlineName);
 
 			return modifiedTime;
-
 		}catch(Exception ex){
 
 		}
@@ -61,7 +60,7 @@ public class AircraftPropertyService {
 	public boolean isUpdated(String authToken, String tailNumber, Date timeStamp){
 
 		// Convert to UTC string?
-		Date lastModified = getLastModified(authToken, tailNumber);
+		Date lastModified = getLastModified(authToken);
 
 		if(!lastModified.equals(timeStamp)){
 			return true;
@@ -104,6 +103,35 @@ public class AircraftPropertyService {
 			return aircraftConfigList;
 		}catch(Exception ex){
 			logger.error("failed to retrieve APs: " + ex);
+		}
+		return null;
+	}
+
+	public Date getLastModifiedTimeInContainer(String authToken, String airlineGroupTspContainer){
+		try {
+			String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
+			if (Strings.isNullOrEmpty(airlineName)) {
+				throw new IllegalArgumentException("Bad Input");
+			}
+
+			List<String> tspList = fileManagementService.getTspListFromStorage(authToken);
+
+			logger.debug("tsplist");
+			Date lastModifiedDate = null;
+
+			for(String tspName : tspList) {
+				Date thisModifiedDate = fileManagementService.getBlobLastModifiedTimeStamp(airlineGroupTspContainer, tspName);
+
+				if(lastModifiedDate == null || thisModifiedDate.compareTo(lastModifiedDate) > 0){
+					lastModifiedDate = thisModifiedDate;
+				}
+			}
+
+			logger.debug("latest date: " + lastModifiedDate);
+
+			return lastModifiedDate;
+		} catch (Exception ex) {
+			logger.error("Failed get container lastest date TSP package" + ex);
 		}
 		return null;
 	}
