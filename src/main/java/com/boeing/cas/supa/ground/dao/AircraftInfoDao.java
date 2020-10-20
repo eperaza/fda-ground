@@ -10,7 +10,7 @@ public interface AircraftInfoDao {
 	public boolean save(AircraftInfo airlineTail);
 	public List<AircraftInfo> getAirlineTails();
 	public AircraftInfo getAirlineTailById(int id);
-	public Date getAircraftPropertyLastModifiedTimeStamp(String airlineName, String tailNumber);
+	public Date getAircraftPropertyLastModifiedTimeStamp(String airlineName);
 	public AircraftInfo getTailByAirlineAndTailNumber(String airlineName, String tailNumber);
 	public AircraftConfiguration getAircraftPropertiesByAirlineAndTailNumber(String airlineName, String tailNumber);
 	public List<AircraftConfiguration> getAircraftPropertiesByAirline(String airline);

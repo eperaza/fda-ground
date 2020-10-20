@@ -3,6 +3,8 @@ package com.boeing.cas.supa.ground.dao;
 import com.boeing.cas.supa.ground.pojos.AircraftConfiguration;
 import com.boeing.cas.supa.ground.pojos.AircraftInfo;
 import org.hibernate.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import javax.transaction.Transactional;
@@ -12,54 +14,53 @@ import java.util.List;
 @Repository
 @Transactional
 public class AircraftInfoDaoImpl extends BaseDaoImpl implements AircraftInfoDao {
-	
-	@Override
-	public boolean save(AircraftInfo airlineTail) {
-		getSession().saveOrUpdate(airlineTail);
-		return airlineTail.getId() > 0;
-	}
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public List<AircraftInfo> getAirlineTails() {
-		return getSession().createQuery("from AirlineTail").list();
-	}
+    @Override
+    public boolean save(AircraftInfo airlineTail) {
+        getSession().saveOrUpdate(airlineTail);
+        return airlineTail.getId() > 0;
+    }
 
-	@Override
-	public AircraftInfo getAirlineTailById(int id) {
-		return getSession().get(AircraftInfo.class, id);
-	}
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<AircraftInfo> getAirlineTails() {
+        return getSession().createQuery("from AirlineTail").list();
+    }
 
-	@Override
-	public Date getAircraftPropertyLastModifiedTimeStamp(String airlineName, String tailNumber) {
-		Query query = getSession().getNamedQuery("getAircraftPropertyLastModifiedTimeStamp");
-		query.setParameter("name", airlineName);
-		query.setParameter("tailNumber", tailNumber);
-		return (Date)query.uniqueResult();
-	}
+    @Override
+    public AircraftInfo getAirlineTailById(int id) {
+        return getSession().get(AircraftInfo.class, id);
+    }
 
-	@Override
-	public AircraftInfo getTailByAirlineAndTailNumber(String airlineName, String tailNumber) {
-		Query query = getSession().getNamedQuery("getTailByAirlineAndTailNumber");
-		query.setParameter("name", airlineName);
-		query.setParameter("tailNumber", tailNumber);
-		
-		return (AircraftInfo)query.uniqueResult();
-	}
+    @Override
+    public Date getAircraftPropertyLastModifiedTimeStamp(String airlineName) {
+        Query query = getSession().getNamedQuery("getAircraftPropertyLastModifiedTimeStamp");
+        query.setParameter("name", airlineName);
+        return (Date) query.uniqueResult();
+    }
 
-	@Override
-	public AircraftConfiguration getAircraftPropertiesByAirlineAndTailNumber(String airlineName, String tailNumber) {
-		Query query = getSession().getNamedQuery("getAircraftPropertiesByAirlineAndTailNumber");
-		query.setParameter("name", airlineName);
-		query.setParameter("tailNumber", tailNumber);
-		
-		return (AircraftConfiguration)query.uniqueResult();
-	}
+    @Override
+    public AircraftInfo getTailByAirlineAndTailNumber(String airlineName, String tailNumber) {
+        Query query = getSession().getNamedQuery("getTailByAirlineAndTailNumber");
+        query.setParameter("name", airlineName);
+        query.setParameter("tailNumber", tailNumber);
 
-	@Override
-	public List<AircraftConfiguration> getAircraftPropertiesByAirline(String airlineName) {
-		Query query = getSession().getNamedQuery("getAircraftPropertiesByAirline");
-		query.setParameter("name", airlineName);
-		return query.list();
-	}
+        return (AircraftInfo) query.uniqueResult();
+    }
+
+    @Override
+    public AircraftConfiguration getAircraftPropertiesByAirlineAndTailNumber(String airlineName, String tailNumber) {
+        Query query = getSession().getNamedQuery("getAircraftPropertiesByAirlineAndTailNumber");
+        query.setParameter("name", airlineName);
+        query.setParameter("tailNumber", tailNumber);
+
+        return (AircraftConfiguration) query.uniqueResult();
+    }
+
+    @Override
+    public List<AircraftConfiguration> getAircraftPropertiesByAirline(String airlineName) {
+        Query query = getSession().getNamedQuery("getAircraftPropertiesByAirline");
+        query.setParameter("name", airlineName);
+        return query.list();
+    }
 }

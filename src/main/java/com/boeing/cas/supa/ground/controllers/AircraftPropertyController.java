@@ -11,7 +11,6 @@ import com.boeing.cas.supa.ground.utils.CheckSumUtil;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,12 +51,11 @@ public class AircraftPropertyController {
     @Autowired
     private FileManagementService fileManagementService;
 
-    @RequestMapping(path="/getAircraftConfiguration", method={RequestMethod.GET}, produces="application/zip")
+    @RequestMapping(path = "/getAircraftConfiguration", method = {RequestMethod.GET}, produces = "application/zip")
     public ResponseEntity<byte[]> getAircraftConfiguration(
-                                         @RequestHeader("Authorization") String authToken,
-                                         @RequestHeader(name = "lastUpdated", required = false) Date lastUpdated) throws IOException, NoSuchAlgorithmException, TspConfigLogException, FileDownloadException {
+            @RequestHeader("Authorization") String authToken,
+            @RequestHeader(name = "lastUpdated", required = false) Date lastUpdated) throws IOException, NoSuchAlgorithmException, TspConfigLogException, FileDownloadException {
 
-        String airlineName =  azureADClientService.validateAndGetAirlineName(authToken);
         final User user = azureADClientService.getUserInfoFromJwtAccessToken(authToken);
         List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
         if (airlineGroups.size() != 1) {
@@ -71,18 +69,36 @@ public class AircraftPropertyController {
 
         // file path name to retrieve from blob - it is not truly a real directory
         String fileName = new StringBuilder(airlineGroup).append("/").append(airlineGroup).append("-config-pkg.zip").toString();
-        boolean tspExists = asu.blobExistsOnCloud(container, fileName);
+        boolean configPkgExists = asu.blobExistsOnCloud(container, fileName);
 
-        if(lastUpdated != null && tspExists){
-            logger.debug("DATE WAS PASSED IN!!!");
-            Date lastModified = fileManagementService.getBlobLastModifiedTimeStamp(container, fileName);
-            logger.debug("retrieved timestamp: " + lastModified.toString());
+        Date databaseLastModifiedDate = aircraftPropertyService.getLastModified(authToken);
+        logger.debug("Last database modified date: " + databaseLastModifiedDate);
 
-            // both dates are equal
-            if(lastUpdated.compareTo(lastModified) == 0){
+        String airlineGroupTspContainer = fileManagementService.getTspContainerFromStorage(authToken);
+        Date tspJsonLastModifiedDate = aircraftPropertyService.getLastModifiedTimeInContainer(authToken, airlineGroupTspContainer);
+        logger.debug("Last json modified date: " + tspJsonLastModifiedDate);
+
+        Date latestModifiedDate = null;
+        if(databaseLastModifiedDate != null && tspJsonLastModifiedDate != null){
+            latestModifiedDate = databaseLastModifiedDate.compareTo(tspJsonLastModifiedDate) >= 0 ? databaseLastModifiedDate : tspJsonLastModifiedDate;
+        } else if(tspJsonLastModifiedDate != null){
+            latestModifiedDate = tspJsonLastModifiedDate;
+        } else if (databaseLastModifiedDate != null) {
+            latestModifiedDate = databaseLastModifiedDate;
+        }
+        logger.debug("Lastest modified date: " + latestModifiedDate);
+
+        if (latestModifiedDate != null && configPkgExists) {
+            logger.debug("DATE EXISTS!!!");
+            Date zipLastModified = fileManagementService.getBlobLastModifiedTimeStamp(container, fileName);
+            logger.debug("retrieved timestamp: " + zipLastModified.toString());
+
+            // package is more recent
+            if (latestModifiedDate.compareTo(zipLastModified) < 0) {
                 // do nothing, return
+                logger.debug("package is more recent, so we do nothing");
                 return new ResponseEntity<>(HttpStatus.OK);
-            }else{
+            } else {
                 // Dates NOT equal - get latest TSP Config zip package
                 byte[] zipFile = aircraftPropertyService.getAircraftConfig(authToken);
                 // insert into DB
@@ -98,11 +114,11 @@ public class AircraftPropertyController {
 
                 return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
             }
-        }else if(lastUpdated == null && tspExists){
-            // no date passed in, new FDA app, just grab the existing package
-            logger.debug("NO DATE passed in, tspExists for that airline in blob");
+        } else if (latestModifiedDate == null && configPkgExists) {
+            // no date in database, new FDA app, just grab the existing package (note: idk how this happens with no jsons honestly?)
+            logger.debug("NO DATE from database or tsp storage, configPkgExists for that airline in blob");
 
-            try{
+            try {
                 byte[] zipFile = aircraftPropertyService.getAircraftConfigFromBlob(authToken, fileName);
                 Date lastModifiedTimeStamp = fileManagementService.getBlobLastModifiedTimeStamp(container, fileName);
                 String lastModifiedStamp = lastModifiedTimeStamp.toString();
@@ -115,11 +131,11 @@ public class AircraftPropertyController {
                 header.add("lastModifiedDate", lastModifiedStamp);
 
                 return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
-            } catch (Exception ex){
+            } catch (Exception ex) {
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
-        }else if(lastUpdated == null && !tspExists){
-            // No date passed, no TSPconfig created yet, create a new one for the airline and upload it to Azure Blob
+        } else if (!configPkgExists) {
+            // no TSP config package created yet, create a new one for the airline and upload it to Azure Blob
             byte[] zipFile = aircraftPropertyService.getAircraftConfig(authToken);
             // insert into DB
             FileManagementMessage zipUploadmsg = fileManagementService.uploadTspConfigPackage(zipFile, "test-aircraft-config.zip", authToken);
@@ -139,7 +155,7 @@ public class AircraftPropertyController {
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
-    @RequestMapping(path="/getAircraftProperty", method = { RequestMethod.GET })
+    @RequestMapping(path = "/getAircraftProperty", method = {RequestMethod.GET})
     public ResponseEntity<Object> getAircraftProperty(@RequestHeader("Authorization") String authToken,
                                                       @RequestHeader(name = "tailNumber", required = true) String tailNumber) throws IOException {
 
@@ -155,9 +171,9 @@ public class AircraftPropertyController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    @RequestMapping(path="/aircraftconfigpkg", method = { RequestMethod.GET})
+    @RequestMapping(path = "/aircraftconfigpkg", method = {RequestMethod.GET})
     public ResponseEntity<Object> forceUpdateAircraftConfigPackage(@RequestHeader("Authorization") String authToken,
-                                                                   @RequestHeader(name="airline", required=false) String airline) throws IOException, TspConfigLogException, FileDownloadException {
+                                                                   @RequestHeader(name = "airline", required = false) String airline) throws IOException, TspConfigLogException, FileDownloadException {
 
         final User user = azureADClientService.getUserInfoFromJwtAccessToken(authToken);
         List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
@@ -176,11 +192,34 @@ public class AircraftPropertyController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequestMapping(path="/getAircraftPropertiesByAirline", method={ RequestMethod.GET })
-    public ResponseEntity<Object> getAircraftPropertiesByAirline(@RequestHeader("Authorization") String authToken) throws JSONException, IOException {
+    @RequestMapping(path = "/getAircraftPropertiesByAirline", method = {RequestMethod.GET})
+    public ResponseEntity<Object> getAircraftPropertiesByAirline(@RequestHeader("Authorization") String authToken) {
 
         List<AircraftConfiguration> aircraftProps = aircraftPropertyService.getAircraftPropertiesByAirline(authToken);
 
         return new ResponseEntity<>(aircraftProps, HttpStatus.OK);
+    }
+
+    @RequestMapping(path = "/getLastModifiedByAirlineName", method = {RequestMethod.GET})
+    public ResponseEntity<Object> getLastModifiedByAirlineName(@RequestHeader("Authorization") String authToken) {
+
+        Date lastModifiedDate = aircraftPropertyService.getLastModified(authToken);
+
+        logger.debug("latest modified date: " + lastModifiedDate);
+        return new ResponseEntity<>(lastModifiedDate, HttpStatus.OK);
+    }
+
+    @RequestMapping(path = "/getLastModifiedDateInContainer", method = {RequestMethod.GET})
+    public ResponseEntity<Object> getLastModifiedDateInContainer(@RequestHeader("Authorization") String authToken) {
+        try {
+            String airlineGroupTspContainer = fileManagementService.getTspContainerFromStorage(authToken);
+            Date lastModifiedDate = aircraftPropertyService.getLastModifiedTimeInContainer(authToken, airlineGroupTspContainer);
+
+            return new ResponseEntity<>(lastModifiedDate, HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("Failed get container lastest date TSP package" + ex);
+        }
+
+        return new ResponseEntity<>("", HttpStatus.OK);
     }
 }
