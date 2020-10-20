@@ -51,10 +51,114 @@ public class AircraftPropertyController {
     @Autowired
     private FileManagementService fileManagementService;
 
-    @RequestMapping(path = "/getAircraftConfiguration", method = {RequestMethod.GET}, produces = "application/zip")
+    @RequestMapping(path="/getAircraftConfiguration", method={RequestMethod.GET}, produces="application/zip")
     public ResponseEntity<byte[]> getAircraftConfiguration(
             @RequestHeader("Authorization") String authToken,
             @RequestHeader(name = "lastUpdated", required = false) Date lastUpdated) throws IOException, NoSuchAlgorithmException, TspConfigLogException, FileDownloadException {
+
+        final User user = azureADClientService.getUserInfoFromJwtAccessToken(authToken);
+        List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+        if (airlineGroups.size() != 1) {
+            throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "Failed to associate user with an airline", Constants.RequestFailureReason.UNAUTHORIZED));
+        }
+        String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+
+        AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
+
+        String container = TSP_CONFIG_ZIP_CONTAINER;
+
+        // file path name to retrieve from blob - it is not truly a real directory
+        String fileName = new StringBuilder(airlineGroup).append("/").append(airlineGroup).append("-config-pkg.zip").toString();
+        boolean tspExists = asu.blobExistsOnCloud(container, fileName);
+
+        //if lastUpdated is null or older than last modified then return the existing package
+        if(lastUpdated != null && tspExists){
+            logger.debug("DATE WAS PASSED IN!!!");
+            Date lastModified = fileManagementService.getBlobLastModifiedTimeStamp(container, fileName);
+            logger.debug("retrieved timestamp: " + lastModified.toString());
+
+            // both dates are equal
+            if(lastUpdated.compareTo(lastModified) >= 0){
+                // do nothing, return
+                logger.debug("lastUpdated is newer than lastModified");
+                return new ResponseEntity<>(HttpStatus.OK);
+            }else{
+                return getExistingTspPackage(authToken, container, fileName);
+            }
+        }else if(lastUpdated == null){
+            // no date passed in, send the existing package
+            logger.debug("NO DATE passed in, tspExists for that airline in blob");
+
+            return getExistingTspPackage(authToken, container, fileName);
+        }
+        // should not get here, but if so need to run manual update (we didn't want a package that wasn't approved to be created)
+        logger.debug("tsp does not exist and last updated was passed in");
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    public ResponseEntity<byte[]> getExistingTspPackage(@RequestHeader("Authorization") String authToken, String container, String fileName) {
+        try {
+            logger.debug("get existing tsp");
+            byte[] zipFile = aircraftPropertyService.getAircraftConfigFromBlob(authToken, fileName);
+            int logging = zipFile != null ? zipFile.length : -13;
+            logger.debug("after zip array size: " + logging);
+            Date lastModifiedTimeStamp = fileManagementService.getBlobLastModifiedTimeStamp(container, fileName);
+
+            logger.debug("last motified in get existing" + lastModifiedTimeStamp);
+            String lastModifiedStamp = lastModifiedTimeStamp.toString();
+            String checkSum = checkSumUtil.generateCheckSum(zipFile);
+
+            HttpHeaders header = new HttpHeaders();
+            header.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+            header.add(HttpHeaders.CONTENT_TYPE, "application/octet-stream");
+            header.add("CheckSum", checkSum);
+            header.add("lastModifiedDate", lastModifiedStamp);
+
+            return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @RequestMapping(path = "/getAircraftProperty", method = {RequestMethod.GET})
+    public ResponseEntity<Object> getAircraftProperty(@RequestHeader("Authorization") String authToken,
+                                                      @RequestHeader(name = "tailNumber", required = true) String tailNumber) throws IOException {
+
+        logger.debug("got to endpoint with tail: " + tailNumber);
+
+        Object result = aircraftPropertyService.getAircraftProperty(authToken, tailNumber);
+
+        logger.debug("aircraft prop: " + result);
+        if (result instanceof ApiError) {
+            return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
+        }
+
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @RequestMapping(path = "/aircraftconfigpkg", method = {RequestMethod.GET})
+    public ResponseEntity<Object> forceUpdateAircraftConfigPackage(@RequestHeader("Authorization") String authToken,
+                                                                   @RequestHeader(name = "airline", required = false) String airline) throws IOException, TspConfigLogException, FileDownloadException {
+
+        final User user = azureADClientService.getUserInfoFromJwtAccessToken(authToken);
+        List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+        if (airlineGroups.size() != 1) {
+            throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "Failed to associate user with an airline", Constants.RequestFailureReason.UNAUTHORIZED));
+        }
+        String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+
+        // file path name to retrieve from blob - it is not truly a real directory
+        String fileName = new StringBuilder(airlineGroup).append("/").append(airlineGroup).append("-config-pkg.zip").toString();
+
+        byte[] zipFile = aircraftPropertyService.getAircraftConfig(authToken);
+        // insert into DB
+        FileManagementMessage zipUploadmsg = fileManagementService.uploadTspConfigPackage(zipFile, fileName, authToken);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @RequestMapping(path = "/updateAircraftConfiguration", method = {RequestMethod.GET})
+    public ResponseEntity<Object> updateAircraftConfiguration(@RequestHeader("Authorization") String authToken) throws FileDownloadException, IOException, TspConfigLogException, NoSuchAlgorithmException {
 
         final User user = azureADClientService.getUserInfoFromJwtAccessToken(authToken);
         List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
@@ -93,12 +197,13 @@ public class AircraftPropertyController {
             Date zipLastModified = fileManagementService.getBlobLastModifiedTimeStamp(container, fileName);
             logger.debug("retrieved timestamp: " + zipLastModified.toString());
 
-            // package is more recent
             if (latestModifiedDate.compareTo(zipLastModified) < 0) {
-                // do nothing, return
+                // package is more recent do nothing, return
                 logger.debug("package is more recent, so we do nothing");
                 return new ResponseEntity<>(HttpStatus.OK);
             } else {
+                logger.debug("package is older create package");
+                //pacakge is less recent so update tsp
                 // Dates NOT equal - get latest TSP Config zip package
                 byte[] zipFile = aircraftPropertyService.getAircraftConfig(authToken);
                 // insert into DB
@@ -114,27 +219,8 @@ public class AircraftPropertyController {
 
                 return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
             }
-        } else if (latestModifiedDate == null && configPkgExists) {
-            // no date in database, new FDA app, just grab the existing package (note: idk how this happens with no jsons honestly?)
-            logger.debug("NO DATE from database or tsp storage, configPkgExists for that airline in blob");
-
-            try {
-                byte[] zipFile = aircraftPropertyService.getAircraftConfigFromBlob(authToken, fileName);
-                Date lastModifiedTimeStamp = fileManagementService.getBlobLastModifiedTimeStamp(container, fileName);
-                String lastModifiedStamp = lastModifiedTimeStamp.toString();
-                String checkSum = checkSumUtil.generateCheckSum(zipFile);
-
-                HttpHeaders header = new HttpHeaders();
-                header.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
-                header.add(HttpHeaders.CONTENT_TYPE, "application/octet-stream");
-                header.add("CheckSum", checkSum);
-                header.add("lastModifiedDate", lastModifiedStamp);
-
-                return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
-            } catch (Exception ex) {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
         } else if (!configPkgExists) {
+            logger.debug("no config package create package");
             // no TSP config package created yet, create a new one for the airline and upload it to Azure Blob
             byte[] zipFile = aircraftPropertyService.getAircraftConfig(authToken);
             // insert into DB
@@ -151,44 +237,7 @@ public class AircraftPropertyController {
             return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
         }
 
-        // shouldn't get here
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-    }
-
-    @RequestMapping(path = "/getAircraftProperty", method = {RequestMethod.GET})
-    public ResponseEntity<Object> getAircraftProperty(@RequestHeader("Authorization") String authToken,
-                                                      @RequestHeader(name = "tailNumber", required = true) String tailNumber) throws IOException {
-
-        logger.debug("got to endpoint with tail: " + tailNumber);
-
-        Object result = aircraftPropertyService.getAircraftProperty(authToken, tailNumber);
-
-        logger.debug("aircraft prop: " + result);
-        if (result instanceof ApiError) {
-            return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
-        }
-
-        return new ResponseEntity<>(result, HttpStatus.OK);
-    }
-
-    @RequestMapping(path = "/aircraftconfigpkg", method = {RequestMethod.GET})
-    public ResponseEntity<Object> forceUpdateAircraftConfigPackage(@RequestHeader("Authorization") String authToken,
-                                                                   @RequestHeader(name = "airline", required = false) String airline) throws IOException, TspConfigLogException, FileDownloadException {
-
-        final User user = azureADClientService.getUserInfoFromJwtAccessToken(authToken);
-        List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
-        if (airlineGroups.size() != 1) {
-            throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "Failed to associate user with an airline", Constants.RequestFailureReason.UNAUTHORIZED));
-        }
-        String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
-
-        // file path name to retrieve from blob - it is not truly a real directory
-        String fileName = new StringBuilder(airlineGroup).append("/").append(airlineGroup).append("-config-pkg.zip").toString();
-
-        byte[] zipFile = aircraftPropertyService.getAircraftConfig(authToken);
-        // insert into DB
-        FileManagementMessage zipUploadmsg = fileManagementService.uploadTspConfigPackage(zipFile, fileName, authToken);
-
+        // if lastModifiedDate is null (no json or database item) AND configPkgExists we get here, just do nothing as it is more recent
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

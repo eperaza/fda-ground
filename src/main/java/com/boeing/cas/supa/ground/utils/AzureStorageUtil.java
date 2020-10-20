@@ -381,7 +381,7 @@ public class AzureStorageUtil {
 	    	CloudBlobContainer container = blobClient.getContainerReference(containerName);
             
             if (container.exists()) {
-            	
+
             	CloudBlockBlob blob = container.getBlockBlobReference(fileName);
             	if (blob.exists()) {
                     outputStream = new ByteArrayOutputStream();

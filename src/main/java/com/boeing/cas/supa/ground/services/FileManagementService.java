@@ -192,17 +192,15 @@ public class FileManagementService {
                 }
             } else if (TSP_CONFIG_ZIP_CONTAINER.equals(type)) {
                 container = TSP_CONFIG_ZIP_CONTAINER;
-                filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/').append(file).toString();
+                filePath = file;
+                logger.debug("tsp zip container  " + container + "|" + filePath);
+
                 if (asu.blobExistsOnCloud(container, filePath) != true) {
                     // in case the file is not exist, try to upper case the file name
-                    String tailNumberPart = file.substring(0, file.indexOf(".json"));
-                    filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/').append(tailNumberPart.toUpperCase()).append(".json").toString();
+                    filePath = filePath.substring(0, 3).toUpperCase() + filePath.substring(3);
 
                     if (asu.blobExistsOnCloud(container, filePath) != true) {
-                        // in case the file is not exist, try to upper case the first letter to support camel file name
-                        filePath = new StringBuilder(airlineGroup.toUpperCase()).append('/')
-                                .append(file.substring(0, 1).toUpperCase())
-                                .append(file.substring(1)).toString();
+                        throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("No file corresponding to specified name %s and type %s", file, type), RequestFailureReason.NOT_FOUND));
                     }
                 }
             } else if (MOBILECONFIG_STORAGE_CONTAINER.equals(type)) {
@@ -214,7 +212,6 @@ public class FileManagementService {
 
             // Once container and file path are established, retrieve the file contents in bytes
             try (ByteArrayOutputStream outputStream = asu.downloadFile(container, filePath)) {
-
                 if (outputStream == null) {
                     throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("No file corresponding to specified name %s and type %s", file, type), RequestFailureReason.NOT_FOUND));
                 }
