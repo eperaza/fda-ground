@@ -127,10 +127,16 @@ public class CertificateVerifierUtil {
         try {
             logger.debug("Cert Compare");
             logger.debug("cert holder: {}", certHolder);
-            X509Certificate x509ServerCert = this.appCertificates.get(certHolder);
-            if (x509ServerCert == null) {
-                logger.debug("Getting from AppNewCertificates instead");
-                x509ServerCert = this.appNewCertificates.get(certHolder);
+            X509Certificate x509ServerCert = null;
+            if (registrationProcess == true) {
+                logger.debug("Getting from appRegistrationCertificates");
+                x509ServerCert = this.appRegistrationCertificates.get(certHolder);
+            } else {
+                x509ServerCert = this.appCertificates.get(certHolder);
+                if (x509ServerCert == null) {
+                    logger.debug("Getting from AppNewCertificates instead");
+                    x509ServerCert = this.appNewCertificates.get(certHolder);
+                }
             }
             Map<String, String> x509ClientCertSubjectDn = this.getMap(x509ClientCert.getSubjectDN().getName());
             Map<String, String> x509ClientCertIssuerDn = this.getMap(x509ClientCert.getIssuerDN().getName());
