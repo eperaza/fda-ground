@@ -558,6 +558,7 @@ public class FileManagementService {
         final String storagePath = _storagePath;
         final Path uploadPath = _uploadPath;
         final String filePath = new StringBuilder(storagePath).append('/').append(fileName).toString();
+        final String _fileName = fileName;
         // ------- Adding file to Azure Storage -------
         logger.debug("Adding file to Azure Storage");
         Future<Boolean> azureFuture = es.submit(new Callable<Boolean>() {
@@ -568,6 +569,9 @@ public class FileManagementService {
                 try {
                     logger.info("Starting Azure upload");
                     AzureStorageUtil asu = new AzureStorageUtil(properties.get("StorageAccountName"), properties.get("StorageKey"));
+                    logger.info("Moving old package");
+                    asu.archiveFileToSubContainer(TSP_CONFIG_ZIP_CONTAINER, airlineGroup, _fileName);
+                    logger.info("Package moved");
                     upload = asu.uploadTspZipConfig(TSP_CONFIG_ZIP_CONTAINER, filePath, uploadPath.toFile().getAbsolutePath());
                     logger.info("Upload to Azure complete: {}", upload);
                 } catch (TspConfigLogException ex) {
