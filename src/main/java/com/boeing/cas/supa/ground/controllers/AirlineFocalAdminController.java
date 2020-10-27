@@ -148,7 +148,7 @@ public class AirlineFocalAdminController {
 		}
 
 		Object result;
-		if(airlineGroups.get(0).getDisplayName().equalsIgnoreCase("airline-amx")){
+		if(airlineGroups.get(0).getDisplayName().equalsIgnoreCase("airline-amx") || airlineGroups.get(0).getDisplayName().equalsIgnoreCase("airline-cnd")){
 			logger.debug(" **** OLD AIRLINE REGISTRATION PROCESS **** ");
 
 			result = aadClient.createUser(newUserPayload, accessTokenInRequest, airlineGroups.get(0), newUserPayload.getRoleGroupName(), false);
