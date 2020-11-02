@@ -197,7 +197,9 @@ public class FileManagementService {
 
                 if (asu.blobExistsOnCloud(container, filePath) != true) {
                     // in case the file is not exist, try to upper case the file name
-                    filePath = filePath.substring(0, 3).toUpperCase() + filePath.substring(3);
+                    // TODO fix so it works off of any airline name not the substring being 3
+                    int indexFirstHyphen = filePath.indexOf('-');
+                    filePath = filePath.substring(0, indexFirstHyphen).toUpperCase() + filePath.substring(indexFirstHyphen);
 
                     if (asu.blobExistsOnCloud(container, filePath) != true) {
                         throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("No file corresponding to specified name %s and type %s", file, type), RequestFailureReason.NOT_FOUND));

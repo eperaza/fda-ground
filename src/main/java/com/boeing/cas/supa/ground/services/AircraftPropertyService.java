@@ -54,7 +54,7 @@ public class AircraftPropertyService {
 
             return modifiedTime;
         } catch (Exception ex) {
-
+            logger.error("Failed get last modified date from aircraft info and aircraftproperty. Error: " + ex);
         }
         return null;
     }
