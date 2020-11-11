@@ -211,10 +211,22 @@ public class AzureStorageUtil {
                 logger.debug("Container {} does not exist", airlineGroupContainerName);
                 return false;
             }
+
+            String archiveContainerName = new StringBuilder(containerName).append("/").append(airlineGroup).append("/archive").toString();
+            CloudBlobContainer archiveContainer = serviceClient.getContainerReference(archiveContainerName);
+            if(archiveContainer == null){
+                logger.debug("Archive container {} does not exist", archiveContainerName);
+                return false;
+            }
+
             String currentTime = DateTime.now().toString();
             String archiveBlobName = new StringBuilder(fileName).append("-").append(currentTime).toString();
-            CloudBlockBlob archivedBlob = container.getBlockBlobReference(archiveBlobName);
+            CloudBlockBlob archivedBlob = archiveContainer.getBlockBlobReference(archiveBlobName);
             CloudBlockBlob blobToCopy = container.getBlockBlobReference(fileName);
+            if(!blobToCopy.exists()){
+                logger.debug("Blob to Copy {} does not exist", blobToCopy);
+                return false;
+            }
             archivedBlob.startCopy(blobToCopy);
 
             returnValue = true;
