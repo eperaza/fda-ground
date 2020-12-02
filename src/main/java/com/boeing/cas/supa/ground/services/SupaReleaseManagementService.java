@@ -266,8 +266,12 @@ public class SupaReleaseManagementService {
 
 
 	public SupaRelease getWarRelease(String authToken, String releaseVersion) throws SupaReleaseException {
+		return getWarRelease(authToken, releaseVersion, false);
+	}
 
-		// Determine the airline from the user's membership.
+	public SupaRelease getWarRelease(String authToken, String releaseVersion, Boolean forceUnEncrypted) throws SupaReleaseException {
+
+			// Determine the airline from the user's membership.
 		final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
 		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
 		if (airlineGroups.size() != 1) {
@@ -289,7 +293,11 @@ public class SupaReleaseManagementService {
 
 						if (outputStream != null) {
 							outputStream.flush();
-							getWarReleaseContent(airlineGroup, supaRelease, outputStream);
+							if (forceUnEncrypted) {
+								getWarReleaseContent(airlineGroup, forceUnEncrypted, supaRelease, outputStream);
+							} else {
+								getWarReleaseContent(airlineGroup, supaRelease, outputStream);
+							}
 							return supaRelease;
 						}
 					}
@@ -312,25 +320,32 @@ public class SupaReleaseManagementService {
 	
 	private void getWarReleaseContent(String airlineName, SupaRelease supaRelease, ByteArrayOutputStream warFileContent) throws IOException {
 		boolean needEncryptedContent = compareSupaVersions(supaRelease.getRelease(), START_ENCRYPT_SUPA_VERSION) > 0;
-		if (!needEncryptedContent) {
+		getWarReleaseContent(airlineName, needEncryptedContent, supaRelease, warFileContent);
+	}
+
+	private void getWarReleaseContent(String airlineName, Boolean forceUnencrypted, SupaRelease supaRelease, ByteArrayOutputStream warFileContent) throws IOException {
+
+		if (forceUnencrypted) {
+			logger.info("Sending unencrypted file");
 			supaRelease.setFile(warFileContent.toByteArray());
 			return;
+		} else {
+			logger.info("Encrypting supa and sending");
+			// do checksum, encrypted zip up content
+			File downloadedFile = IOUtils.writeToTempFile(warFileContent, SUPA_WAR);
+			File tempDir = downloadedFile.getParentFile();
+			File checksumFile = new File(tempDir, SUPA_WAR_CHECKSUM);
+			IOUtils.writeToFile(IOUtils.getChecksumSHA256InByteArray(downloadedFile), checksumFile, false);
+
+			File encryptedFile = new File(tempDir, "supa.zip");
+			String password = keyVaultRetriever.getSecretByKey(String.format("%s%s", ZUPPA_SECRET_PREFIX, airlineName));
+			encryptedFile = zipService.zipFilesEncrypted(password, encryptedFile.toString(), null, downloadedFile, checksumFile);
+
+			supaRelease.setFile(Files.readAllBytes(encryptedFile.toPath()));
+
+			// delete temp folder
+			IOUtils.deleteDirQuietly(tempDir);
 		}
-		
-		// do checksum, encrypted zip up content
-		File downloadedFile = IOUtils.writeToTempFile(warFileContent, SUPA_WAR);
-		File tempDir = downloadedFile.getParentFile();
-		File checksumFile = new File(tempDir, SUPA_WAR_CHECKSUM);
-		IOUtils.writeToFile(IOUtils.getChecksumSHA256InByteArray(downloadedFile), checksumFile, false);
-		
-		File encryptedFile = new File(tempDir, "supa.zip");
-		String password = keyVaultRetriever.getSecretByKey(String.format("%s%s", ZUPPA_SECRET_PREFIX, airlineName));
-		encryptedFile = zipService.zipFilesEncrypted(password, encryptedFile.toString(), null, downloadedFile, checksumFile);
-		
-		supaRelease.setFile(Files.readAllBytes(encryptedFile.toPath()));
-		
-		// delete temp folder
-		IOUtils.deleteDirQuietly(tempDir);
 	}
 	
 	private int compareSupaVersions(String version1, String version2) {

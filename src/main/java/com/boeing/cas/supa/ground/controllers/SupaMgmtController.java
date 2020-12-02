@@ -140,7 +140,7 @@ public class SupaMgmtController {
 		logger.info("Download War release: {}", releaseVersion);
 		SupaRelease supaRelease = null;
 		try {
-			supaRelease = supaReleaseMgmtService.getWarRelease(authToken, releaseVersion);
+			supaRelease = supaReleaseMgmtService.getWarRelease(authToken, releaseVersion, false);
 			if (supaRelease != null && supaRelease.getFile() != null && supaRelease.getFile().length > 0) {
 				return ResponseEntity.ok()
 						.cacheControl(cacheControl)
@@ -158,4 +158,31 @@ public class SupaMgmtController {
 		}
 	}
 
+	@RequestMapping(value = "/getWarReleaseOldFormat/{version:.+}", method = RequestMethod.GET)
+	public ResponseEntity<Object> getWarReleaseOldFormat(@RequestHeader("Authorization") String authToken,
+												@PathVariable("version") String releaseVersion,
+												HttpServletResponse response) {
+
+		CacheControl cacheControl = CacheControl.maxAge(0, TimeUnit.SECONDS);
+
+		logger.info("Download Old War release: {}", releaseVersion);
+		SupaRelease supaRelease = null;
+		try {
+			supaRelease = supaReleaseMgmtService.getWarRelease(authToken, releaseVersion, true);
+			if (supaRelease != null && supaRelease.getFile() != null && supaRelease.getFile().length > 0) {
+				return ResponseEntity.ok()
+						.cacheControl(cacheControl)
+						.contentType(MediaType.APPLICATION_OCTET_STREAM)
+						.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + supaRelease.getPath() + "\"")
+						.body(supaRelease.getFile());
+			}
+
+			// Throw exception if this point is reached
+			throw new SupaReleaseException(new ApiError("SUPA_RELEASE_DOWNLOAD", "Missing or invalid WAR release", RequestFailureReason.BAD_REQUEST));
+		} catch (SupaReleaseException sre) {
+			logger.error("Failed to retrieve specified WAR release [{}]: {}", ControllerUtils.sanitizeString(releaseVersion), sre.getMessage(), sre);
+			//return new ResponseEntity<>(sre.getError(), ControllerUtils.translateRequestFailureReasonToHttpErrorCode(sre.getError().getFailureReason()));
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(sre.getError().getErrorDescription());
+		}
+	}
 }
