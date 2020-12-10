@@ -319,8 +319,10 @@ public class SupaReleaseManagementService {
 	}
 	
 	private void getWarReleaseContent(String airlineName, SupaRelease supaRelease, ByteArrayOutputStream warFileContent) throws IOException {
-		boolean needEncryptedContent = compareSupaVersions(supaRelease.getRelease(), START_ENCRYPT_SUPA_VERSION) > 0;
-		getWarReleaseContent(airlineName, needEncryptedContent, supaRelease, warFileContent);
+		boolean needUnEncryptedContent = compareSupaVersions(supaRelease.getRelease(), START_ENCRYPT_SUPA_VERSION) < 0;
+		logger.info("Comparing supa versions {} {}", supaRelease.getRelease(), START_ENCRYPT_SUPA_VERSION);
+		logger.info("Determined we need unencrypted? {}", needUnEncryptedContent);
+		getWarReleaseContent(airlineName, needUnEncryptedContent, supaRelease, warFileContent);
 	}
 
 	private void getWarReleaseContent(String airlineName, Boolean forceUnencrypted, SupaRelease supaRelease, ByteArrayOutputStream warFileContent) throws IOException {
