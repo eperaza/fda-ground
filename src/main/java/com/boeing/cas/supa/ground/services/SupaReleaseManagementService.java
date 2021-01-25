@@ -40,7 +40,6 @@ public class SupaReleaseManagementService {
 	private static final String SUPA_WAR_CHECKSUM = "supa.war.sha256";
 	private static final String START_ENCRYPT_SUPA_VERSION = "6.0";
 	private static final String VERSION_SEPERATOR = "\\.";
-	private static final String ZUPPA_SECRET_PREFIX = "zuppa-";
 
 	@Autowired
 	private Map<String, String> appProps;
@@ -340,7 +339,7 @@ public class SupaReleaseManagementService {
 			IOUtils.writeToFile(IOUtils.getChecksumSHA256InByteArray(downloadedFile), checksumFile, false);
 
 			File encryptedFile = new File(tempDir, "supa.zip");
-			String password = keyVaultRetriever.getSecretByKey(String.format("%s%s", ZUPPA_SECRET_PREFIX, airlineName));
+			String password = keyVaultRetriever.getSecretByKey(String.format("%s%s", Constants.ZUPPA_SECRET_PREFIX, airlineName));
 			encryptedFile = zipService.zipFilesEncrypted(password, encryptedFile.toString(), null, downloadedFile, checksumFile);
 
 			supaRelease.setFile(Files.readAllBytes(encryptedFile.toPath()));
