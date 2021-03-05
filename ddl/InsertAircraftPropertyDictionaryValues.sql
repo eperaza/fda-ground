@@ -15,7 +15,7 @@ VALUES ('B737-600'), ('B737-600DAC'), ('B737-600W'),
 
 -- insert into Platform table
 INSERT INTO [dbo].[Platform] (Name)
-VALUES ('webFB'), ('ONS'), ('TPED');
+VALUES ('webFB'), ('ONS'), ('EAFR');
 
 -- insert into Property table
 INSERT INTO [dbo].[Property] (Name)
@@ -28,7 +28,7 @@ WHERE platform.Name = 'webFB' AND property.Name = 'aircraft.717format';
 
 INSERT INTO [dbo].[PlatformProperty] (PlatformID, PropertyID)
 SELECT platform.ID, property.ID FROM dbo.Platform platform, dbo.Property property
-WHERE platform.Name IN ('ONS', 'TPED') AND property.Name = 'ons.dataType';
+WHERE platform.Name IN ('ONS', 'EAFR') AND property.Name = 'ons.dataType';
 
 -- insert into PropertyValue table
 INSERT INTO [dbo].[PropertyValue] (PlatformPropertyID, Value)
@@ -48,8 +48,8 @@ WHERE property.Name = 'ons.dataType' and platform.Name = 'ONS';
 
 INSERT INTO [dbo].[PropertyValue] (PlatformPropertyID, Value)
 SELECT platformProperty.ID, tpedDataType.dataType 
-FROM (VALUES ('eafr')) as tpedDataType(dataType), 
+FROM (VALUES ('eafrMon')) as tpedDataType(dataType), 
 dbo.PlatformProperty platformProperty WITH(NOLOCK)
 JOIN dbo.Property property WITH(NOLOCK) ON property.ID = platformProperty.PropertyID
 JOIN dbo.Platform platform WITH(NOLOCK) ON platform.ID = platformProperty.PlatformID
-WHERE property.Name = 'ons.dataType' and platform.Name = 'TPED';
+WHERE property.Name = 'ons.dataType' and platform.Name = 'EAFR';

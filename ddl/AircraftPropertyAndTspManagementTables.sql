@@ -65,7 +65,7 @@ BEGIN
 		[PlatformPropertyID] [int] NOT NULL,
 		[Value] [varchar] (100) NOT NULL,
 		[ModifiedTime] [datetime] NOT NULL DEFAULT GETDATE(),
-		[UpdatedDate] [datetime] NULL,
+		[CreatedBy] [nvarchar](50) NOT NULL DEFAULT ('SYSTEM'),
 		[UpdatedBy] [nvarchar](50) NULL,
 	 CONSTRAINT [PK_PropertyValue] PRIMARY KEY CLUSTERED 
 	(
@@ -224,18 +224,4 @@ BEGIN
 	ALTER TABLE [dbo].[ActiveTSP] CHECK CONSTRAINT [FK_ActiveTSP_TSP]
 	
 	ALTER TABLE [dbo].[ActiveTSP] CHECK CONSTRAINT [FK_ActiveTSP_AircraftInfo]
-END
-
-ALTER TRIGGER [dbo].[tr_AircraftProperty_Modified]
-   ON [dbo].[AircraftProperty]
-   AFTER UPDATE
-AS BEGIN
-   SET [ModifiedTime] = GETDATE()
-END
-
-ALTER TRIGGER [dbo].[tr_TSP_Modified]
-   ON [dbo].[TSP]
-   AFTER UPDATE
-AS BEGIN
-   SET [ModifiedTime] = GETDATE()
 END
