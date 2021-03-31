@@ -66,6 +66,10 @@ public class AircraftPropertyController {
         String fileName = new StringBuilder(airlineGroup).append("/").append(airlineGroup).append("-config-pkg.zip").toString();
         boolean tspExists = asu.blobExistsOnCloud(container, fileName);
 
+        logger.error("TSP File Name: " + fileName);
+        logger.error("TSP Exists: " + ((tspExists == true) ? "Yes" : "No" ));
+        logger.error("TSP last updated: " + lastUpdated.toString());
+
         //if lastUpdated is null or older than last modified then return the existing package
         if (lastUpdated != null && tspExists) {
             logger.debug("DATE WAS PASSED IN!!!");

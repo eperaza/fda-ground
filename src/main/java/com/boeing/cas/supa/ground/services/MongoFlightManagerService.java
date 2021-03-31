@@ -114,6 +114,7 @@ public class MongoFlightManagerService {
         labels.put("estDepartureTime", 1);
         labels.put("departureAirport", 1);
         labels.put("arrivalAirport", 1);
+        labels.put("planCI", 1);
 
         Map<String, Integer> sortBy = new HashMap<>();
         sortBy.put("estDepartureTime", -1);
@@ -199,6 +200,7 @@ public class MongoFlightManagerService {
         labels.put("estDepartureTime", 1);
         labels.put("departureAirport", 1);
         labels.put("arrivalAirport", 1);
+        labels.put("planCI", 1);
 
         BasicDBObject searchLabels = new BasicDBObject();
 

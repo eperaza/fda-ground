@@ -188,7 +188,7 @@ public class AircraftPropertyService {
 
     public ResponseEntity<byte[]> getExistingTspPackage(@RequestHeader("Authorization") String authToken, String container, String fileName) {
         try {
-            logger.debug("get existing tsp");
+            logger.error("get existing tsp");
             byte[] zipFile = getAircraftConfigFromBlob(authToken, fileName);
             int logging = zipFile != null ? zipFile.length : -13;
             logger.debug("after zip array size: " + logging);
@@ -200,6 +200,8 @@ public class AircraftPropertyService {
 
 			HttpHeaders header = getHttpHeaders(fileName, checkSum, lastModifiedStamp);
 
+			logger.error("TSP filename: " + fileName);
+			//logger.error("TSP header: " + header.);
 			return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
         } catch (Exception ex) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
