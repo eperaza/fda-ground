@@ -55,6 +55,25 @@ public class FlightRecordController {
 		}
 	}
 
+	@RequestMapping(path = "/uploadPilotNote", method = { RequestMethod.POST })
+	public ResponseEntity<Object> uploadPilotNote(final @RequestParam("file") MultipartFile uploadPilotNote,
+													 @RequestHeader("Authorization") String authToken) {
+
+		try {
+
+			if (uploadPilotNote.isEmpty()) {
+				logger.warn("The flight record payload is empty");
+				throw new SupaSystemLogException(new ApiError("FLIGHT_RECORD_UPLOAD_FAILURE", "Empty or invalid file submitted", RequestFailureReason.BAD_REQUEST));
+			}
+
+			FileManagementMessage pilotNoteUploadResponse = this.fileManagementService.uploadPilotNote(uploadPilotNote, authToken);
+			return new ResponseEntity<>(pilotNoteUploadResponse, HttpStatus.OK);
+		} catch (SupaSystemLogException fre) {
+			logger.error("Upload pilot note failed: {}", fre.getMessage());
+			return new ResponseEntity<>(fre.getError(), ControllerUtils.translateRequestFailureReasonToHttpErrorCode(fre.getError().getFailureReason()));
+		}
+	}
+
 	@RequestMapping(path = "/uploadSupaSystemLog", method = { RequestMethod.POST })
 	public ResponseEntity<Object> uploadSupaSystemLog(final @RequestParam("file") MultipartFile uploadSupaSystemLog,
 													 @RequestHeader("Authorization") String authToken) {
