@@ -68,7 +68,11 @@ public class AircraftPropertyController {
 
         logger.error("TSP File Name: " + fileName);
         logger.error("TSP Exists: " + ((tspExists == true) ? "Yes" : "No" ));
-        logger.error("TSP last updated: " + lastUpdated.toString());
+        if(lastUpdated != null) {
+            logger.error("TSP last updated: " + lastUpdated.toString());
+        } else {
+            logger.error("TSP last updated: never");
+        }
 
         //if lastUpdated is null or older than last modified then return the existing package
         if (lastUpdated != null && tspExists) {
