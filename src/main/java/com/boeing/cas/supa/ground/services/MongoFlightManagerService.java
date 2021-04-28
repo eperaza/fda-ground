@@ -115,6 +115,7 @@ public class MongoFlightManagerService {
         labels.put("departureAirport", 1);
         labels.put("arrivalAirport", 1);
         labels.put("planCI", 1);
+        labels.put("planRevNum", 1);
 
         Map<String, Integer> sortBy = new HashMap<>();
         sortBy.put("estDepartureTime", -1);
@@ -139,7 +140,9 @@ public class MongoFlightManagerService {
                 .append(password)
                 .append("@")
                 .append(source.getServerName())
-                .append(":10255/?ssl=true&replicaSet=globaldb");
+                .append(":10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@")
+                .append(source.getUserName())
+                .append("@");
 
         //logger.debug("ConnectionString=[" + cosmosDbUrl.toString() + "]");
         StringBuilder response = new StringBuilder();
@@ -201,6 +204,7 @@ public class MongoFlightManagerService {
         labels.put("departureAirport", 1);
         labels.put("arrivalAirport", 1);
         labels.put("planCI", 1);
+        labels.put("planRevNum", 1);
 
         BasicDBObject searchLabels = new BasicDBObject();
 
