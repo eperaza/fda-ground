@@ -217,12 +217,22 @@ public class MongoFlightManagerService {
             return new ApiError("FLIGHT_OBJECTS_REQUEST", "CosmosDb Primary Password missing for " + source.getAirline(), RequestFailureReason.INTERNAL_SERVER_ERROR);
         }
 
+        String endLegacyMongoConn = ":10255/?ssl=true&replicaSet=globaldb";
+        String endNewMongoConn = ":10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@" + source.getServerName() + "@";
+
+        String endMongoConnString = "";
+        if (source.getServerName().contains("cosmos")) {
+            endMongoConnString = endNewMongoConn;
+        } else {
+            endMongoConnString = endLegacyMongoConn;
+        }
+
         StringBuilder cosmosDbUrl = new StringBuilder("mongodb://")
                 .append(source.getUserName()).append(":")
                 .append(password)
                 .append("@")
                 .append(source.getServerName())
-                .append(":10255/?ssl=true&replicaSet=globaldb");
+                .append(endMongoConnString);
 
         //logger.debug("ConnectionString=[" + cosmosDbUrl.toString() + "]");
         StringBuilder response = new StringBuilder();
