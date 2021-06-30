@@ -358,7 +358,7 @@ public class AzureADClientService {
 
 			User requestorUser = getUserInfoFromJwtAccessToken(accessTokenInRequest);
 			if (requestorUser.getDirectoryRoles() != null) {
-				List<DirectoryRole> directoryRoles = requestorUser.getDirectoryRoles().stream().filter(g -> g.getDisplayName().toLowerCase().equals("user account administrator")).collect(Collectors.toList());
+				List<DirectoryRole> directoryRoles = requestorUser.getDirectoryRoles().stream().filter(g -> g.getDisplayName().toLowerCase().equals("user administrator")).collect(Collectors.toList());
 				if (directoryRoles.size() == 0) {
 					logger.error("Insufficient privileges to create user: not a user account administrator");
 					return new ApiError("CREATE_USER_FAILURE", "Insufficient privileges to create user", RequestFailureReason.UNAUTHORIZED);

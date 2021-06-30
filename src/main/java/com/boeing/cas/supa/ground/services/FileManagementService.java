@@ -39,6 +39,7 @@ public class FileManagementService {
 
     private final static String FLIGHT_RECORDS_STORAGE_CONTAINER = "flight-records";
     private final static String SUPA_SYSTEM_LOGS_STORAGE_CONTAINER = "supa-system-logs";
+    private final static String PILOT_NOTES_STORAGE_CONTAINER = "pilot-notes";
     public final static String TSP_CONFIG_ZIP_CONTAINER = "aircraft-config-package";
     private final static String TSP_STORAGE_CONTAINER = "tsp";
     private final static String MOBILECONFIG_STORAGE_CONTAINER = "config";
@@ -512,6 +513,154 @@ public class FileManagementService {
         }
 
         return flightRecordUploadResponse;
+    }
+
+    public FileManagementMessage uploadPilotNote(final MultipartFile uploadPilotNote, String authToken) throws SupaSystemLogException {
+
+        logger.debug("Upload pilot note request");
+        final FileManagementMessage pilotNoteUploadResponse = new FileManagementMessage(uploadPilotNote.getOriginalFilename());
+
+        String supaSystemLogName = uploadPilotNote.getOriginalFilename();
+
+        // Determine the airline from the user's membership.
+        final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
+        List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+        if (airlineGroups.size() != 1) {
+            throw new SupaSystemLogException(new ApiError("PILOT_NOTE_UPLOAD_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
+        }
+
+        String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
+        // Sample Flight log: {airline}_{tailNumber}_{webFBSerialNumber}_systemLog_{yyyyMMdd}_{HHmmss}Z.zip
+        List<String> supaSystemLogNameTokens = Arrays.asList(supaSystemLogName.split("_"));
+        String uploadFolder = null;
+        Path _uploadPath = null;
+        long _fileSizeKb = 0L;
+        String _airline = null,
+                _tail = null,
+                _logDate = null,
+                _logTime = null,
+                _storagePath = null;
+        Instant _logDatetime = null;
+        try {
+            _airline = supaSystemLogNameTokens.get(0);
+            // Remove hyphen from tail identifier, if present, and convert to lowercase.
+            _tail = supaSystemLogNameTokens.get(1).toLowerCase().replace("-", StringUtils.EMPTY);
+            _logDate = "0"; //supaSystemLogNameTokens.get(4);
+            _logTime = "0";//supaSystemLogNameTokens.get(5).replace(".zip", StringUtils.EMPTY);
+            if (!_airline.equalsIgnoreCase(airlineGroup)) {
+                throw new SupaSystemLogException(new ApiError("PILOT_NOTE_UPLOAD_FAILURE", String.format("Supa pilot note filename prefix %s is not associated with %s airline user", _airline, airlineGroup.toUpperCase()), RequestFailureReason.UNAUTHORIZED));
+            }
+            try {
+                _logDatetime = OffsetDateTime.parse(String.format("%s_%s", _logDate, _logTime), Constants.SupaSystemLogDateTimeFormatterForParse).toInstant();
+            } catch (DateTimeParseException dtpe) {
+                logger.warn(dtpe.getMessage());
+                // Treat as non-critical error... don't re-throw exception
+            }
+
+            // If tail and/or date-time tokens are missing or invalid, save file in undetermined folder
+            if (StringUtils.isBlank(_tail) || _logDatetime == null) {
+                _storagePath = new StringBuilder(_airline).append("/UNDETERMINED").toString();
+            } else {
+                _storagePath = new StringBuilder(_airline).append('/').append(_tail).append('/').append(OffsetDateTime.ofInstant(_logDatetime, ZoneId.of("UTC")).format(Constants.SupaSystemLogDateTimeFormatterForFormat)).toString();
+            }
+
+            // Store the uploaded file in TEMP, in preparation for uploading to Azure
+            uploadFolder = ControllerUtils.saveUploadedFiles(Arrays.asList(uploadPilotNote));
+            if (StringUtils.isBlank(uploadFolder)) {
+                throw new IOException("Failed to establish upload folder");
+            }
+            _uploadPath = Paths.get(new StringBuilder(uploadFolder)
+                    .append(File.separator)
+                    .append(uploadPilotNote.getOriginalFilename())
+                    .toString());
+            try (FileChannel fileChannel = FileChannel.open(_uploadPath)) {
+                _fileSizeKb = fileChannel.size();
+            }
+        } catch (IndexOutOfBoundsException | IOException ioe) {
+            throw new SupaSystemLogException(new ApiError("PILOT_NOTE_UPLOAD_FAILURE", "Failed to extract identifying tokens from pilot note filename", RequestFailureReason.BAD_REQUEST));
+        }
+
+        final long fileSizeKb = _fileSizeKb;
+        final String airline = _airline,
+                storagePath = _storagePath;
+        final Path uploadPath = _uploadPath;
+        // If flight date and time is absent in flight record name, default it to the minimum supported Instant
+        final Instant logDatetime = _logDatetime != null ? _logDatetime : OffsetDateTime.parse("19700101_000000Z", Constants.SupaSystemLogDateTimeFormatterForParse).toInstant();
+
+        // Prepare a final Flight Log instance to
+        // pass to the individual upload threads, so individual attributes can be updates as warranted.
+        final SupaSystemLog supaSystemLog = new SupaSystemLog(uploadPilotNote.getOriginalFilename(), storagePath,
+                fileSizeKb, logDatetime, airline, user.getUserPrincipalName(), null);
+
+        // Check to see if the Blob already exists
+        boolean bExists = false;
+        try {
+            AzureStorageUtil asu = new AzureStorageUtil(appProps.get("StorageAccountName"), appProps.get("StorageKey"));
+            bExists = asu.blobExistsOnCloud(SUPA_SYSTEM_LOGS_STORAGE_CONTAINER, new StringBuilder(storagePath).append('/')
+                    .append(supaSystemLog.getSupaSystemLogName()).toString());
+        } catch (IOException ioe) {
+
+        }
+
+        if (bExists) {
+            throw new SupaSystemLogException(new ApiError("PILOT_NOTE_UPLOAD_FAILURE", "The specified blob already exists.", RequestFailureReason.ALREADY_REPORTED));
+        }
+        // Set up executor pool for performing ADW and Azure uploads concurrently
+        ExecutorService es = Executors.newFixedThreadPool(3);
+        List<Future<Boolean>> futures = new ArrayList<>();
+        final Map<String, String> properties = this.appProps;
+
+        // ------- Adding file to Azure Storage -------
+        logger.debug("Adding file to Azure Storage");
+        Future<Boolean> azureFuture = es.submit(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+
+                Boolean upload = false;
+                try {
+                    logger.info("Starting Azure upload");
+                    AzureStorageUtil asu = new AzureStorageUtil(properties.get("StorageAccountName"), properties.get("StorageKey"));
+                    upload = asu.uploadSupaSystemLog(PILOT_NOTES_STORAGE_CONTAINER, new StringBuilder(storagePath).append('/')
+                            .append(supaSystemLog.getSupaSystemLogName()).toString(), uploadPath.toFile().getAbsolutePath());
+                    logger.info("Upload to Azure complete: {}", upload);
+                } catch (SupaSystemLogException fre) {
+                    logger.error("Failed to upload to Azure Storage: {}", fre.getMessage());
+                    pilotNoteUploadResponse.setMessage(fre.getMessage());
+                } catch (Exception e) {
+                    logger.error("ApiError in Azure upload: {}", e.getMessage(), e);
+                }
+                return upload;
+            }
+        });
+        futures.add(azureFuture);
+
+        boolean azureBool = false;
+        try {
+            azureBool = azureFuture.get();
+        } catch (InterruptedException | ExecutionException e) {
+            logger.error("ApiError in running executionservice: {}", e.getMessage(), e);
+        }
+        es.shutdown();
+
+        try {
+            if (!es.awaitTermination(1, TimeUnit.MINUTES)) {
+                es.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+
+            Thread.currentThread().interrupt();
+            logger.error("ApiError in shuttingdown executionservice: {}", e.getMessage(), e);
+            es.shutdownNow();
+        }
+
+        // If Azure Storage upload fails, that is a crucial error that warrants an appropriate error response to the user
+        if (!azureBool) {
+            throw new SupaSystemLogException(new ApiError("PILOT_NOTE_UPLOAD_FAILURE",
+                    pilotNoteUploadResponse.getMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR));
+        }
+        pilotNoteUploadResponse.setUploaded(true);
+
+        return pilotNoteUploadResponse;
     }
 
     public FileManagementMessage uploadTspConfigPackage(byte[] zipFile, String fileName, String authToken) throws TspConfigLogException, IOException {
