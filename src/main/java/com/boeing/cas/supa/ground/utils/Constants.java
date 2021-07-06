@@ -18,6 +18,8 @@ public class Constants {
 	public static final String ACCEPT_CT_JSON_ONOTHING = "application/json";
 
 	public static final String AUTH_HEADER_PREFIX = "Bearer ";
+	
+	public static final String MP_FOR_REGISTRATION="isMPForRegistration";
 
 	public static final String CHECKSUM_PREFIX_SHA1 = ".sha1";
 
