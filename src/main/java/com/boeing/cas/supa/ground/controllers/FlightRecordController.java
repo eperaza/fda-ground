@@ -74,6 +74,16 @@ public class FlightRecordController {
 		}
 	}
 
+	@RequestMapping(path = "/listFlightRecordsLocation", method = { RequestMethod.GET }, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<Object> listFlightRecordsLocation(@RequestHeader("Authorization") String authToken) {
+
+		try {
+			List<FileManagementMessage> fileMgmtMessages = this.fileManagementService.listFlightRecords(authToken);
+			return new ResponseEntity<>(fileMgmtMessages, HttpStatus.OK);
+		} catch (FlightRecordException fre) {
+			return new ResponseEntity<>(new ApiError("FLIGHT_RECORD_LIST", fre.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
 	@RequestMapping(path = "/uploadSupaSystemLog", method = { RequestMethod.POST })
 	public ResponseEntity<Object> uploadSupaSystemLog(final @RequestParam("file") MultipartFile uploadSupaSystemLog,
 													 @RequestHeader("Authorization") String authToken) {
