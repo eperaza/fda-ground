@@ -59,8 +59,12 @@ public class FlightObjectManagerService {
 				return new ApiError("FILE_DOWNLOAD_FAILURE", "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED);
 			}
 			String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
-
-			CosmosDbFlightPlanSource source = this.getFlightPlanSourceFromBlob(airlineGroup);
+			logger.debug("getting the airline group "+airlineGroup);
+			CosmosDbFlightPlanSource source = this.getFlightPlanSourceFromBlob("etd");
+			logger.debug("getting the airline source "+source);
+			logger.debug("getting the airline flightId "+flightId);
+			logger.debug("getting the airline departureAirport "+departureAirport);
+			logger.debug("getting the airline arrivalAirport "+arrivalAirport);
 			// if the CosmosDB flight plan is available, use it - otherwise use RS.
 			if (source != null ) {
 				logger.debug("Use CosmosDb to obtain the flight plan.");

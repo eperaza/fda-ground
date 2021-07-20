@@ -1,6 +1,7 @@
 package com.boeing.cas.supa.ground.services;
 
 import com.boeing.cas.supa.ground.dao.AircraftInfoDao;
+import com.boeing.cas.supa.ground.dao.AirlineDao;
 import com.boeing.cas.supa.ground.exceptions.TspConfigLogException;
 import com.boeing.cas.supa.ground.pojos.AircraftConfiguration;
 import com.boeing.cas.supa.ground.pojos.FileManagementMessage;
@@ -32,6 +33,9 @@ public class AircraftPropertyService {
 
     @Autowired
     private AircraftInfoDao aircraftInfoDao;
+    
+    @Autowired 
+    private AirlineDao airlineDao;
 
     @Autowired
     private FileManagementService fileManagementService;
@@ -41,6 +45,28 @@ public class AircraftPropertyService {
 
     @Autowired
     private AzureADClientService azureADClientService;
+    
+    public Date getLastModifedAirline(String authToken,String airline)
+    {
+        try {
+        	  logger.debug("Getting Last modifed from the Aircraft propery service before dao");
+        	//return airlineDao.getAirlineByName(airline).getModifiedTime();
+        	
+//            String airlineName = azureADClientService.validateAndGetAirlineName(authToken);
+//            if (Strings.isNullOrEmpty(airlineName)) {
+//                logger.debug(":::UNAUTHORIZED - User membership is ambiguous - cannot define user's airline");
+//            }
+//
+//            logger.debug("getLastModified airline name: " + airlineName);
+        	return aircraftInfoDao.getAircraftPropertyLastModifiedTimeStamp(airline);
+//
+//            return modifiedTime;
+        } catch (Exception ex) {
+            logger.error("Failed get last modified date from aircraft info and aircraftproperty. Error: " + ex);
+        }
+        return null;
+    }
+    
 
     public Date getLastModified(String authToken) {
         try {

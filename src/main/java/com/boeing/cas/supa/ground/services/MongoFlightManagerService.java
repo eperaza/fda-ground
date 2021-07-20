@@ -144,7 +144,7 @@ public class MongoFlightManagerService {
                 .append(source.getUserName())
                 .append("@");
 
-        //logger.debug("ConnectionString=[" + cosmosDbUrl.toString() + "]");
+        logger.debug("ConnectionString=[" + cosmosDbUrl.toString() + "]");
         StringBuilder response = new StringBuilder();
         response.append("{\"data\":{\"perfectFlights\":[");
 
@@ -234,7 +234,7 @@ public class MongoFlightManagerService {
                 .append(source.getServerName())
                 .append(endMongoConnString);
 
-        //logger.debug("ConnectionString=[" + cosmosDbUrl.toString() + "]");
+        logger.debug("ConnectionString=[" + cosmosDbUrl.toString() + "]");
         StringBuilder response = new StringBuilder();
         response.append("{\"data\":{\"perfectFlight\":{\"version\":0,\"id\":\"" + id + "\",\"flight\":{");
 
@@ -310,7 +310,7 @@ public class MongoFlightManagerService {
             .append(source.getServerName())
             .append(":10255/?ssl=true&replicaSet=globaldb");
 
-        //logger.debug("ConnectionString=[" + cosmosDbUrl.toString() + "]");
+        logger.debug("ConnectionString=[" + cosmosDbUrl.toString() + "]");
         StringBuilder response = new StringBuilder();
         response.append("{\"data\":{\"flightPlan\":{\"file\":");
 

@@ -354,6 +354,49 @@ public class AzureStorageUtil {
         return tempFile;
     }
 
+    public Date getLastModifiedFromBlob(String containerName, String airlineGroup) {
+    	logger.debug("Storage Util for Blob");
+        CloudBlobClient blobClient = this.storageAccount.createCloudBlobClient();
+        String airlineDir = new StringBuilder(airlineGroup.toUpperCase()).append("/").toString();
+
+        //List<String> tspFileNames = new ArrayList<>();
+
+        try {
+            CloudBlobContainer container = blobClient.getContainerReference(containerName);
+            logger.debug("Storage Util for Blob after container refrence");
+            Iterable<ListBlobItem> blobs = container.listBlobs();
+
+            logger.debug("airlineDir: " + airlineDir);
+         //   int trimIndex = airlineDir.length();
+
+            for (ListBlobItem blob : blobs) {
+            	logger.debug("Storage Util for Blob--"+blob.getUri().toString()+"--"+blob.getContainer().getName());
+                CloudBlobDirectory directory = (CloudBlobDirectory) blob;
+
+                if (airlineDir.equals(directory.getPrefix())) {
+                	logger.debug("Storage Util for Blob--match found-");
+  return	blob.getContainer().getProperties().getLastModified();
+//                    Iterable<ListBlobItem> fileBlobs = directory.listBlobs();
+//                   
+//                    for (ListBlobItem fileBlob : fileBlobs) {
+//                  
+//                        
+//                    }
+                }
+            }
+        } catch (StorageException e) {            
+            logger.debug("Storage Util for Blob after container refrence Exception happned1");
+            e.printStackTrace();
+            return new Date();
+        } catch (URISyntaxException e) {
+            logger.debug("Storage Util for Blob after container refrence Exception happned2");
+            e.printStackTrace();
+            return new Date();
+        }
+        logger.debug("Storage Util for Blob null date returned");
+        return new Date();
+    }
+
     public List<String> getFilenamesFromBlob(String containerName, String airlineGroup) {
 
         CloudBlobClient blobClient = this.storageAccount.createCloudBlobClient();
@@ -370,12 +413,15 @@ public class AzureStorageUtil {
             int trimIndex = airlineDir.length();
 
             for (ListBlobItem blob : blobs) {
+            	//blob.getContainer().getProperties().getLastModified();
                 CloudBlobDirectory directory = (CloudBlobDirectory) blob;
 
                 if (airlineDir.equals(directory.getPrefix())) {
 
                     Iterable<ListBlobItem> fileBlobs = directory.listBlobs();
+                   
                     for (ListBlobItem fileBlob : fileBlobs) {
+                    	
                         if (fileBlob instanceof CloudBlob) {
                             CloudBlob cloudBlob = (CloudBlob) fileBlob;
                             // trim the parent directory from the path
@@ -392,7 +438,6 @@ public class AzureStorageUtil {
         }
         return tspFileNames;
     }
-
 
     public ByteArrayOutputStream downloadFile(String containerName, String fileName) {
 
