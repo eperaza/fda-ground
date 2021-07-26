@@ -394,6 +394,40 @@ public class AzureStorageUtil {
     }
 
 
+    public List<AirlineUpdate> getLastUpdatedFromBlob(String containerName) {
+    	logger.debug("Storage Util: 1 ");
+        CloudBlobClient blobClient = this.storageAccount.createCloudBlobClient();
+    //    String airlineDir = new StringBuilder(airlineGroup.toUpperCase()).append("/").toString();
+
+        List<AirlineUpdate> airlineUpdates = new ArrayList<>();
+        logger.debug("Storage Util: 2 ");
+        try {
+        	CloudBlobContainer container = blobClient.getContainerReference(containerName);
+            logger.debug("Storage Util for Blob after container refrence");
+            Iterable<ListBlobItem> blobs = container.listBlobs();
+
+            
+            for (ListBlobItem blob : blobs) {
+            	logger.debug("Storage Util for Blob--"+blob.getUri().toString()+"--"+blob.getContainer().getName());
+           //     CloudBlobDirectory directory = (CloudBlobDirectory) blob;
+
+                try{
+                airlineUpdates.add(new AirlineUpdate(blob.getParent().getPrefix(),blob.getContainer().getProperties().getLastModified().toString()));
+                }	
+                catch (StorageException e) {
+                	airlineUpdates.add(new AirlineUpdate(blob.getParent().getPrefix(),"mydate"));
+                	logger.debug(">>"+e.getMessage());
+                }
+            }
+        } catch (StorageException e) {
+            e.printStackTrace();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        return airlineUpdates;
+    }
+
+
     public ByteArrayOutputStream downloadFile(String containerName, String fileName) {
 
         // Create the Azure Storage Blob Client.
