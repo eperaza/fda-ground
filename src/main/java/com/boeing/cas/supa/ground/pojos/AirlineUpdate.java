@@ -1,13 +1,15 @@
 package com.boeing.cas.supa.ground.pojos;
 
+import java.sql.Date;
+
 public class AirlineUpdate {
 	private String airline;
-	private String updated;
+	private java.util.Date updated;
 	
 
-	public AirlineUpdate(String airline, String updated) {
+	public AirlineUpdate(String airline, java.util.Date updatedDate) {
 		this.airline = airline;
-		this.updated = updated;
+		this.updated = updatedDate;
 	}
 
 	public String getAirline() {
@@ -18,12 +20,12 @@ public class AirlineUpdate {
 		this.airline = airline;
 	}
 
-	public String getUpdated() {
+	public java.util.Date getUpdated() {
 		return updated;
 	}
 
-	public void setPath(String updated) {
-		this.updated = updated;
+	public void setUpdateDate(java.util.Date dt1) {
+		this.updated = dt1;
 	}
 
 }
