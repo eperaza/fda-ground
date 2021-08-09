@@ -36,7 +36,20 @@ public class FeatureManagementController {
 
     @Autowired
     private FeatureManagementService featureManagementService;
+   
+ 
 
+    @RequestMapping(path="/retriveZuppa", method = { RequestMethod.GET })
+    public ResponseEntity<Object> retriveZuppa2(@RequestHeader("Authorization") String authToken, String airline) {
+        // Extract the access token from the authorization request header
+        String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
+        Object result = featureManagementService.getAppSecrets(accessTokenInRequest,airline);
+
+        if (result instanceof ApiError) {
+            return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
+        }
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
     @RequestMapping(path="/featuremanagement", method = { RequestMethod.GET })
     public ResponseEntity<Object> getFeatureManagement(@RequestHeader("Authorization") String authToken) {
 

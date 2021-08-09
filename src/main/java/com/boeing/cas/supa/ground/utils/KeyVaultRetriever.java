@@ -10,10 +10,12 @@ import java.security.cert.X509Certificate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.microsoft.azure.PagedList;
 import com.microsoft.azure.keyvault.KeyVaultClient;
 import com.microsoft.azure.keyvault.models.CertificateBundle;
 import com.microsoft.azure.keyvault.models.KeyBundle;
 import com.microsoft.azure.keyvault.models.SecretBundle;
+import com.microsoft.azure.keyvault.models.SecretItem;
 import com.microsoft.azure.keyvault.webkey.JsonWebKey;
 
 public class KeyVaultRetriever {
@@ -29,7 +31,12 @@ public class KeyVaultRetriever {
 		this.keyVaultUri = keyVaultUri;
 		this.kvc = KeyVaultAuthenticator.getAuthenticatedClient(clientId, clientKey);
 	}
+	public PagedList<SecretItem> getAllSecret() {
 
+		PagedList<SecretItem> sb = this.kvc.listSecrets(this.keyVaultUri);
+		
+		return sb;
+	}
 	public String getSecretByKey(String secretName) {
 
 		SecretBundle sb = this.kvc.getSecret(this.keyVaultUri, secretName);
