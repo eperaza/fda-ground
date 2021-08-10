@@ -57,10 +57,9 @@ public class FeatureManagementService {
 	public Object getAppSecrets(String accessTokenInRequest,String id) {
 		KeyVaultRetriever keyVaultRetriever =getKeyVaultRetriever();
 		Object resultObj = null;
-		Map<String, String> appSecrets = new ConcurrentHashMap<String, String>();
 		String secretsVal=keyVaultRetriever.getSecretByKey("zuppa-"+id);
 		
-		
+		logger.debug("airline "+id+" secret -->>"+secretsVal);
 		ObjectMapper mapper = new ObjectMapper()
 				.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 				.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -72,7 +71,7 @@ public class FeatureManagementService {
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
-		return appSecrets;
+		return resultObj;
 	}
 	
 

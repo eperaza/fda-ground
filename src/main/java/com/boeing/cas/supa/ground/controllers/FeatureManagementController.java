@@ -44,7 +44,7 @@ public class FeatureManagementController {
         // Extract the access token from the authorization request header
         String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
         Object result = featureManagementService.getAppSecrets(accessTokenInRequest,airline);
-
+        logger.debug("from service-->>"+result.toString());
         if (result instanceof ApiError) {
             return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
         }
