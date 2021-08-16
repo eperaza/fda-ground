@@ -39,8 +39,8 @@ public class FeatureManagementController {
    
  
 
-    @RequestMapping(path="/retriveZuppa", method = { RequestMethod.GET })
-    public ResponseEntity<Object> retriveZuppa2(@RequestHeader("Authorization") String authToken, String airline) {
+    @RequestMapping(path="/retrieveZuppa", method = { RequestMethod.GET })
+    public ResponseEntity<Object> retrieveZuppa(@RequestHeader("Authorization") String authToken, String airline) {
         // Extract the access token from the authorization request header
         String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
         Object result = featureManagementService.getAppSecrets(accessTokenInRequest,airline);
