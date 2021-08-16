@@ -446,36 +446,7 @@ public class AzureStorageUtil {
               	continue;
               }
             	
-            	
-//            	if (blob instanceof CloudBlob) {
-//                    CloudBlob cblob = (CloudBlob) blob;
-//                    //size += cblob.getProperties().getLength();
-//                    logger.debug(cblob.getProperties().getLastModified().toString());
-//                }
-//            	logger.debug("Storage Util for Blob--"+blob.getUri().toString()+"--"+blob.getContainer().getName());
-//           //     CloudBlobDirectory directory = (CloudBlobDirectory) blob;
-//
-//                try{
-//                airlineUpdates.add(new AirlineUpdate(blob.getParent().getPrefix(),blob.getContainer().getProperties().getLastModified().toString()));
-//                }	
-//                catch (StorageException e) {
-//                	//airlineUpdates.add(new AirlineUpdate(blob.getParent().getPrefix(),"mydate"));
-//                	logger.debug(">>"+e.getMessage());
-//                	try {
-//                		 logger.debug("prefix>>-- " +blob.getParent().getPrefix());
-//                         
-//                	}
-//                	catch (Exception e1) {
-//                		logger.debug(">prefix exception>"+e1.getMessage());
-//                	}
-//                	try {
-//               		 logger.debug("last Modifend " +blob.getContainer().getProperties().getLastModified().toString());
-//                        
-//	               	}
-//	               	catch (Exception e2) {
-//	               		logger.debug(">last modifed exception>"+e2.getMessage());
-//	               	}
-//                }
+            
             }
             
         } catch (StorageException e) {

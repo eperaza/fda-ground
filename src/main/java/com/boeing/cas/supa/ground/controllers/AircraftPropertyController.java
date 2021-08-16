@@ -46,7 +46,7 @@ public class AircraftPropertyController {
     @Autowired
     private FileManagementService fileManagementService;
     
-    @RequestMapping(path = "/getallairlinelastupdated", method = {RequestMethod.GET})
+    @RequestMapping(path = "/getAllAirlineLastUpdated", method = {RequestMethod.GET})
 	public List<AirlineUpdate> getAllAirlineLastUpdated(String authToken, String airline) throws FileDownloadException,IOException {
 		AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
 
