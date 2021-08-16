@@ -49,7 +49,7 @@ public class FeatureManagementService {
 
 
 	public KeyVaultRetriever getKeyVaultRetriever() {
-		return new KeyVaultRetriever("https://fda-ground-test-kv.vault.azure.net/", this.keyVaultProperties.getClientId(),
+		return new KeyVaultRetriever(this.keyVaultProperties.getZuppaUri(), this.keyVaultProperties.getClientId(),
 				this.keyVaultProperties.getClientKey());
 	}
 
