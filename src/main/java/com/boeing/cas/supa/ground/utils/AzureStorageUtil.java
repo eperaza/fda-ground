@@ -397,8 +397,7 @@ public class AzureStorageUtil {
     public List<AirlineUpdate> getLastUpdatedFromBlob(String containerName) {
     	logger.debug("Storage Util: 3 ");
         CloudBlobClient blobClient = this.storageAccount.createCloudBlobClient();
-    //    String airlineDir = new StringBuilder(airlineGroup.toUpperCase()).append("/").toString();
-
+ 
         List<AirlineUpdate> airlineUpdates = new ArrayList<>();
         logger.debug("Storage Util: 3 ");
         try {
@@ -408,10 +407,7 @@ public class AzureStorageUtil {
             logger.debug("all blobs3 " +blobs.toString()+"--");
             int i=1;
             for (ListBlobItem blob : blobs) {
-            //	logger.debug("Storage Util for Blob--"+blob.getUri().toString()+"--"+blob.getContainer().getName());
-            //	logger.debug(blob.getContainer().getProperties().getLastModified().toString());
-//            	 if (blob..GetType() == typeof(CloudBlockBlob))
-//            	 {}
+  
             	logger.debug("Entered loop 3");
             	logger.debug(String.valueOf(i));
             	
@@ -447,35 +443,6 @@ public class AzureStorageUtil {
               }
             	
             	
-//            	if (blob instanceof CloudBlob) {
-//                    CloudBlob cblob = (CloudBlob) blob;
-//                    //size += cblob.getProperties().getLength();
-//                    logger.debug(cblob.getProperties().getLastModified().toString());
-//                }
-//            	logger.debug("Storage Util for Blob--"+blob.getUri().toString()+"--"+blob.getContainer().getName());
-//           //     CloudBlobDirectory directory = (CloudBlobDirectory) blob;
-//
-//                try{
-//                airlineUpdates.add(new AirlineUpdate(blob.getParent().getPrefix(),blob.getContainer().getProperties().getLastModified().toString()));
-//                }	
-//                catch (StorageException e) {
-//                	//airlineUpdates.add(new AirlineUpdate(blob.getParent().getPrefix(),"mydate"));
-//                	logger.debug(">>"+e.getMessage());
-//                	try {
-//                		 logger.debug("prefix>>-- " +blob.getParent().getPrefix());
-//                         
-//                	}
-//                	catch (Exception e1) {
-//                		logger.debug(">prefix exception>"+e1.getMessage());
-//                	}
-//                	try {
-//               		 logger.debug("last Modifend " +blob.getContainer().getProperties().getLastModified().toString());
-//                        
-//	               	}
-//	               	catch (Exception e2) {
-//	               		logger.debug(">last modifed exception>"+e2.getMessage());
-//	               	}
-//                }
             }
             
         } catch (StorageException e) {
