@@ -395,60 +395,28 @@ public class AzureStorageUtil {
 
 
     public List<AirlineUpdate> getLastUpdatedFromBlob(String containerName) {
-    	logger.debug("Storage Util: 3 ");
-        CloudBlobClient blobClient = this.storageAccount.createCloudBlobClient();
-    //    String airlineDir = new StringBuilder(airlineGroup.toUpperCase()).append("/").toString();
-
+    	CloudBlobClient blobClient = this.storageAccount.createCloudBlobClient();
+   
         List<AirlineUpdate> airlineUpdates = new ArrayList<>();
-        logger.debug("Storage Util: 3 ");
         try {
         	CloudBlobContainer container = blobClient.getContainerReference(containerName);
-            logger.debug("Storage Util for Blob after container refrence3");
             Iterable<ListBlobItem> blobs = container.listBlobs();
-            logger.debug("all blobs3 " +blobs.toString()+"--");
             int i=1;
             for (ListBlobItem blob : blobs) {
-            //	logger.debug("Storage Util for Blob--"+blob.getUri().toString()+"--"+blob.getContainer().getName());
-            //	logger.debug(blob.getContainer().getProperties().getLastModified().toString());
-//            	 if (blob..GetType() == typeof(CloudBlockBlob))
-//            	 {}
-            	logger.debug("Entered loop 3");
-            	logger.debug(String.valueOf(i));
             	
             	i++;
             	
               try{
-            	  logger.debug("Storage Util for Blob--"+blob.getUri().toString()+"--"+blob.getContainer().getName());
             	  String name=blob.getContainer().getName();
             	  java.util.Date dt1=blob.getContainer().getProperties().getLastModified();
             	  AirlineUpdate apd=new AirlineUpdate(name, dt1);
               airlineUpdates.add(apd);
               }	
               catch (StorageException e) {
-              	
-              	logger.debug(">>"+e.getMessage());
-              	try {
-              		 logger.debug("prefix>>-- " +blob.getParent().getPrefix());
-                       
-              	}
-              	catch (Exception e1) {
-              		logger.debug(">prefix exception>"+e1.getMessage());
-              		continue;
-              	}
-              	try {
-             		 logger.debug("last Modifend " +blob.getContainer().getProperties().getLastModified().toString());
-                      
-	               	}
-	               	catch (Exception e2) {
-	               		logger.debug(">last modifed exception>"+e2.getMessage());
-	               		continue;
-	               	}
+              	logger.debug(e.getMessage());
               	continue;
               }
-            	
-            
             }
-            
         } catch (StorageException e) {
             e.printStackTrace();
         } catch (URISyntaxException e) {
