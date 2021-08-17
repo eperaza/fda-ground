@@ -394,6 +394,38 @@ public class AzureStorageUtil {
     }
 
 
+    public List<AirlineUpdate> getLastUpdatedFromBlob(String containerName) {
+    	CloudBlobClient blobClient = this.storageAccount.createCloudBlobClient();
+   
+        List<AirlineUpdate> airlineUpdates = new ArrayList<>();
+        try {
+        	CloudBlobContainer container = blobClient.getContainerReference(containerName);
+            Iterable<ListBlobItem> blobs = container.listBlobs();
+            int i=1;
+            for (ListBlobItem blob : blobs) {
+            	
+            	i++;
+            	
+              try{
+            	  String name=blob.getContainer().getName();
+            	  java.util.Date dt1=blob.getContainer().getProperties().getLastModified();
+            	  AirlineUpdate apd=new AirlineUpdate(name, dt1);
+              airlineUpdates.add(apd);
+              }	
+              catch (StorageException e) {
+              	logger.debug(e.getMessage());
+              	continue;
+              }
+            }
+        } catch (StorageException e) {
+            e.printStackTrace();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        return airlineUpdates;
+    }
+
+
     public ByteArrayOutputStream downloadFile(String containerName, String fileName) {
 
         // Create the Azure Storage Blob Client.
