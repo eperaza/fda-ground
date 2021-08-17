@@ -122,8 +122,7 @@ public class AirlineFocalAdminController {
 					defaultRole
 			);
 
-			if(airlineGroups.get(0).getDisplayName().equalsIgnoreCase("airline-amx") ||
-					airlineGroups.get(0).getDisplayName().equalsIgnoreCase("airline-etd")){
+			if(airlineGroups.get(0).getDisplayName().equalsIgnoreCase("airline-amx")){
 				logger.debug("Old REG Hit");
 				aadClient.createUser(userFromExcel, authToken, airlineGroups.get(0), userFromExcel.getRoleGroupName(), false);
 			}else{
