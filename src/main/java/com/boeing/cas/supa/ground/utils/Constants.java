@@ -18,6 +18,8 @@ public class Constants {
 	public static final String ACCEPT_CT_JSON_ONOTHING = "application/json";
 
 	public static final String AUTH_HEADER_PREFIX = "Bearer ";
+	
+	public static final String MP_FOR_REGISTRATION="isMPForRegistration";
 
 	public static final String CHECKSUM_PREFIX_SHA1 = ".sha1";
 
@@ -71,4 +73,8 @@ public class Constants {
 	public static String PATTERN_EMAIL_REGEX = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])";
 	
 	public static final String ZUPPA_SECRET_PREFIX = "zuppa-";
+	
+	public static final String AIRCRAFT_CONFIG_PKG="/aircraftconfigpkg";
+	public static final String AUTHORIZATION="Authorization";
+	public static final String AIRLINE="airline";
 }
