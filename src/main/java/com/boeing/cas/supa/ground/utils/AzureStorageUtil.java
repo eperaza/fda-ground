@@ -355,7 +355,7 @@ public class AzureStorageUtil {
     }
 
     public Date getLastModifiedFromBlob(String containerName, String airlineGroup) {
-    	logger.debug("Storage Util for Blob");
+    	
         CloudBlobClient blobClient = this.storageAccount.createCloudBlobClient();
         String airlineDir = new StringBuilder(airlineGroup.toUpperCase()).append("/").toString();
 
@@ -363,37 +363,25 @@ public class AzureStorageUtil {
 
         try {
             CloudBlobContainer container = blobClient.getContainerReference(containerName);
-            logger.debug("Storage Util for Blob after container refrence");
+        
             Iterable<ListBlobItem> blobs = container.listBlobs();
 
-            logger.debug("airlineDir: " + airlineDir);
-         //   int trimIndex = airlineDir.length();
-
             for (ListBlobItem blob : blobs) {
-            	logger.debug("Storage Util for Blob--"+blob.getUri().toString()+"--"+blob.getContainer().getName());
-                CloudBlobDirectory directory = (CloudBlobDirectory) blob;
+               CloudBlobDirectory directory = (CloudBlobDirectory) blob;
 
                 if (airlineDir.equals(directory.getPrefix())) {
-                	logger.debug("Storage Util for Blob--match found-");
-  return	blob.getContainer().getProperties().getLastModified();
-//                    Iterable<ListBlobItem> fileBlobs = directory.listBlobs();
-//                   
-//                    for (ListBlobItem fileBlob : fileBlobs) {
-//                  
-//                        
-//                    }
+                	
+				  return	blob.getContainer().getProperties().getLastModified();
+
                 }
             }
         } catch (StorageException e) {            
-            logger.debug("Storage Util for Blob after container refrence Exception happned1");
-            e.printStackTrace();
+          e.printStackTrace();
             return new Date();
         } catch (URISyntaxException e) {
-            logger.debug("Storage Util for Blob after container refrence Exception happned2");
-            e.printStackTrace();
+             e.printStackTrace();
             return new Date();
         }
-        logger.debug("Storage Util for Blob null date returned");
         return new Date();
     }
 
@@ -413,7 +401,7 @@ public class AzureStorageUtil {
             int trimIndex = airlineDir.length();
 
             for (ListBlobItem blob : blobs) {
-            	//blob.getContainer().getProperties().getLastModified();
+            
                 CloudBlobDirectory directory = (CloudBlobDirectory) blob;
 
                 if (airlineDir.equals(directory.getPrefix())) {
