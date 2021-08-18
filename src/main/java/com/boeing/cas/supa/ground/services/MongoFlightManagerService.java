@@ -313,7 +313,7 @@ public class MongoFlightManagerService {
             .append(source.getServerName())
             .append(":10255/?ssl=true&replicaSet=globaldb");
 
-        //logger.debug("ConnectionString=[" + cosmosDbUrl.toString() + "]");
+        logger.debug("ConnectionString=[" + cosmosDbUrl.toString() + "]");
         StringBuilder response = new StringBuilder();
         response.append("{\"data\":{\"flightPlan\":{\"file\":");
 

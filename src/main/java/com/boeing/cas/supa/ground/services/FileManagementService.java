@@ -40,7 +40,7 @@ public class FileManagementService {
     private final static String FLIGHT_RECORDS_STORAGE_CONTAINER = "flight-records";
     private final static String SUPA_SYSTEM_LOGS_STORAGE_CONTAINER = "supa-system-logs";
     private final static String PILOT_NOTES_STORAGE_CONTAINER = "pilot-notes";
-    public final static String TSP_CONFIG_ZIP_CONTAINER = "aircraft-config-package";
+	public final static String TSP_CONFIG_ZIP_CONTAINER = "aircraft-config-package";
     private final static String TSP_STORAGE_CONTAINER = "tsp";
     private final static String MOBILECONFIG_STORAGE_CONTAINER = "config";
     private final static String CERTIFICATES_STORAGE_CONTAINER = "certificates";
@@ -56,7 +56,15 @@ public class FileManagementService {
 
     @Autowired
     private FlightRecordDao flightRecordDao;
+	public Date getLastModifedDateForContainer(String authToken, String airline) throws FileDownloadException,IOException {
+		AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
 
+        String container = TSP_CONFIG_ZIP_CONTAINER;
+      
+        logger.debug("File Management Service for last modified date before storage util");
+        return asu.getLastModifiedFromBlob(container, airline);
+	}
+   
     public List<String> getTspListFromStorage(String authToken) throws FileDownloadException, IOException {
 
         final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
@@ -1074,4 +1082,6 @@ public class FileManagementService {
 
         return listOfFlightMgmtMessages;
     }
+
+
 }

@@ -354,6 +354,37 @@ public class AzureStorageUtil {
         return tempFile;
     }
 
+    public Date getLastModifiedFromBlob(String containerName, String airlineGroup) {
+    	
+        CloudBlobClient blobClient = this.storageAccount.createCloudBlobClient();
+        String airlineDir = new StringBuilder(airlineGroup.toUpperCase()).append("/").toString();
+
+        //List<String> tspFileNames = new ArrayList<>();
+
+        try {
+            CloudBlobContainer container = blobClient.getContainerReference(containerName);
+        
+            Iterable<ListBlobItem> blobs = container.listBlobs();
+
+            for (ListBlobItem blob : blobs) {
+               CloudBlobDirectory directory = (CloudBlobDirectory) blob;
+
+                if (airlineDir.equals(directory.getPrefix())) {
+                	
+				  return	blob.getContainer().getProperties().getLastModified();
+
+                }
+            }
+        } catch (StorageException e) {            
+          e.printStackTrace();
+            return new Date();
+        } catch (URISyntaxException e) {
+             e.printStackTrace();
+            return new Date();
+        }
+        return new Date();
+    }
+
     public List<String> getFilenamesFromBlob(String containerName, String airlineGroup) {
 
         CloudBlobClient blobClient = this.storageAccount.createCloudBlobClient();
@@ -370,12 +401,15 @@ public class AzureStorageUtil {
             int trimIndex = airlineDir.length();
 
             for (ListBlobItem blob : blobs) {
+            
                 CloudBlobDirectory directory = (CloudBlobDirectory) blob;
 
                 if (airlineDir.equals(directory.getPrefix())) {
 
                     Iterable<ListBlobItem> fileBlobs = directory.listBlobs();
+                   
                     for (ListBlobItem fileBlob : fileBlobs) {
+                    	
                         if (fileBlob instanceof CloudBlob) {
                             CloudBlob cloudBlob = (CloudBlob) fileBlob;
                             // trim the parent directory from the path
@@ -395,22 +429,19 @@ public class AzureStorageUtil {
 
 
     public List<AirlineUpdate> getLastUpdatedFromBlob(String containerName) {
-    	CloudBlobClient blobClient = this.storageAccount.createCloudBlobClient();
-   
+        CloudBlobClient blobClient = this.storageAccount.createCloudBlobClient();
         List<AirlineUpdate> airlineUpdates = new ArrayList<>();
+
         try {
         	CloudBlobContainer container = blobClient.getContainerReference(containerName);
             Iterable<ListBlobItem> blobs = container.listBlobs();
-            int i=1;
+
             for (ListBlobItem blob : blobs) {
-            	
-            	i++;
-            	
               try{
             	  String name=blob.getContainer().getName();
             	  java.util.Date dt1=blob.getContainer().getProperties().getLastModified();
             	  AirlineUpdate apd=new AirlineUpdate(name, dt1);
-              airlineUpdates.add(apd);
+            	  airlineUpdates.add(apd);
               }	
               catch (StorageException e) {
               	logger.debug(e.getMessage());
@@ -424,8 +455,7 @@ public class AzureStorageUtil {
         }
         return airlineUpdates;
     }
-
-
+    
     public ByteArrayOutputStream downloadFile(String containerName, String fileName) {
 
         // Create the Azure Storage Blob Client.

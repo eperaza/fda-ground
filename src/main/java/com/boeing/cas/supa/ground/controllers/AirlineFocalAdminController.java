@@ -1,7 +1,10 @@
 package com.boeing.cas.supa.ground.controllers;
 
+import com.boeing.cas.supa.ground.exceptions.FileDownloadException;
 import com.boeing.cas.supa.ground.pojos.*;
+import com.boeing.cas.supa.ground.services.AircraftPropertyService;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
+import com.boeing.cas.supa.ground.services.FileManagementService;
 import com.boeing.cas.supa.ground.services.FeatureManagementService;
 import com.boeing.cas.supa.ground.services.UploadService;
 import com.boeing.cas.supa.ground.utils.Constants;
@@ -17,8 +20,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,10 +45,46 @@ public class AirlineFocalAdminController {
 
 	@Autowired
 	private AzureADClientService aadClient;
+	
+	@Autowired
+	private FileManagementService fileManagementService;
+	
+	  @Autowired
+	    private AircraftPropertyService aircraftPropertyService;
 
 	public AirlineFocalAdminController(UploadService uploadService) {
 		this.uploadService = uploadService;
 	}
+	 @RequestMapping(path="/getFlightStatus", method = { RequestMethod.GET })
+	    public ResponseEntity<Object> getFlightStatus(@RequestHeader("Authorization") String authToken, 
+	    		@RequestHeader(name = "airline", required = true) String airline) {
+
+	        logger.debug("File Status for airline: " + airline);
+	      
+
+	        Date result = aircraftPropertyService.getLastModifedAirline(authToken, airline);
+	        	try {
+					Date result2=fileManagementService.getLastModifedDateForContainer(authToken,airline);
+					if(result==result2)
+					{
+								return new ResponseEntity<>(result.toString() +"--matched--"+result2.toString(), HttpStatus.OK);
+					}
+					else
+					{
+						return new ResponseEntity<>(result.toString() +"--not matched--"+result2.toString(), HttpStatus.OK);
+					}
+				} catch (FileDownloadException e) {
+					return new ResponseEntity<>(result.toString() +"--not matched--", HttpStatus.OK);
+					// TODO Auto-generated catch block
+				//	e.printStackTrace();
+				} catch (IOException e) {
+					return new ResponseEntity<>(result.toString() +"--not matched--", HttpStatus.OK);
+					// TODO Auto-generated catch block
+				//	e.printStackTrace();
+				}
+
+	       // return new ResponseEntity<>("No Match", HttpStatus.INTERNAL_SERVER_ERROR);
+	    }
 
 	@RequestMapping(path="/users", method = { RequestMethod.POST })
 	public ResponseEntity<Object> createUser(@RequestBody NewUser newUserPayload, @RequestHeader("Authorization") String authToken) {
