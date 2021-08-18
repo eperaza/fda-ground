@@ -444,10 +444,10 @@ public class AzureStorageUtil {
             	  airlineUpdates.add(apd);
               }	
               catch (StorageException e) {
-                  logger.debug("Storage exception " + e.toString());
+              	logger.debug(e.getMessage());
+              	continue;
               }
             }
-            
         } catch (StorageException e) {
             e.printStackTrace();
         } catch (URISyntaxException e) {

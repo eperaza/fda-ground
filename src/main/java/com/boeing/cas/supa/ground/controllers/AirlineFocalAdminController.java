@@ -5,6 +5,7 @@ import com.boeing.cas.supa.ground.pojos.*;
 import com.boeing.cas.supa.ground.services.AircraftPropertyService;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
 import com.boeing.cas.supa.ground.services.FileManagementService;
+import com.boeing.cas.supa.ground.services.FeatureManagementService;
 import com.boeing.cas.supa.ground.services.UploadService;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
@@ -35,6 +36,9 @@ public class AirlineFocalAdminController {
 
 	@Autowired
 	private UploadService uploadService;
+	
+	@Autowired
+    private FeatureManagementService featureManagementService;
 
 	private static final List<String> ALLOWED_USER_ROLES = Arrays.asList(
 		new String[] { "role-airlinefocal", "role-airlinepilot", "role-airlinemaintenance", "role-airlinecheckairman", "role-airlineefbadmin" });
@@ -87,6 +91,9 @@ public class AirlineFocalAdminController {
 
 		// Extract the access token from the authorization request header
 		String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
+		List<AirlinePreferences> prefList= new ArrayList<>();
+
+
 
 		 // Get group membership of user issuing request. Ensure that user belongs to role-airlinefocal group
 		 // and one and only one airline group.
@@ -156,8 +163,7 @@ public class AirlineFocalAdminController {
 					defaultRole
 			);
 
-			if(airlineGroups.get(0).getDisplayName().equalsIgnoreCase("airline-amx") ||
-					airlineGroups.get(0).getDisplayName().equalsIgnoreCase("airline-etd")){
+			if(airlineGroups.get(0).getDisplayName().equalsIgnoreCase("airline-amx")){
 				logger.debug("Old REG Hit");
 				aadClient.createUser(userFromExcel, authToken, airlineGroups.get(0), userFromExcel.getRoleGroupName(), false);
 			}else{
@@ -180,19 +186,36 @@ public class AirlineFocalAdminController {
 
 		// Validate user privileges by checking group membership. Must belong to Role-AirlineFocal group and a single Airline group.
 		List<Group> airlineGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
-
-		//List<Group> roleGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().equals("role-airlinefocal")).peek(g -> logger.info("Role Group: {}", g)).collect(Collectors.toList());
-		// Allow anyone who can access this screen to add users
-
+		// Create user with the received payload/parameters defining the new account.
+		List<AirlinePreferences> prefList= new ArrayList<>();
+		
+				Object preferences = featureManagementService.getAirlinePreferences(accessTokenInRequest);
+		logger.error("prefrence info--"+preferences.toString());
+		boolean isMP=false;
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			
+			AirlinePreferences[]  parser = mapper.readValue(preferences.toString(), AirlinePreferences[].class);
+		    logger.error("prefrence info--Parsing done");
+			for(AirlinePreferences pref:parser)
+			{
+				if(pref.getAirlineKey().toString()==Constants.MP_FOR_REGISTRATION && pref.isEnabled())
+					isMP=true;
+				
+			}
+		
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			logger.error("prefrence info-- Error Occured");
+		
+		}		
 		List<Group> roleGroups = airlineFocalCurrentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_USER_ROLE_PREFIX)).peek(g -> logger.info("Airline Group: {}", g)).collect(Collectors.toList());
 		if (airlineGroups.size() != 1 || roleGroups.size() != 1) {
 			return new ResponseEntity<>(new ApiError("MISSING_OR_INVALID_MEMBERSHIP", "User membership is ambiguous, within airlines or roles"), HttpStatus.UNAUTHORIZED);
 		}
 
 		Object result;
-		if(airlineGroups.get(0).getDisplayName().equalsIgnoreCase("airline-amx") ||
-				airlineGroups.get(0).getDisplayName().equalsIgnoreCase("airline-cnd") ||
-				airlineGroups.get(0).getDisplayName().equalsIgnoreCase("airline-etd")){
+		if(isMP){
 			logger.debug(" **** OLD AIRLINE REGISTRATION PROCESS **** ");
 
 			result = aadClient.createUser(newUserPayload, accessTokenInRequest, airlineGroups.get(0), newUserPayload.getRoleGroupName(), false);

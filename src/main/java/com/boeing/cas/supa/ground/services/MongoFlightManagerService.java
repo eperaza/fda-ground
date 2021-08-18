@@ -168,7 +168,9 @@ public class MongoFlightManagerService {
             //MongoCursor<Document> cursor = collection.find(searchQuery).projection(searchLabels).iterator();
             cursor = collection.find(searchQuery).projection(searchLabels).sort(sortLabels).iterator();
 
+
             while (cursor.hasNext()) {
+                logger.debug("Found a doc");
                 Document dbo = cursor.next();
                 if (dbo.containsKey("_id")) {
                     dbo.remove("_id");
@@ -194,7 +196,6 @@ public class MongoFlightManagerService {
 
         Map<String, String> query = new HashMap<String, String>();
             query.put("id", id);
-
         Map<String, Integer> labels = new HashMap<String, Integer>();
         labels.put("id", 1);
         labels.put("flightPlanId", 1);
@@ -206,6 +207,7 @@ public class MongoFlightManagerService {
         labels.put("planCI", 1);
         labels.put("planRevNum", 1);
 
+        logger.debug("Searching on id: " + id);
         BasicDBObject searchLabels = new BasicDBObject();
 
         for (Map.Entry<String, Integer> entry : labels.entrySet()) {
@@ -224,7 +226,7 @@ public class MongoFlightManagerService {
         if (source.getServerName().contains("cosmos")) {
             endMongoConnString = endNewMongoConn;
         } else {
-            endMongoConnString = endLegacyMongoConn;
+            endMongoConnString = endLegacyMongoConn + source.getUserName() + "@";
         }
 
         StringBuilder cosmosDbUrl = new StringBuilder("mongodb://")
@@ -257,6 +259,7 @@ public class MongoFlightManagerService {
             StringBuffer sbMetaData = new StringBuffer();
 
             while (cursor.hasNext()) {
+                logger.debug("found a document");
                 Document dbo = cursor.next();
                 if (dbo.containsKey("_id")) {
                     dbo.remove("_id");
@@ -328,11 +331,13 @@ public class MongoFlightManagerService {
             for (Map.Entry<String, String> entry : query.entrySet()) {
                 searchQuery.put(entry.getKey(), entry.getValue());
             }
-
+            logger.debug("MongoCollection: " + collection.toString());
             cursor = collection.find(searchQuery).projection(searchLabels).iterator();
             while (cursor.hasNext()) {
+                logger.debug("Found a document");
                 Document dbo = cursor.next();
                 sbtmp.append(dbo.toJson());
+                //logger.debug("Doc contents: " + dbo.toJson());
             }
         }
         catch(NullPointerException ex){
@@ -343,6 +348,13 @@ public class MongoFlightManagerService {
         }
         int startHere = 0;
         startHere = sbtmp.toString().indexOf("\"flightPlan\" :");
+        logger.debug("StartHere is: " + Integer.toString(startHere));
+
+        if (startHere == -1) {
+            startHere = sbtmp.toString().indexOf("\"flightPlan\":");
+            logger.debug("StartHere is: " + Integer.toString(startHere));
+        }
+
         if (startHere > 0) {
             startHere += new String("\"flightPlan\" :").length();
             response.append(sbtmp.toString().substring(startHere));

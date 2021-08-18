@@ -6,17 +6,29 @@ import com.boeing.cas.supa.ground.pojos.*;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
+import com.boeing.cas.supa.ground.utils.KeyVaultRetriever;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.microsoft.azure.PagedList;
+import com.microsoft.azure.keyvault.models.SecretItem;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import com.azure.identity.DefaultAzureCredentialBuilder;
+import com.azure.security.keyvault.secrets.SecretAsyncClient;
+import com.azure.security.keyvault.secrets.SecretClient;
+import com.azure.security.keyvault.secrets.SecretClientBuilder;
+import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+import com.azure.security.keyvault.secrets.models.SecretProperties;
 
 @Service
 public class FeatureManagementService {
@@ -31,6 +43,37 @@ public class FeatureManagementService {
 
 	@Autowired
 	private FeatureManagementDao featureManagementDao;
+	
+	@Autowired
+	private KeyVaultProperties keyVaultProperties;
+
+
+	public KeyVaultRetriever getKeyVaultRetriever() {
+		return new KeyVaultRetriever(this.keyVaultProperties.getZuppaUri(), this.keyVaultProperties.getClientId(),
+				this.keyVaultProperties.getClientKey());
+	}
+
+	
+	public Object getAppSecrets(String accessTokenInRequest,String id) {
+		KeyVaultRetriever keyVaultRetriever =getKeyVaultRetriever();
+		Object resultObj = null;
+		String secretsVal=keyVaultRetriever.getSecretByKey("zuppa-"+id);
+		
+		logger.debug("airline "+id+" secret -->>"+secretsVal);
+		ObjectMapper mapper = new ObjectMapper()
+				.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+				.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+		logger.debug(String.valueOf(keyVaultRetriever.getSecretByKey("adwHost")));
+
+		try {
+			resultObj = mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL).setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
+					.writeValueAsString(secretsVal);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+		return resultObj;
+	}
+	
 
 	public Object getFeatureManagement(String accessTokenInRequest) {
 

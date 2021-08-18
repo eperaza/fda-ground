@@ -126,9 +126,9 @@ public class AircraftPropertyController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    @RequestMapping(path = "/aircraftconfigpkg", method = {RequestMethod.GET})
-    public ResponseEntity<Object> forceUpdateAircraftConfigPackage(@RequestHeader("Authorization") String authToken,
-                                                                   @RequestHeader(name = "airline", required = false) String airline) throws IOException, TspConfigLogException, FileDownloadException {
+    @RequestMapping(path = Constants.AIRCRAFT_CONFIG_PKG, method = {RequestMethod.GET})
+    public ResponseEntity<Object> forceUpdateAircraftConfigPackage(@RequestHeader(Constants.AUTHORIZATION) String authToken,
+                                                                   @RequestHeader(name = Constants.AIRLINE, required = false) String airline) throws IOException, TspConfigLogException, FileDownloadException {
 
         final User user = azureADClientService.getUserInfoFromJwtAccessToken(authToken);
         List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
