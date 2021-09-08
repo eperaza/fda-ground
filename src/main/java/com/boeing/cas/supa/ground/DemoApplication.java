@@ -101,6 +101,11 @@ public class DemoApplication {
 		appSecrets.put("UserManagementAppClientSecret", keyVaultRetriever.getSecretByKey("UserManagementAppClientSecret"));
 		appSecrets.put("UserManagementAdminPassword", keyVaultRetriever.getSecretByKey("UserManagementAdminPassword"));
 		appSecrets.put("UserManagementAdminUsername", keyVaultRetriever.getSecretByKey("UserManagementAdminUsername"));
+		appSecrets.put("zuppa-amx", keyVaultRetriever.getSecretByKey("zuppa-amx"));
+		appSecrets.put("zuppa-cnd", keyVaultRetriever.getSecretByKey("zuppa-cnd"));
+		appSecrets.put("zuppa-efo", keyVaultRetriever.getSecretByKey("zuppa-efo"));
+		appSecrets.put("zuppa-etd", keyVaultRetriever.getSecretByKey("zuppa-etd"));
+		appSecrets.put("zuppa-fda", keyVaultRetriever.getSecretByKey("zuppa-fda"));
 
 		return appSecrets;
 	}

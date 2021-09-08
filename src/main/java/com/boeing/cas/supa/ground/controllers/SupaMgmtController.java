@@ -84,6 +84,20 @@ public class SupaMgmtController {
 		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
 
+	@RequestMapping(path="/getZuppa", method = { RequestMethod.GET })
+	public ResponseEntity<Object> getZuppa(@RequestHeader("Authorization") String authToken) {
+
+		// Extract the access token from the authorization request header
+		String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
+
+		// Get Current Zuppa for fleet
+		Object result = supaReleaseMgmtService.getZuppa(accessTokenInRequest);
+
+		if (result instanceof ApiError) {
+			return new ResponseEntity<>(result, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(((ApiError) result).getFailureReason()));
+		}
+		return new ResponseEntity<>(result, HttpStatus.OK);
+	}
 
 	@RequestMapping(path = "/setCurrentSupaRelease", method = { RequestMethod.POST })
 	public ResponseEntity<Object> setCurrentSupaRelease(final @RequestParam("version") String releaseVersion,
