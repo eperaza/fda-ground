@@ -170,7 +170,7 @@ public class MongoFlightManagerService {
 
 
             while (cursor.hasNext()) {
-                logger.debug("Found a doc");
+                //logger.debug("Found a doc");
                 Document dbo = cursor.next();
                 if (dbo.containsKey("_id")) {
                     dbo.remove("_id");

@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.boeing.cas.supa.ground.pojos.*;
+import com.boeing.cas.supa.util.SupaSecretUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -165,11 +166,12 @@ public class SupaReleaseManagementService {
 			logger.info("Getting zupa for zuppa-" + airline);
 			StringBuilder zuppa = new StringBuilder(appProps.get("zuppa-" + airline));
 
+			char[] zuppaChar = zuppa.toString().toCharArray();
+			resultObj = SupaSecretUtils.generatePassword(zuppa.toString().toCharArray(), (short) 1004);
+
 			ObjectMapper mapper = new ObjectMapper()
 					.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 					.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-
-			resultObj = zuppa;
 
 		} catch (Exception exception) {
 			logger.error("Get Zuppa exception: {}", exception.getMessage(), exception);

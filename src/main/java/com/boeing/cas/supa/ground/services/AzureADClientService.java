@@ -488,9 +488,14 @@ public class AzureADClientService {
 				MimeMessage message = emailSender.createMimeMessage();
 				MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 				//MimeMessageHelper helper = new MimeMessageHelper(message);
-				helper.setFrom(new StringBuilder("noreply@").append(this.appProps.get("AzureADCustomTenantName")).toString());
+				String azureDomain = this.appProps.get("AzureADCustomTenantName").toString();
+				helper.setFrom("noreply@flitedeckadvisor.com");
 				helper.setReplyTo(new StringBuilder("noreply@").append(this.appProps.get("AzureADCustomTenantName")).toString());
-				helper.setSubject("Welcome to FliteDeck Advisor - New Account Registration");
+				if (azureDomain.equals("flitedeckadvisor.com")) {
+					helper.setSubject("Welcome to FliteDeck Advisor - New Account Registration");
+				} else {
+					helper.setSubject("(TEST ENV) Welcome to FliteDeck Advisor - New Account Registration");
+				}
 				helper.setTo(newUserPayload.getOtherMails().get(0));
 
 				helper.setText(composeNewUserAccountActivationEmail(newlyCreatedUser, registrationToken, newRegistrationProcess), true);
