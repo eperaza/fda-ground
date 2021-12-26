@@ -197,6 +197,7 @@ public class AzureADAuthFilter implements Filter {
         ObjectMapper mapper = new ObjectMapper();
         PrintWriter out = httpResponse.getWriter();
         out.print(mapper.writeValueAsString(responseException));
+		out.flush();
         out.close();
 	}
 
