@@ -309,7 +309,7 @@ public class FeatureManagementDaoImpl implements FeatureManagementDao {
 		}
 	}
 
-	private static final class AirlinePreferencesRowMapper implements RowMapper<AirlinePreferences> {
+	public static final class AirlinePreferencesRowMapper implements RowMapper<AirlinePreferences> {
 
 		@Override
 		public AirlinePreferences mapRow(ResultSet resultSet, int rowNum) throws SQLException {
