@@ -99,6 +99,7 @@ public class AirlineStatusTests {
         assertNotNull(controller);
         assertNotNull(service);
         assertNotNull(jdbcTemplate);
+        logger.info("Context Loads Successfully");
 	}
 
     @Test
@@ -114,6 +115,7 @@ public class AirlineStatusTests {
         
         //then
         assertNotNull(lastModified);
+        logger.debug("getBlobLastModifiedTimeStamp Test Passed");
     }
 
     @Test
@@ -132,6 +134,7 @@ public class AirlineStatusTests {
         assertEquals(FLIGHT_PLAN_CONTAINER, captorOne.getValue());
         assertEquals(fileName, captorTwo.getValue());
 		assertNotNull(outputStream);
+        logger.debug("flightPlanDownload Test Passed");
     }
 
     @Test
@@ -148,6 +151,7 @@ public class AirlineStatusTests {
         //then
         verify(jdbcTemplate).query(Mockito.anyString(), Mockito.any(AirlinePreferencesRowMapper.class));
         assertNotNull(preferencesList);
+        logger.debug("getAirlinePreferences Test Passed");
     }
 
     @Test
@@ -181,6 +185,7 @@ public class AirlineStatusTests {
 		assertNotNull(tspReport);
 		assertEquals(TOKEN_STRING, captorOne.getValue());
         assertEquals(AIRLINE, captorTwo.getValue());
+        logger.debug("checkAutoConfig Test Passed");
 	}
 
     @Test
@@ -208,6 +213,7 @@ public class AirlineStatusTests {
 		assertNotNull(flightPlanReport);
 		assertEquals(TOKEN_STRING, captorOne.getValue());
         assertEquals(AIRLINE, captorTwo.getValue());
+        logger.debug("checkFlightPlan Test Passed");
 	}
 
     @Test
@@ -235,8 +241,9 @@ public class AirlineStatusTests {
 		verify(service).checkAirlinePreferences(captorOne.capture(), captorTwo.capture());
 		assertNotNull(preferencesReport);
 		assertEquals(TOKEN_STRING, captorOne.getValue());
-        assertEquals(AIRLINE, captorTwo.getValue());
+        assertEquals(AIRLINE, captorTwo.getValue());        
+        logger.debug("checkAirlinePreferences Test Passed");
     }
-
+    
 }
 
