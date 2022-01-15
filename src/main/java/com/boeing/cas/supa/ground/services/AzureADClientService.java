@@ -1386,8 +1386,10 @@ public class AzureADClientService {
 		// Remove code
 		List<String> persistentEmailFromBlob = getPersistentEmailFromBlob("persistent-emails", new StringBuilder("persistent.emails").toString());
 
+		// Flag to temporarily disable user account activation code expiration.  Remove this flag and all references to set it back to use emails from database
+		Boolean disableActivationCodeExpiration = true;
 		// If not a persistent email, then remove it.
-		if (!persistentEmailFromBlob.contains(email.toLowerCase())) {
+		if (!persistentEmailFromBlob.contains(email.toLowerCase()) && !disableActivationCodeExpiration) {
 			logger.debug("Remove activation code [{}] for [{}]", code, email);
 			userAccountRegister.removeActivationCode(email, code);
 		} else {
