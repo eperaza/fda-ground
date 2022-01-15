@@ -58,6 +58,10 @@ public class AzureADAuthFilter implements Filter {
 	private static final Set<String> REGISTRATION_PATH = Collections.unmodifiableSet(
 			new HashSet<>(Arrays.asList("/getclientcert")));
 
+	// include any path which uses actuator endpoints
+	private static final Set<String> HEALTH_PATH = Collections.unmodifiableSet(
+			new HashSet<>(Arrays.asList("/health", "/metrics", "/info", "/trace")));
+
 	@Autowired
 	private CertificateVerifierUtil certVerify;
 
@@ -73,7 +77,7 @@ public class AzureADAuthFilter implements Filter {
 		if (!(request instanceof HttpServletRequest)) {
 			return;
 		}
-
+		
 		HttpServletRequest httpRequest = (HttpServletRequest) request;
 		HttpServletResponse httpResponse = (HttpServletResponse) response;
 		String path = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length()).replaceAll("[/]+$", StringUtils.EMPTY);
@@ -83,10 +87,13 @@ public class AzureADAuthFilter implements Filter {
 		boolean registrationPath = REGISTRATION_PATH.contains(path);
 		logger.debug("registration path? {}", registrationPath?"yes":"no");
 
+		boolean healthPath = HEALTH_PATH.contains(path);
+		logger.debug("health path? {}", healthPath?"yes":"no");
+
 		int responseCode = 400;
 		ApiError responseException = null;
 
-		//need to remove hard-coded names, and use keyvault entries instead
+		// need to remove hard-coded names, and use keyvault entries instead
 		if (registrationPath) {
 			if (this.isValidClientCertInReqHeader("fdadvisor2z", httpRequest, true)) {
 				logger.debug("{} cert is valid, moving request along", "fdadvisor2z");
@@ -97,6 +104,12 @@ public class AzureADAuthFilter implements Filter {
 			responseCode = 403;
 			responseException = new ApiError("registration certificate missing", "Must provide a valid client registration certificate");
 			sendResponse(responseCode, responseException, httpResponse);
+			return;
+		}
+		// validate certificate exclusion health path
+		if (healthPath) {
+			logger.debug("health path is valid, moving request along");
+			chain.doFilter(request, response);
 			return;
 		}
 		boolean isUsingPrimaryCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCertName"), httpRequest, false);
@@ -184,7 +197,8 @@ public class AzureADAuthFilter implements Filter {
         ObjectMapper mapper = new ObjectMapper();
         PrintWriter out = httpResponse.getWriter();
         out.print(mapper.writeValueAsString(responseException));
-        out.flush();
+		out.flush();
+        out.close();
 	}
 
 	private boolean isValidClientCertInReqHeader(String certHolder, HttpServletRequest httpRequest,
