@@ -94,10 +94,10 @@ public class AircraftPropertyController {
             // lastUpdated is newer or the same as the last time it was modified
             if (lastUpdated.compareTo(lastModified) >= 0) {
                 // do nothing, return
-                logger.error("Date passed in is equal or newer than lastModified: " + ((lastUpdated.compareTo(lastModified) >= 0) ? "True" : "False" ));
+                logger.debug("Date passed in [{}] is equal or newer than lastModified: [{}]", lastUpdated.toString(), ((lastUpdated.compareTo(lastModified) >= 0) ? "True" : "False"));
                 return new ResponseEntity<>(HttpStatus.OK);
             } else {
-                logger.error("Date passed in is older than lastModified: " + ((lastUpdated.compareTo(lastModified) >= 0) ? "False" : "True" ));
+                logger.debug("Date passed in [{}] is older than lastModified: [{}]", lastUpdated.toString(), ((lastUpdated.compareTo(lastModified) >= 0) ? "False" : "True"));
                 return aircraftPropertyService.getExistingTspPackage(authToken, container, fileName);
             }
         } else if (lastUpdated == null) {
