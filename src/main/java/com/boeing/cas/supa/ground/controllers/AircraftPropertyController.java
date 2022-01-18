@@ -89,7 +89,6 @@ public class AircraftPropertyController {
         //if lastUpdated is null or older than last modified then return the existing package
         if (lastUpdated != null && tspExists) {
             Date lastModified = fileManagementService.getBlobLastModifiedTimeStamp(container, fileName);
-            logger.error("Date passed in is equal or newer than lastModified: " + ((lastUpdated.compareTo(lastModified) >= 0) ? "True" : "False" ));
             logger.debug("retrieved timestamp: " + lastModified.toString());
 
             // lastUpdated is newer or the same as the last time it was modified
@@ -98,6 +97,7 @@ public class AircraftPropertyController {
                 logger.error("Date passed in is equal or newer than lastModified: " + ((lastUpdated.compareTo(lastModified) >= 0) ? "True" : "False" ));
                 return new ResponseEntity<>(HttpStatus.OK);
             } else {
+                logger.error("Date passed in is older than lastModified: " + ((lastUpdated.compareTo(lastModified) >= 0) ? "False" : "True" ));
                 return aircraftPropertyService.getExistingTspPackage(authToken, container, fileName);
             }
         } else if (lastUpdated == null) {
