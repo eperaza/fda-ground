@@ -19,6 +19,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.mvc.LastModified;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -87,16 +88,16 @@ public class AircraftPropertyController {
 
         //if lastUpdated is null or older than last modified then return the existing package
         if (lastUpdated != null && tspExists) {
-            logger.debug("DATE WAS PASSED IN!!!");
             Date lastModified = fileManagementService.getBlobLastModifiedTimeStamp(container, fileName);
             logger.debug("retrieved timestamp: " + lastModified.toString());
 
             // lastUpdated is newer or the same as the last time it was modified
             if (lastUpdated.compareTo(lastModified) >= 0) {
                 // do nothing, return
-                logger.debug("lastUpdated is newer than lastModified");
+                logger.debug("Date passed in [{}] is equal or newer than lastModified: [{}]", lastUpdated.toString(), ((lastUpdated.compareTo(lastModified) >= 0) ? "True" : "False"));
                 return new ResponseEntity<>(HttpStatus.OK);
             } else {
+                logger.debug("Date passed in [{}] is older than lastModified: [{}]", lastUpdated.toString(), ((lastUpdated.compareTo(lastModified) >= 0) ? "False" : "True"));
                 return aircraftPropertyService.getExistingTspPackage(authToken, container, fileName);
             }
         } else if (lastUpdated == null) {
