@@ -190,18 +190,19 @@ public class AirlineFocalAdminController {
 		List<AirlinePreferences> prefList= new ArrayList<>();
 		
 				Object preferences = featureManagementService.getAirlinePreferences(accessTokenInRequest);
-		logger.error("prefrence info--"+preferences.toString());
+		logger.error("preference info--"+preferences.toString());
 		boolean isMP=false;
 		ObjectMapper mapper = new ObjectMapper();
 		try {
 			
 			AirlinePreferences[]  parser = mapper.readValue(preferences.toString(), AirlinePreferences[].class);
-		    logger.error("prefrence info--Parsing done");
+		    logger.error("preference info--Parsing done");
 			for(AirlinePreferences pref:parser)
 			{
-				if(pref.getAirlineKey().toString()==Constants.MP_FOR_REGISTRATION && pref.isEnabled())
+				if(pref.getAirlineKey().contains(Constants.MP_FOR_REGISTRATION) && pref.isEnabled()){
+					logger.debug("preference {} is enabled: {} ", pref.getAirlineKey().toString(), pref.isEnabled());
 					isMP=true;
-				
+				}
 			}
 		
 		} catch (Exception e) {
