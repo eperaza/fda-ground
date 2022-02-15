@@ -510,7 +510,9 @@ public class AzureADClientService {
 
 				if (newRegistrationProcess) {
 					logger.debug("Using new Process, do NOT attach mp");
-					helper.addAttachment(emailNewPdfAttachment.getName(), emailNewPdfAttachment);
+					if (!airlineGroup.getDisplayName().equals("airline-etd")) {
+						helper.addAttachment(emailNewPdfAttachment.getName(), emailNewPdfAttachment);
+					}
 				} else {
 					String mpFileName = newlyCreatedUser.getDisplayName().replaceAll("\\s+", "_").toLowerCase() + ".mp";
 					File emailMpAttachment = getFileFromBlob("tmp", mpFileName, null);

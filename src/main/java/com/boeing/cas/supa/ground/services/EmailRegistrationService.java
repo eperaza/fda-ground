@@ -58,28 +58,48 @@ public class EmailRegistrationService {
                 .filter(group -> group.getDisplayName().startsWith("role-"))
                 .map(group -> group.getDisplayName().replace("role-airline", StringUtils.EMPTY).toLowerCase())
                 .collect(Collectors.joining(","));
+        String firstName = newUser.getGivenName();
+        if (airline.equals("airline-etd")) {
+            emailMessageBody.append("Dear ").append(String.format("%s", firstName)).append(",");
+            emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("Welcome to the next level of flight optimization solution.");
+            emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("Your new account for FliteDeck Advisor Lite has been successfully created.");
+            emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("To get started with your new account registration:");
+            emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("1. Install FliteDeck Advisor on the company iPad.");
+            emailMessageBody.append("2. Open FDA-Lite application.");
+            emailMessageBody.append("3. Enter this Activation code: \"" + activationCode + "\" in the FliteDeck Advisor registration screen.");
+            emailMessageBody.append("4. After completing the registration, reopen the FliteDeck Advisor to start using it.");
+            emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("If you experience any issues, please contact your Airline Focal.");
+            emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("This email was generated automatically; please do not reply to this message.");
+            emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
 
-        emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-        emailMessageBody.append("Your new account for FliteDeck Advisor has been successfully created. The Airline ").append(String.format("%s",
-                StringUtils.capitalize(role))).append( " role is assigned to your account.");
+        } else {
+            emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("Your new account for FliteDeck Advisor has been successfully created. The Airline ").append(String.format("%s",
+                    StringUtils.capitalize(role))).append(" role is assigned to your account.");
 
-        emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-        emailMessageBody.append("To get started with your new account registration,");
+            emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("To get started with your new account registration,");
 
-        emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-        emailMessageBody.append("   1. Go to the <a href=\"https://itunes.apple.com/us/app/flitedeck-advisor/id1058617698\">App Store</a>")
-                .append(" to install FliteDeck Advisor on your iPad. Open the installed application.").append(Constants.HTML_LINE_BREAK);
-        emailMessageBody.append("   2. Come back to this email and enter this <b>ONE-TIME</b> code: \"" + activationCode + "\" into the FliteDeck Registration. ")
-                .append(Constants.HTML_LINE_BREAK);
-        emailMessageBody.append("   3. After completing the registration and the WiFi configuration, reopen the FliteDeck Advisor to start using it.");
+            emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("   1. Go to the <a href=\"https://itunes.apple.com/us/app/flitedeck-advisor/id1058617698\">App Store</a>")
+                    .append(" to install FliteDeck Advisor on your iPad. Open the installed application.").append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("   2. Come back to this email and enter this <b>ONE-TIME</b> code: \"" + activationCode + "\" into the FliteDeck Registration. ")
+                    .append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("   3. After completing the registration and the WiFi configuration, reopen the FliteDeck Advisor to start using it.");
 
-        emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-        emailMessageBody.append("Please find the attached PDF document for detailed instructions. If you experience any issues or have any questions, please contact our representative, Jim Fritz at james.l.fritz@boeing.com. ");
-        emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-        emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-        emailMessageBody.append("Thank you, ").append("FliteDeck Advisor Support");
-        emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-
+            emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("Please find the attached PDF document for detailed instructions. If you experience any issues or have any questions, please contact our representative, Jim Fritz at james.l.fritz@boeing.com. ");
+            emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("Thank you, ").append("FliteDeck Advisor Support");
+            emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+        }
         try{
             logger.debug("NewRegistrationProcess: emailAddress [{}]", emailAddress);
             logger.debug("NewRegistrationProcess: activationCode [{}]", activationCode);
