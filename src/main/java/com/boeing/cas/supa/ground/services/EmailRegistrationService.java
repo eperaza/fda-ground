@@ -51,15 +51,16 @@ public class EmailRegistrationService {
                 .filter(group -> group.getDisplayName().startsWith("airline-"))
                 .map(group -> group.getDisplayName().replace("airline-", StringUtils.EMPTY).toUpperCase())
                 .collect(Collectors.joining(","));
-        emailMessageBody.append("Hi ").append(newUser.getDisplayName()).append(' ')
-                .append(String.format("(%s),", airline));
-
+        if (!airline.equals("ETD")) {
+            emailMessageBody.append("Hi ").append(newUser.getDisplayName()).append(' ')
+                    .append(String.format("(%s),", airline));
+        }
         String role = newUser.getGroups().stream()
                 .filter(group -> group.getDisplayName().startsWith("role-"))
                 .map(group -> group.getDisplayName().replace("role-airline", StringUtils.EMPTY).toLowerCase())
                 .collect(Collectors.joining(","));
         String firstName = newUser.getGivenName();
-        if (airline.equals("airline-etd")) {
+        if (airline.equals("ETD")) {
             emailMessageBody.append("Dear ").append(String.format("%s", firstName)).append(",");
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("Welcome to the next level of flight optimization solution.");
@@ -68,11 +69,11 @@ public class EmailRegistrationService {
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("To get started with your new account registration:");
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("1. Install FliteDeck Advisor on the company iPad.");
-            emailMessageBody.append("2. Open FDA-Lite application.");
-            emailMessageBody.append("3. Enter this Activation code: \"" + activationCode + "\" in the FliteDeck Advisor registration screen.");
-            emailMessageBody.append("4. After completing the registration, reopen the FliteDeck Advisor to start using it.");
-            emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("1. Install FliteDeck Advisor on the company iPad.").append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("2. Open FDA-Lite application.").append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("3. Enter this Activation code: \"" + activationCode + "\" in the FliteDeck Advisor registration screen.").append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("4. After completing the registration, reopen the FliteDeck Advisor to start using it.").append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("If you experience any issues, please contact your Airline Focal.");
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("This email was generated automatically; please do not reply to this message.");

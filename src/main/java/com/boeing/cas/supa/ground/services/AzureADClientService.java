@@ -510,8 +510,12 @@ public class AzureADClientService {
 
 				if (newRegistrationProcess) {
 					logger.debug("Using new Process, do NOT attach mp");
+
 					if (!airlineGroup.getDisplayName().equals("airline-etd")) {
+						logger.debug("Add attachment for airline: \"" + airlineGroup.getDisplayName() + "\"");
 						helper.addAttachment(emailNewPdfAttachment.getName(), emailNewPdfAttachment);
+					} else {
+						logger.debug("Do not add attachment for airline: \"" + airlineGroup.getDisplayName() + "\"");
 					}
 				} else {
 					String mpFileName = newlyCreatedUser.getDisplayName().replaceAll("\\s+", "_").toLowerCase() + ".mp";
