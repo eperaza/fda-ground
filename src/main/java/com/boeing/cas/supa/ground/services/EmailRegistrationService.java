@@ -70,11 +70,14 @@ public class EmailRegistrationService {
             emailMessageBody.append("To get started with your new account registration:");
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("1. Install FliteDeck Advisor on the company iPad.").append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("2. Open FDA-Lite application.").append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("3. Enter this Activation code: \"" + activationCode + "\" in the FliteDeck Advisor registration screen.").append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("4. After completing the registration, reopen the FliteDeck Advisor to start using it.").append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("2. In the Registration screen, enter your email address.").append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("3. Open FDA-Lite application.").append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("4. Enter the Activation code: \"" + activationCode + "\"").append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("5. Enter a password and tap Register.").append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("If you experience any issues, please contact your Airline Focal.");
+            emailMessageBody.append("After completing the registration, reopen the FliteDeck Advisor to start using it.");
+            emailMessageBody.append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("If you experience any issues, please contact your EFB Support.");
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("This email was generated automatically; please do not reply to this message.");
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
