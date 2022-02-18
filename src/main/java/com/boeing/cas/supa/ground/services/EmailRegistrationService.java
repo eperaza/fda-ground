@@ -70,8 +70,8 @@ public class EmailRegistrationService {
             emailMessageBody.append("To get started with your new account registration:");
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("1. Install FliteDeck Advisor on the company iPad.").append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("2. In the Registration screen, enter your email address.").append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("3. Open FDA-Lite application.").append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("2. Open FDA-Lite application.").append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("3. In the Registration screen, enter your email address.").append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("4. Enter the Activation code: \"" + activationCode + "\"").append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("5. Enter a password and tap Register.").append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append(Constants.HTML_LINE_BREAK);
