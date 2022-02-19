@@ -60,8 +60,9 @@ public class EmailRegistrationService {
                 .map(group -> group.getDisplayName().replace("role-airline", StringUtils.EMPTY).toLowerCase())
                 .collect(Collectors.joining(","));
         String firstName = newUser.getGivenName();
+        String firstNameCapitalized = firstName.substring(0, 1).toUpperCase() + firstName.substring(1);
         if (airline.equals("ETD")) {
-            emailMessageBody.append("Dear ").append(String.format("%s", firstName)).append(",");
+            emailMessageBody.append("Dear ").append(String.format("%s", firstNameCapitalized)).append(",");
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("Welcome to the next level of flight optimization solution.");
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
