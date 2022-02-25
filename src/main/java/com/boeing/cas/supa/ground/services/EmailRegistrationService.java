@@ -92,15 +92,14 @@ public class EmailRegistrationService {
             emailMessageBody.append("To get started with your new account registration,");
 
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("   1. Go to the <a href=\"https://itunes.apple.com/us/app/flitedeck-advisor/id1058617698\">App Store</a>")
-                    .append(" to install FliteDeck Advisor on your iPad. Open the installed application.").append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("   2. Come back to this email and enter this <b>ONE-TIME</b> code: \"" + activationCode + "\" into the FliteDeck Registration. ")
+            emailMessageBody.append("   1. Copy this ONE-TIME code: \"" + activationCode + "\"")
                     .append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("   3. After completing the registration and the WiFi configuration, reopen the FliteDeck Advisor to start using it.");
+            emailMessageBody.append("   2. Go to the attached registration instructions PDF and follow the instructions.");
 
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("Please find the attached PDF document for detailed instructions. If you experience any issues or have any questions, please contact our representative, Jim Fritz at james.l.fritz@boeing.com. ");
+            emailMessageBody.append("If you experience any issues or have any questions, please contact our representative and our support group through the following email:");
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("FDA Group support - <a href=\"mailto:FliteDeckAdvisorSupport@Boeing.com\"FliteDeckAdvisorSupport@Boeing.com");
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("Thank you, ").append("FliteDeck Advisor Support");
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
