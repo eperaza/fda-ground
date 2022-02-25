@@ -99,9 +99,9 @@ public class EmailRegistrationService {
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("If you experience any issues or have any questions, please contact our representative and our support group through the following email:");
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("FDA Group support - <a href=\"mailto:FliteDeckAdvisorSupport@Boeing.com\"FliteDeckAdvisorSupport@Boeing.com");
+            emailMessageBody.append("FDA Group support - <a href=\"mailto:FliteDeckAdvisorSupport@Boeing.com\">FliteDeckAdvisorSupport@Boeing.com</a>");
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("Thank you, ").append("FliteDeck Advisor Support");
+            emailMessageBody.append("Thank you, ").append(Constants.HTML_LINE_BREAK).append("FliteDeck Advisor Support");
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
         }
         try{
