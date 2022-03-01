@@ -40,9 +40,6 @@ public class UserMgmtController {
 	@Autowired
 	private UserMgmtService umClient;
 
-	@Autowired
-	public OldEmailRegistrations oldEmailList;
-
 	@RequestMapping(path = "/deleteUser/{userId}", method = { RequestMethod.DELETE })
 	public ResponseEntity<Object> deleteUserByAirline(@PathVariable("userId") String userId,
 			@RequestHeader("Authorization") String authToken, @RequestHeader("Membership") String membership,

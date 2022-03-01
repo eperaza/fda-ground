@@ -106,6 +106,8 @@ public class DemoApplication {
 		appSecrets.put("zuppa-efo", keyVaultRetriever.getSecretByKey("zuppa-efo"));
 		appSecrets.put("zuppa-etd", keyVaultRetriever.getSecretByKey("zuppa-etd"));
 		appSecrets.put("zuppa-fda", keyVaultRetriever.getSecretByKey("zuppa-fda"));
+		appSecrets.put("AzureADPortalClientId", keyVaultRetriever.getSecretByKey("AzureADPortalClientId"));
+
 
 		return appSecrets;
 	}
