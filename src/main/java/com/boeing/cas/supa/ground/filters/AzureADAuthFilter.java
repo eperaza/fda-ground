@@ -148,7 +148,7 @@ public class AzureADAuthFilter implements Filter {
 			logger.debug("Checking cert and OAuth2 token...");
 			boolean validClientCert = isUsingPrimaryCert || isUsingSecondaryCert;
 			boolean validOAuthToken = this.isValidOAuthToken(httpRequest.getHeader("Authorization"));
-			if (validOAuthToken) {
+			if (validClientCert && validOAuthToken) {
 				logger.debug("cert and OAuth2 token are good!");
 				chain.doFilter(request, response);
 				return;
@@ -274,7 +274,6 @@ public class AzureADAuthFilter implements Filter {
 		boolean approved = false;
 
 		for (Map.Entry<Integer, String> app : approvedApps.entrySet()) {
-			logger.debug("value: {}", app);
 			if (app.getValue().equals(claimsMap.get("appid"))) {
 				approved = true;
 			}

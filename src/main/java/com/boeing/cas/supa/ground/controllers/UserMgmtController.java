@@ -43,13 +43,10 @@ public class UserMgmtController {
 	@RequestMapping(path = "/deleteUser/{userId}", method = { RequestMethod.DELETE })
 	public ResponseEntity<Object> deleteUserByAirline(@PathVariable("userId") String userId,
 			@RequestHeader("Authorization") String authToken, @RequestHeader("Membership") String membership,
-			@RequestHeader("Role") String role) {
-
-		// Extract the access token from the authorization request header
-		String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
+			@RequestHeader("Role") String role, @RequestHeader("ObjectID") String objectId) {
 
 		// Delete user based on supplied user object ID.
-		Object result = umClient.deleteUser(userId, accessTokenInRequest, true, membership, role);
+		Object result = umClient.deleteUser(userId, objectId, true, membership, role);
 
 		if (result instanceof ApiError) {
 			return new ResponseEntity<>(result, ControllerUtils
@@ -61,13 +58,10 @@ public class UserMgmtController {
 
 	@RequestMapping(path = "/getUsers", method = { RequestMethod.GET })
 	public ResponseEntity<Object> getUsers(@RequestHeader("Authorization") String authToken,
-			@RequestHeader("Airline") String airline) {
-
-		// Extract the access token from the authorization request header
-		String accessTokenInRequest = authToken.replace(Constants.AUTH_HEADER_PREFIX, StringUtils.EMPTY);
+			@RequestHeader("Airline") String airline, @RequestHeader("ObjectID") String objectId) {
 
 		// Create user with the received payload/parameters defining the new account.
-		Object result = umClient.getUsers(accessTokenInRequest, airline);
+		Object result = umClient.getUsers(objectId, airline);
 
 		if (result instanceof ApiError) {
 			return new ResponseEntity<>(result, ControllerUtils
@@ -174,8 +168,7 @@ public class UserMgmtController {
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
-			logger.error("prefrence info-- Error Occured");
-
+			logger.error("preference info-- Error Occured");
 		}
 
 		Object result;

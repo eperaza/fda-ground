@@ -98,7 +98,7 @@ public class UserMgmtService {
     @Autowired
     private EmailRegistrationService emailService;
 
-    public Object getUsers(String accessTokenInRequest, String airline) {
+    public Object getUsers(String objectID, String airline) {
 
         Object resultObj = null;
         StringBuilder progressLog = new StringBuilder("Get Users -");
@@ -108,9 +108,8 @@ public class UserMgmtService {
             // Get group membership of user issuing request. Ensure that user belongs to
             // role-airlinefocal group
             // and one and only one airline group.
-            User airlineFocalCurrentUser = aadClient.getUserInfoFromJwtAccessToken(accessTokenInRequest);
 
-            List<UserAccount> users = userAccountRegister.getAllUsers(airline, airlineFocalCurrentUser.getObjectId());
+            List<UserAccount> users = userAccountRegister.getAllUsers(airline, objectID);
 
             ObjectMapper mapper = new ObjectMapper()
                     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -207,7 +206,7 @@ public class UserMgmtService {
         return returnVal;
     }
 
-    public Object deleteUser(String userId, String accessTokenInRequest, boolean isSuperAdmin, String membership,
+    public Object deleteUser(String userId, String objectId, boolean isSuperAdmin, String membership,
             String role) {
 
         Object resultObj = null;
@@ -215,13 +214,8 @@ public class UserMgmtService {
 
         try {
 
-            // Get group membership of user issuing request. Ensure that user belongs to
-            // role-airlinefocal group
-            // and one and only one airline group.
-            User airlineFocalCurrentUser = aadClient.getUserInfoFromJwtAccessToken(accessTokenInRequest);
-
             // Ensure requesting user is not trying to delete self!
-            if (airlineFocalCurrentUser.getObjectId().equals(userId)) {
+            if (objectId.equals(userId)) {
                 return new ApiError("USER_DELETE_FAILED", "User cannot delete self", RequestFailureReason.BAD_REQUEST);
             }
 
@@ -335,343 +329,6 @@ public class UserMgmtService {
         } catch (IOException ioe) {
             logger.error("IOException: {}", ioe.getMessage(), ioe);
             resultObj = new ApiError("USER_DELETE_FAILED", "FDAGNDSVCERR0016");
-        } finally {
-
-            if (resultObj instanceof ApiError) {
-                logger.error("FDAGndSvcLog> {}", ControllerUtils.sanitizeString(progressLog.toString()));
-            }
-        }
-
-        return resultObj;
-    }
-
-    public Object createUser(NewUser newUserPayload, String accessTokenInRequest, Group airlineGroup,
-            String roleGroupName, boolean newRegistrationProcess, String airline) {
-
-        Object resultObj = null;
-        StringBuilder progressLog = new StringBuilder("Create user -");
-
-        // Validate the user name
-        if (StringUtils.isBlank(newUserPayload.getUserPrincipalName())
-                || !UsernamePolicyEnforcer.validate(newUserPayload.getUserPrincipalName())) {
-            logger.error("Missing or invalid username specified in user creation request: {}",
-                    ControllerUtils.sanitizeString(newUserPayload.getUserPrincipalName()));
-            return new ApiError("CREATE_USER_FAILURE", UsernamePolicyEnforcer.ERROR_USERNAME_FAILED_DESCRIPTION,
-                    RequestFailureReason.BAD_REQUEST);
-        }
-        // Validate the password
-        else if (StringUtils.isBlank(newUserPayload.getPassword())
-                || !PasswordPolicyEnforcer.validate(newUserPayload.getPassword())) {
-            logger.error("Missing or invalid password specified in user creation request: {}",
-                    ControllerUtils.sanitizeString(newUserPayload.getPassword()));
-            return new ApiError("CREATE_USER_FAILURE", PasswordPolicyEnforcer.ERROR_PSWD_FAILED_DESCRIPTION,
-                    RequestFailureReason.BAD_REQUEST);
-        }
-        // Validate the first name
-        else if (StringUtils.isBlank(newUserPayload.getGivenName())) {
-            logger.error("Missing or invalid first name specified in user creation request: {}",
-                    ControllerUtils.sanitizeString(newUserPayload.getGivenName()));
-            return new ApiError("CREATE_USER_FAILURE", "Missing or invalid first name",
-                    RequestFailureReason.BAD_REQUEST);
-        }
-        // Validate the last name
-        else if (StringUtils.isBlank(newUserPayload.getSurname())) {
-            logger.error("Missing or invalid last name specified in user creation request: {}",
-                    ControllerUtils.sanitizeString(newUserPayload.getSurname()));
-            return new ApiError("CREATE_USER_FAILURE", "Missing or invalid last name",
-                    RequestFailureReason.BAD_REQUEST);
-        }
-        // Validate the email address
-        else if (CollectionUtils.isEmpty(newUserPayload.getOtherMails()) || newUserPayload.getOtherMails().stream()
-                .anyMatch(e -> StringUtils.isBlank(e) || !e.matches(Constants.PATTERN_EMAIL_REGEX))) {
-            logger.error("Missing or invalid work email: {}",
-                    CollectionUtils.isEmpty(newUserPayload.getOtherMails())
-                            ? StringUtils.EMPTY
-                            : ControllerUtils
-                                    .sanitizeString(StringUtils.join(newUserPayload.getOtherMails().toArray())));
-            return new ApiError("CREATE_USER_FAILURE", "Missing or invalid work email",
-                    RequestFailureReason.BAD_REQUEST);
-        }
-        // Validate the user role specified
-        else if (StringUtils.isBlank(newUserPayload.getRoleGroupName())
-                || !Constants.ALLOWED_USER_ROLES.contains(newUserPayload.getRoleGroupName())) {
-            logger.error("Missing or invalid user role specified in user creation request: {}",
-                    ControllerUtils.sanitizeString(newUserPayload.getRoleGroupName()));
-            return new ApiError("CREATE_USER_FAILURE", "Missing or invalid user role",
-                    RequestFailureReason.BAD_REQUEST);
-        }
-        // validate airline group specifier, either in the new user request payload or
-        // in the airline group argument
-        else if (airlineGroup == null && StringUtils.isBlank(newUserPayload.getAirlineGroupName())) {
-            logger.error("Missing or invalid airline group specified in user creation request: {}",
-                    ControllerUtils.sanitizeString(newUserPayload.getAirlineGroupName()));
-            return new ApiError("CREATE_USER_FAILURE", "Missing or invalid airline", RequestFailureReason.BAD_REQUEST);
-        } else {
-            // continue with deeper validations...
-        }
-
-        // Get GroupId of requested user role
-        Group roleGroup = aadClient.getGroupByName(newUserPayload.getRoleGroupName(), accessTokenInRequest);
-        if (roleGroup == null) {
-            logger.error("Failed to retrieve user role group: {}",
-                    ControllerUtils.sanitizeString(newUserPayload.getRoleGroupName()));
-            return new ApiError("CREATE_USER_FAILURE", "Missing or invalid user role");
-        }
-
-        // Get Group object corresponding to requested airline group
-        if (airlineGroup == null) {
-
-            User requestorUser = aadClient.getUserInfoFromJwtAccessToken(accessTokenInRequest);
-            if (requestorUser.getDirectoryRoles() != null) {
-                List<DirectoryRole> directoryRoles = requestorUser.getDirectoryRoles().stream()
-                        .filter(g -> g.getDisplayName().toLowerCase().equals("user administrator"))
-                        .collect(Collectors.toList());
-                if (directoryRoles.size() == 0) {
-                    logger.error("Insufficient privileges to create user: not a user account administrator");
-                    return new ApiError("CREATE_USER_FAILURE", "Insufficient privileges to create user",
-                            RequestFailureReason.UNAUTHORIZED);
-                }
-                // Get GroupId of requested airline group
-                airlineGroup = aadClient.getGroupByName(newUserPayload.getAirlineGroupName(), accessTokenInRequest);
-                if (airlineGroup == null) {
-                    logger.error("Insufficient privileges to create user: failed to retrieve airline group");
-                    return new ApiError("CREATE_USER_FAILURE", "Missing or invalid airline",
-                            RequestFailureReason.BAD_REQUEST);
-                }
-            }
-        }
-
-        // Get access token based on delegated permission via impersonation with a Local
-        // Administrator of the tenant.
-        String adminAccessToken = null;
-        Object authResult = aadClient.getElevatedPermissionsAccessToken(PermissionType.IMPERSONATION);
-        if (authResult instanceof ApiError) {
-            return authResult;
-        }
-        // access token could not be obtained either via delegated permissions or
-        // application permissions.
-        else if (authResult == null) {
-            return new ApiError("CREATE_USER_FAILURE", "Failed to acquire permissions");
-        } else {
-            adminAccessToken = String.valueOf(authResult);
-            progressLog.append("\nObtained impersonation access token");
-        }
-
-        // Validate user name provided by the admin; if invalid, return appropriate
-        // error key/description
-        User userObj = null;
-        try {
-
-            userObj = aadClient.getUserFromGraph(
-                    new StringBuilder(newUserPayload.getUserPrincipalName()).append('@')
-                            .append(this.appProps.get("AzureADCustomTenantName")).toString(),
-                    adminAccessToken,
-                    progressLog,
-                    "CREATE_USER_ERROR");
-            if (userObj != null) {
-                logger.warn("User already exists: {}",
-                        ControllerUtils.sanitizeString(newUserPayload.getUserPrincipalName()));
-                return new ApiError("CREATE_USER_ERROR",
-                        "Username already exists in directory. Please use an altered form of the username, such as appending number(s), to avoid name conflicts.",
-                        RequestFailureReason.CONFLICT);
-            } else {
-                // proceed with creation of user account
-            }
-        } catch (ApiErrorException aee) {
-
-            if (aee.getApiError().getFailureReason().equals(RequestFailureReason.NOT_FOUND)) {
-                // this is good, user does not exist, so can proceed with user creation
-            } else {
-                logger.warn("User could not be retrieved from graph: {}",
-                        ControllerUtils.sanitizeString(aee.getApiError().getErrorDescription()));
-                return aee.getApiError();
-            }
-        } catch (IOException ioe) {
-            logger.warn("User could not be retrieved from graph: {}", ControllerUtils.sanitizeString(ioe.getMessage()),
-                    ioe);
-            return new ApiError("CREATE_USER_ERROR", "Failed to retrieve user from graph",
-                    RequestFailureReason.INTERNAL_SERVER_ERROR);
-        }
-
-        // Proceed with request to create the new user account
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode rootNode = aadClient.convertNewUserObjectToJsonPayload(mapper, newUserPayload);
-        try {
-
-            URL url = new URL(
-                    new StringBuilder(azureadApiUri).append('/').append(this.appProps.get("AzureADTenantName"))
-                            .append("/users")
-                            .append('?').append(new StringBuilder(Constants.AZURE_API_VERSION_PREFIX)
-                                    .append(azureadApiVersion).toString())
-                            .toString());
-
-            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-            // Set the appropriate header fields in the request header.
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("api-version", azureadApiVersion);
-            conn.setRequestProperty("Authorization", adminAccessToken);
-            conn.setRequestProperty("Content-Type", "application/json");
-            conn.setRequestProperty("Accept", Constants.ACCEPT_CT_JSON_ODATAMINIMAL);
-            conn.setDoOutput(true);
-            try (DataOutputStream dos = new DataOutputStream(conn.getOutputStream())) {
-                dos.writeBytes(mapper.writeValueAsString(rootNode));
-                dos.flush();
-            }
-
-            String responseStr = HttpClientHelper.getResponseStringFromConn(conn,
-                    conn.getResponseCode() == HttpStatus.CREATED.value());
-            progressLog.append("\nReceived HTTP ").append(conn.getResponseCode()).append(", response: ")
-                    .append(responseStr);
-            if (conn.getResponseCode() == HttpStatus.CREATED.value()) {
-
-                mapper = new ObjectMapper()
-                        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                        .setSerializationInclusion(Include.NON_NULL);
-                resultObj = mapper.readValue(responseStr, User.class);
-                progressLog.append("\nDeserialized create user response to obtain User object");
-
-                User newlyCreatedUser = (User) resultObj;
-                logger.info("Created new user: {}", newlyCreatedUser.getUserPrincipalName());
-                // Assign user to airline-related group and role-related group
-                boolean addedUserToAirlineGroup = aadClient.addUserToGroup(airlineGroup.getObjectId(),
-                        newlyCreatedUser.getObjectId(), adminAccessToken);
-                progressLog.append("\nAdded user to airline group");
-                boolean addedUserToRoleGroup = aadClient.addUserToGroup(roleGroup.getObjectId(),
-                        newlyCreatedUser.getObjectId(),
-                        adminAccessToken);
-                progressLog.append("\nAdded user to primary user role");
-
-                // Get the updated user membership and update the User object sent back in the
-                // response.
-                UserMembership userMembership = aadClient.getUserMembershipFromGraph(newlyCreatedUser.getObjectId(),
-                        adminAccessToken);
-                progressLog.append("\nObtained groups which user is a member of");
-                newlyCreatedUser.setGroups(userMembership.getUserGroups());
-
-                if (!addedUserToAirlineGroup || !addedUserToRoleGroup) {
-                    logger.error("Failed to add user to airline group and/or role group");
-                }
-                progressLog.append("\nUser added to airline and role groups");
-
-                // User creation looks good... set new user to the return value [resultObj]
-                UserAccount newUser = new UserAccount(newlyCreatedUser);
-                newUser.setUserRole(ControllerUtils.sanitizeString(roleGroupName));
-
-                // resultObj = newlyCreatedUser;
-                resultObj = newUser;
-                // logger.info("Added new user {} to {} and {} groups",
-                // newlyCreatedUser.getUserPrincipalName(), airlineGroup.getDisplayName(),
-                // ControllerUtils.sanitizeString(roleGroupName));
-                logger.info("Added new user {} to {} and {} groups", newUser.getUserPrincipalName(),
-                        airlineGroup.getDisplayName(), ControllerUtils.sanitizeString(roleGroupName));
-
-                // Register new user in the account registration database
-                String registrationToken = UUID.randomUUID().toString();
-                UserAccountRegistration registration = new UserAccountRegistration(registrationToken,
-                        newlyCreatedUser.getObjectId(), newlyCreatedUser.getUserPrincipalName(),
-                        airlineGroup.getDisplayName(), newUserPayload.getOtherMails().get(0),
-                        Constants.UserAccountState.PENDING_USER_ACTIVATION.toString());
-                userAccountRegister.registerNewUserAccount(registration);
-                userAccountRegister.updateUserAccount(newlyCreatedUser);
-                progressLog.append("\nRegistered new user account in database");
-                logger.info("Registered new user {} in the account registration database",
-                        newlyCreatedUser.getUserPrincipalName());
-
-                // New user account registration is successful. Now send email to user (use
-                // otherMail address)
-                MimeMessage message = emailSender.createMimeMessage();
-                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-                // MimeMessageHelper helper = new MimeMessageHelper(message);
-                String azureDomain = this.appProps.get("AzureADCustomTenantName").toString();
-                helper.setFrom("noreply@flitedeckadvisor.com");
-                helper.setReplyTo(
-                        new StringBuilder("noreply@").append(this.appProps.get("AzureADCustomTenantName")).toString());
-                if (azureDomain.equals("flitedeckadvisor.com")) {
-                    helper.setSubject("Welcome to FliteDeck Advisor - New Account Registration");
-                } else {
-                    helper.setSubject("(TEST ENV) Welcome to FliteDeck Advisor - New Account Registration");
-                }
-                helper.setTo(newUserPayload.getOtherMails().get(0));
-
-                helper.setText(aadClient.composeNewUserAccountActivationEmail(newlyCreatedUser, registrationToken,
-                        newRegistrationProcess), true);
-
-                File emailNewPdfAttachment = aadClient.getFileFromBlob("email-new-instructions",
-                        "FDA_registration_instructions.pdf",
-                        airlineGroup.getDisplayName().substring(new String("airline-").length()));
-                File emailOldPdfAttachment = aadClient.getFileFromBlob("email-instructions",
-                        "FDA_registration_instructions.pdf",
-                        airlineGroup.getDisplayName().substring(new String("airline-").length()));
-
-                // File emailNewPdfAttachment = getFileFromBlob("email-new-instructions",
-                // "FDA_registration_instructions.pdf",
-                // airlineGroup.getDisplayName().substring(new String("airline-").length()));
-
-                if (newRegistrationProcess) {
-                    logger.debug("Using new Process, do NOT attach mp");
-                    logger.debug("display name: {}", airlineGroup.getDisplayName());
-                    if (!airline.equals("airline-etd")) {
-                        logger.debug("Add attachment for airline: \"" + airlineGroup.getDisplayName() + "\"");
-                        helper.addAttachment(emailNewPdfAttachment.getName(), emailNewPdfAttachment);
-                        logger.debug("attach pdf instructions email [{}]",
-                                newRegistrationProcess ? emailNewPdfAttachment.getAbsolutePath()
-                                        : emailOldPdfAttachment.getAbsolutePath());
-
-                        String emailPath = newRegistrationProcess ? emailNewPdfAttachment.getAbsolutePath()
-                                : emailOldPdfAttachment.getAbsolutePath();
-                        logger.debug("attach pdf instructions email [{}]", emailPath);
-                    } else {
-                        logger.debug("Do not add attachment for airline: \"" + airlineGroup.getDisplayName() + "\"");
-                    }
-                } else {
-                    String mpFileName = newlyCreatedUser.getDisplayName().replaceAll("\\s+", "_").toLowerCase() + ".mp";
-                    File emailMpAttachment = aadClient.getFileFromBlob("tmp", mpFileName, null);
-                    helper.addAttachment(emailOldPdfAttachment.getName(), emailOldPdfAttachment);
-                    logger.debug("Using old Process, attach mp email [{}]", emailMpAttachment.getAbsolutePath());
-                    helper.addAttachment(emailMpAttachment.getName(), emailMpAttachment);
-                }
-
-                emailSender.send(message);
-                logger.info("Sent account activation email to new user {}", newlyCreatedUser.getUserPrincipalName());
-                progressLog.append("\nSuccessfully queued email for delivery");
-            } else {
-                JsonNode errorNode = mapper.readTree(responseStr).path("odata.error");
-                JsonNode messageNode = errorNode.path("message");
-                JsonNode valueNode = messageNode.path("value");
-
-                resultObj = new ApiError("USER_CREATE_FAILED", valueNode.asText());
-            }
-        } catch (UserAccountRegistrationException uare) {
-            logger.error("Failed to register new user account: {}", uare.getMessage(), uare);
-            resultObj = new ApiError("USER_CREATE_FAILED", "FDAGNDSVCERR0001");
-        } catch (JsonProcessingException jpe) {
-            logger.error("JsonProcessingException: {}", jpe.getMessage(), jpe);
-            resultObj = new ApiError("USER_CREATE_FAILED", "FDAGNDSVCERR0002");
-        } catch (MalformedURLException murle) {
-            logger.error("MalformedURLException: {}", murle.getMessage(), murle);
-            resultObj = new ApiError("USER_CREATE_FAILED", "FDAGNDSVCERR0004");
-        } catch (ProtocolException pe) {
-            logger.error("ProtocolException: {}", pe.getMessage(), pe);
-            resultObj = new ApiError("USER_CREATE_FAILED", "FDAGNDSVCERR0008");
-        } catch (IOException ioe) {
-            logger.error("IOException: {}", ioe.getMessage(), ioe);
-            resultObj = new ApiError("USER_CREATE_FAILED", "FDAGNDSVCERR0016");
-        } catch (MailException me) {
-            logger.error("Failed to send email: {}", me.getMessage(), me);
-            resultObj = new ApiError("USER_CREATE_FAILED", "FDAGNDSVCERR0032");
-        } catch (FileDownloadException dwn) {
-            logger.error("Failed to download Blobs: {}", dwn.getMessage(), dwn);
-            resultObj = new ApiError("USER_CREATE_FAILED", "FDAGNDSVCERR0064");
-        } catch (Exception e) {
-
-            Throwable nestedException = null;
-            if ((nestedException = e.getCause()) != null) {
-                logger.error("Failed to complete user creation flow: {}", nestedException.getMessage(),
-                        nestedException);
-            } else {
-                logger.error("Failed to complete user creation flow: {}", e.getMessage(), e);
-            }
-            resultObj = new ApiError("USER_CREATE_FAILED", "FDAGNDSVCERR0064");
         } finally {
 
             if (resultObj instanceof ApiError) {
