@@ -75,9 +75,8 @@ public class UserAccountPreregistrationDaoImpl implements UserAccountPreregistra
 			}
 		}
 		catch (DataAccessException dae) {
-
 			logger.warn("Failed to insert user account registration record in database: {}", dae.getMessage(), dae);
-			throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", "Database exception", RequestFailureReason.INTERNAL_SERVER_ERROR));
+			throw new UserAccountRegistrationException(new ApiError("CREATE_USER_FAILURE", dae.getMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR));
 		}
 
         return returnVal;
