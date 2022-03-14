@@ -2,14 +2,14 @@ package com.boeing.cas.supa.ground.pojos;
 
 
 public class PreUserAccount {
-
-	String userId;
-    String first;
-	String last;
-	String email;
-	String accountState;
-	String airline;
-    String role;
+	String registrationToken = null;
+	String userId = null;
+    String first = null;
+	String last = null;
+	String email = null;
+	String accountState = null;
+	String airline = null;
+    String role = null;
 
     public PreUserAccount(String userId, String first, String last, String email, String accountState, String airline,
             String role) {
@@ -80,6 +80,14 @@ public class PreUserAccount {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getRegistrationToken() {
+        return registrationToken;
+    }
+
+    public void setRegistrationToken(String registrationToken) {
+        this.registrationToken = registrationToken;
     }
 
     

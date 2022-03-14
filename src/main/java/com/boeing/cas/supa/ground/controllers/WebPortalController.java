@@ -3,13 +3,10 @@ package com.boeing.cas.supa.ground.controllers;
 import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.NewUser;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
-import com.boeing.cas.supa.ground.services.UserMgmtService;
+import com.boeing.cas.supa.ground.services.WebPortalService;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
-import com.boeing.cas.supa.ground.utils.OldEmailRegistrations;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,28 +14,24 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 import com.boeing.cas.supa.ground.exceptions.FileDownloadException;
 import com.boeing.cas.supa.ground.exceptions.TspConfigLogException;
 import com.boeing.cas.supa.ground.exceptions.UserAccountRegistrationException;
 import com.boeing.cas.supa.ground.pojos.*;
 
+@CrossOrigin
 @RequestMapping(path = "/userMgmt")
 @Controller
-public class UserMgmtController {
+public class WebPortalController {
 
-	private final Logger logger = LoggerFactory.getLogger(UserMgmtController.class);
+	private final Logger logger = LoggerFactory.getLogger(WebPortalController.class);
 
 	@Autowired
 	private AzureADClientService aadClient;
 
 	@Autowired
-	private UserMgmtService umClient;
+	private WebPortalService umClient;
 
 	@RequestMapping(path = "/deleteUser/{userId}", method = { RequestMethod.DELETE })
 	public ResponseEntity<Object> deleteUserByAirline(@PathVariable("userId") String userId,
@@ -94,7 +87,7 @@ public class UserMgmtController {
 
 		PreUserAccount newUserPayload = new PreUserAccount(userPayload.getUserId(), userPayload.getFirst(),
 				userPayload.getLast(), userPayload.getEmail(),
-				Constants.UserAccountState.PENDING_USER_ACTIVATION.toString(), userPayload.getAirline(),
+				Constants.UserAccountState.PENDING_USER_REGISTRATION.toString(), userPayload.getAirline(),
 				userPayload.getRole());
 
 		result = umClient.createUser(newUserPayload);
@@ -117,8 +110,9 @@ public class UserMgmtController {
 
 		PreUserAccount newUserPayload = new PreUserAccount(userPayload.getUserId(), userPayload.getFirst(),
 				userPayload.getLast(), userPayload.getEmail(),
-				Constants.UserAccountState.PENDING_USER_ACTIVATION.toString(), userPayload.getAirline(),
+				Constants.UserAccountState.PENDING_USER_REGISTRATION.toString(), userPayload.getAirline(),
 				userPayload.getRole());
+		newUserPayload.setRegistrationToken(userPayload.getRegistrationToken());
 
 		result = umClient.updatePreUser(newUserPayload);
 
@@ -195,11 +189,11 @@ public class UserMgmtController {
 	}
 
 	@RequestMapping(path = "/getTSP", method = { RequestMethod.GET })
-	public ResponseEntity<Object> getTSP(@RequestHeader String airline,
+	public ResponseEntity<Object> getTSP(@RequestHeader("Airline") String airline,
 			@RequestHeader("Authorization") String authToken) throws IOException, TspConfigLogException, FileDownloadException {
 				Object result = umClient.getTSP(airline);
 
-		return new ResponseEntity<>(result, HttpStatus.CREATED);
+		return new ResponseEntity<>(result, HttpStatus.OK);
 
 	}
 

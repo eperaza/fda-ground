@@ -23,14 +23,14 @@ public class UserAccountPreregistrationDaoImpl implements UserAccountPreregistra
 
 	private final Logger logger = LoggerFactory.getLogger(UserAccountPreregistrationDaoImpl.class);
 
-	private static final String USER_ACCOUNT_REGISTRATION_SQL = "INSERT INTO user_account_preregistrations (user_id, first, last, email, role, account_state, airline) VALUES (:user_id, :first, :last, :email, :role, :account_state, :airline)";
+	private static final String USER_ACCOUNT_REGISTRATION_SQL = "INSERT INTO user_account_preregistrations (registration_token, user_id, first, last, email, role, account_state, airline) VALUES (:registration_token, :user_id, :first, :last, :email, :role, :account_state, :airline)";
 	
 	private static final String USER_ACCOUNT_SELECT_SQL = "SELECT * FROM user_account_preregistrations WHERE airline = :airline";
 	private static final String USER_ACCOUNT_REMOVAL_SQL = "DELETE FROM user_account_preregistrations WHERE user_id = :user_id";
     private static final String USER_ACCOUNT_UPDATE_SQL
 			= "UPDATE user_account_preregistrations SET user_id = :user_id, first = :first, last = :last, "
 			+ " email = :email, role = :role "
-			+ " WHERE user_id = :user_id AND airline = :airline";
+			+ " WHERE registration_token = :registration_token AND airline = :airline";
 
 	@Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;
@@ -58,6 +58,7 @@ public class UserAccountPreregistrationDaoImpl implements UserAccountPreregistra
         int returnVal = 0;
 
 		Map<String,Object> namedParameters = new HashMap<>();
+		namedParameters.put("registration_token", userAccountRegistration.getRegistrationToken());
 		namedParameters.put("user_id", userAccountRegistration.getUserId());
 		namedParameters.put("first", userAccountRegistration.getFirst());
 		namedParameters.put("last", userAccountRegistration.getLast());
@@ -109,7 +110,7 @@ public class UserAccountPreregistrationDaoImpl implements UserAccountPreregistra
 
 		int returnVal = 0;
 		Map<String,Object> namedParameters = new HashMap<>();
-
+		namedParameters.put("registration_token", user.getRegistrationToken());
 		namedParameters.put("user_id", user.getUserId());
 		namedParameters.put("airline", user.getAirline());
 		namedParameters.put("first", user.getFirst());
@@ -141,6 +142,7 @@ public class UserAccountPreregistrationDaoImpl implements UserAccountPreregistra
 		public PreUserAccount mapRow(ResultSet resultSet, int rowNum) throws SQLException {
 
 			PreUserAccount user = new PreUserAccount();
+			user.setRegistrationToken(resultSet.getString("REGISTRATION_TOKEN"));
 			user.setUserId(resultSet.getString("USER_ID"));
 			user.setFirst(resultSet.getString("FIRST"));
 			user.setLast(resultSet.getString("LAST"));
@@ -148,7 +150,7 @@ public class UserAccountPreregistrationDaoImpl implements UserAccountPreregistra
             user.setRole(resultSet.getString("ROLE"));
             user.setEmail(resultSet.getString("EMAIL"));
 			String account_state = resultSet.getString("ACCOUNT_STATE");
-			user.setAccountState(account_state.equals("USER_ACTIVATED")?"true":"false");
+			user.setAccountState(account_state.equals("USER_REGISTERED")?"true":"false");
 
 			return user;
 		}

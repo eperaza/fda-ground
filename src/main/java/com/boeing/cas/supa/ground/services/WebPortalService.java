@@ -58,9 +58,9 @@ import java.util.stream.Collectors;
 import static com.boeing.cas.supa.ground.services.FileManagementService.TSP_CONFIG_ZIP_CONTAINER;
 
 @Service
-public class UserMgmtService {
+public class WebPortalService {
 
-    private final Logger logger = LoggerFactory.getLogger(UserMgmtService.class);
+    private final Logger logger = LoggerFactory.getLogger(WebPortalService.class);
 
     @Value("${api.azuread.version}")
     private String azureadApiVersion;
@@ -173,21 +173,19 @@ public class UserMgmtService {
     public int createUser(PreUserAccount newUserPayload) throws UserAccountRegistrationException {
         // Register new user in the account registration database
         String registrationToken = UUID.randomUUID().toString();
+        newUserPayload.setRegistrationToken(registrationToken);
 
         int returnVal = userAccountPreregister.registerNewUserAccount(newUserPayload);
         if (returnVal == 1) {
-            logger.info("Registered new user {} in database");
+            logger.info("Registered new pre user {} in database");
         } else {
             logger.error("failure to create");
-
         }
         return returnVal;
     }
 
     public int updatePreUser(PreUserAccount newUserPayload) throws UserAccountRegistrationException {
         // Register new user in the account registration database
-        String registrationToken = UUID.randomUUID().toString();
-
         int returnVal = userAccountPreregister.updateUserAccount(newUserPayload);
         if (returnVal == 1) {
             logger.info("Registered new user {} in database");
@@ -199,7 +197,6 @@ public class UserMgmtService {
     }
 
     public int deletePreUser(String userId) throws UserAccountRegistrationException {
-
         // Delete any associated records in the User Account Registration database table
         int returnVal = userAccountPreregister.removeUserAccountRegistrationData(userId);
         logger.info("Removed account pre-registration records for user {} in database", userId);
