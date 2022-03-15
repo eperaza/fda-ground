@@ -1,5 +1,6 @@
 package com.boeing.cas.supa.ground.filters;
 
+import java.applet.AudioClip;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.cert.X509Certificate;
@@ -43,6 +44,9 @@ public class AzureADAuthFilter implements Filter {
 
 	@Value("${api.azuread.uri}")
 	private String azureadApiUri;
+
+	@Value("${api.azuread.guid}")
+	private String azureadApiGuid;
 	
 	@Autowired
 	private Map<String, String> appProps;
@@ -251,7 +255,8 @@ public class AzureADAuthFilter implements Filter {
 								.map(Object::toString)
 								.collect(Collectors.toSet());
 			logger.debug("aud Claims: {}", set.toString());
-			if (!set.contains(this.azureadApiUri)) {
+
+			if (!set.contains(this.azureadApiUri) && !set.contains(this.azureadApiGuid) ) {
 				logger.error("Aud does not exist");
 				throw new SecurityException("Not a valid Authorization token: Aud does not exist");
 			}
@@ -261,10 +266,24 @@ public class AzureADAuthFilter implements Filter {
             logger.error("TenantId doesn't exist");
             throw new SecurityException("Not a valid Authorization token: TenantId doesn't exist");
         }
-        if (!this.appProps.get("AzureADAppClientID").equals(claimsMap.get("appid"))) {
-            logger.error("Not part of approved apps");
+
+		//Validate token appid claim against list of approved apps
+		Map<Integer, String> approvedApps = new HashMap<>();
+		approvedApps.put(1, this.appProps.get("AzureADAppClientID"));
+		approvedApps.put(2, this.appProps.get("AzureADPortalClientId"));
+		boolean approved = false;
+
+		for (Map.Entry<Integer, String> app : approvedApps.entrySet()) {
+			if (app.getValue().equals(claimsMap.get("appid"))) {
+				approved = true;
+			}
+		}
+		
+		if (!approved) {
+			logger.error("Not part of approved apps");
             throw new SecurityException("Not a valid Authorization token: Not part of approved apps");
-        }
+       }
+			
         if (!((Date) claimsMap.get("exp")).after(new Date())) {
             logger.error("Expired token");
             throw new SecurityException("Not a valid Authorization token: expired token");

@@ -187,7 +187,7 @@ public class AzureADClientService {
 		return result.getAccessToken();
 	}
 
-	private Object getElevatedPermissionsAccessToken(PermissionType permissionType) {
+	Object getElevatedPermissionsAccessToken(PermissionType permissionType) {
 
 		// Obtain access token for application, so it can invoke Azure AD Graph API
 		String accessToken = null;
@@ -1818,7 +1818,7 @@ public class AzureADClientService {
 		return resultObj;
 	}
 
-	private User getUserFromGraph(String username, String adminAccessToken, StringBuilder progressLog,
+	User getUserFromGraph(String username, String adminAccessToken, StringBuilder progressLog,
 			String contextKey)
 			throws MalformedURLException, IOException, ApiErrorException {
 
@@ -1932,7 +1932,7 @@ public class AzureADClientService {
 		return user;
 	}
 
-	private User getUserInfoFromGraph(String uniqueId, String accessToken) {
+	User getUserInfoFromGraph(String uniqueId, String accessToken) {
 
 		logger.debug("Getting user object info from graph");
 		User userObj = null;
@@ -2121,7 +2121,7 @@ public class AzureADClientService {
 		return rootNode;
 	}
 
-	private String composeNewUserAccountActivationEmail(User newlyCreatedUser, String registrationToken,
+	String composeNewUserAccountActivationEmail(User newlyCreatedUser, String registrationToken,
 			boolean newRegistrationProcess)
 			throws UserAccountRegistrationException {
 		if (newRegistrationProcess) {
