@@ -3,7 +3,7 @@ package com.boeing.cas.supa.ground.controllers;
 import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.NewUser;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
-import com.boeing.cas.supa.ground.services.WebPortalService;
+import com.boeing.cas.supa.ground.services.UserMgmtService;
 import com.boeing.cas.supa.ground.utils.Constants;
 import com.boeing.cas.supa.ground.utils.ControllerUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,15 +23,15 @@ import com.boeing.cas.supa.ground.pojos.*;
 @CrossOrigin
 @RequestMapping(path = "/userMgmt")
 @Controller
-public class WebPortalController {
+public class UserMgmtController {
 
-	private final Logger logger = LoggerFactory.getLogger(WebPortalController.class);
+	private final Logger logger = LoggerFactory.getLogger(UserMgmtController.class);
 
 	@Autowired
 	private AzureADClientService aadClient;
 
 	@Autowired
-	private WebPortalService umClient;
+	private UserMgmtService umClient;
 
 	@RequestMapping(path = "/deleteUser/{userId}", method = { RequestMethod.DELETE })
 	public ResponseEntity<Object> deleteUserByAirline(@PathVariable("userId") String userId,

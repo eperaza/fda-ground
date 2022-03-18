@@ -58,9 +58,9 @@ import java.util.stream.Collectors;
 import static com.boeing.cas.supa.ground.services.FileManagementService.TSP_CONFIG_ZIP_CONTAINER;
 
 @Service
-public class WebPortalService {
+public class UserMgmtService {
 
-    private final Logger logger = LoggerFactory.getLogger(WebPortalService.class);
+    private final Logger logger = LoggerFactory.getLogger(UserMgmtService.class);
 
     @Value("${api.azuread.version}")
     private String azureadApiVersion;
