@@ -411,4 +411,24 @@ public class UserMgmtService {
 
     }
 
+    public void updateUser(UserAccount newUserPayload, String airline) throws UserAccountRegistrationException {
+        // Register new user in the account registration database
+        Group membership = new Group();
+        membership.setDescription("airline");
+        membership.setDisplayName(airline);
+
+        Group role = new Group();
+        role.setDescription("role");
+        role.setDisplayName(newUserPayload.getUserRole());
+
+        List<Group> groups = new ArrayList<>();
+        groups.add(membership);
+        groups.add(role);
+
+        newUserPayload.setGroups(groups);
+        
+        userAccountRegister.updateUserAccount(newUserPayload);
+        logger.info("Updated [{}] in database", newUserPayload.getMailNickname());
+    
+    }
 }
