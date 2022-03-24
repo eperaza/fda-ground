@@ -122,7 +122,7 @@ public class UserMgmtController {
 					ControllerUtils.translateRequestFailureReasonToHttpErrorCode(error.getFailureReason()));
 		}
 
-		return new ResponseEntity<>(result, HttpStatus.CREATED);
+		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
 
 	@RequestMapping(path = "/deletePreUser/{userId:.+}/", method = { RequestMethod.DELETE })
@@ -200,11 +200,10 @@ public class UserMgmtController {
 	public ResponseEntity<Object> updateUser(@RequestBody UserAccount userPayload,
 			@RequestHeader("Authorization") String authToken, @RequestHeader("Airline") String airline) throws UserAccountRegistrationException {
 
-		Object result;
+		Object result = "";
 
 		try{
 			umClient.updateUser(userPayload, airline);
-			result = 1;
 		}
 		catch(UserAccountRegistrationException uare){
 			logger.info("Failed to update user in database", uare.getMessage());
@@ -218,7 +217,7 @@ public class UserMgmtController {
 					ControllerUtils.translateRequestFailureReasonToHttpErrorCode(error.getFailureReason()));
 		}
 
-		return new ResponseEntity<>(result, HttpStatus.CREATED);
+		return new ResponseEntity<>(result, HttpStatus.NO_CONTENT);
 	}
 
 }

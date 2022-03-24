@@ -428,6 +428,7 @@ public class UserMgmtService {
         newUserPayload.setGroups(groups);
         
         userAccountRegister.updateUserAccount(newUserPayload);
+        
         logger.info("Updated [{}] in database", newUserPayload.getMailNickname());
     
     }
