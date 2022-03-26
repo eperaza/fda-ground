@@ -249,6 +249,45 @@ public class AircraftPropertyService {
 		return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
     }
 
+    public ResponseEntity<byte[]> getExistingFDRConfig(@RequestHeader("Authorization") String authToken, String container, String fileName) {
+		try {
+			logger.error("FDR get existing fdr");
+			byte[] zipFile = getFDRConfigFromBlob(authToken, fileName);
+			int logging = zipFile != null ? zipFile.length : -13;
+			logger.debug("FDR after zip array size: " + logging);
+			Date lastModifiedTimeStamp = fileManagementService.getBlobLastModifiedTimeStamp(container, fileName);
+
+			logger.debug("FDR last modified in get existing" + lastModifiedTimeStamp);
+			String lastModifiedStamp = lastModifiedTimeStamp.toString();
+			String checkSum = checkSumUtil.generateCheckSum(zipFile);
+
+			HttpHeaders header = getHttpHeaders(fileName, checkSum, lastModifiedStamp);
+
+			logger.error("FDR filename: " + fileName);
+			//logger.error("FDR header: " + header.);
+			return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
+		} catch (Exception ex) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+	}
+
+	public byte[] getFDRConfigFromBlob(String authToken, String fileName) {
+		try {
+			String airlineName = azureADClientService.validateAndGetAirlineName(authToken);
+			if (Strings.isNullOrEmpty(airlineName)) {
+				throw new IllegalArgumentException("Bad Input");
+			}
+			byte[] fdrConfig = fileManagementService.getFileFromStorage(fileName, "fdr-config", authToken);
+
+			logger.debug(" GOOD - Zip package Downloaded");
+
+			return fdrConfig;
+		} catch (Exception ex) {
+			logger.error("Failed to Download Zip Package" + ex);
+		}
+		return null;
+	}
+
 	public HttpHeaders getHttpHeaders(String fileName, String checkSum, String lastModifiedStamp) {
 		HttpHeaders header = new HttpHeaders();
 		header.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
