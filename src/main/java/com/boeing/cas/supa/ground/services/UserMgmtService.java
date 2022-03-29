@@ -220,8 +220,9 @@ public class UserMgmtService {
             // - perform operation in superadmin mode and have User Account Administrator
             // directory role
             // -or-
-            // - belong to Role-AirlineFocal group and a single Airline group
-            if (!role.equals("role-airlinefocal") || membership.isEmpty()) {
+            // - belong to Role-AirlineFocal or Role-EFBAdmin group and a single Airline group
+            if ((!role.equals("role-airlinefocal") && !role.equals("role-airlineefbadmin")) || membership.isEmpty()) {
+                logger.error("Role not allowed to delete users: [{}]", role);
                 return new ApiError("USER_DELETE_FAILED", "User has insufficient privileges",
                         RequestFailureReason.UNAUTHORIZED);
             }

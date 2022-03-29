@@ -16,6 +16,7 @@ import com.boeing.cas.supa.ground.pojos.Credential;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/login")
 public class LoginController {

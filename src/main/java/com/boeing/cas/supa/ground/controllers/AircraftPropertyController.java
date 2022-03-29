@@ -98,13 +98,13 @@ public class AircraftPropertyController {
                 return new ResponseEntity<>(HttpStatus.OK);
             } else {
                 logger.debug("Date passed in [{}] is older than lastModified: [{}]", lastUpdated.toString(), ((lastUpdated.compareTo(lastModified) >= 0) ? "False" : "True"));
-                return aircraftPropertyService.getExistingTspPackage(authToken, container, fileName);
+                return aircraftPropertyService.getExistingTspPackage(authToken, container, fileName, user);
             }
         } else if (lastUpdated == null) {
             // no date passed in, send the existing package
             logger.debug("NO DATE passed in, tspExists for that airline in blob");
 
-            return aircraftPropertyService.getExistingTspPackage(authToken, container, fileName);
+            return aircraftPropertyService.getExistingTspPackage(authToken, container, fileName, user);
         }
         // should not get here, but if so need to run manual update (we didn't want a package that wasn't approved to be created)
         logger.debug("tsp does not exist and last updated was passed in");
