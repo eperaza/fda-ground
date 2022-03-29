@@ -111,6 +111,60 @@ public class AircraftPropertyController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @RequestMapping(path = "/getFDRConfiguration", method = {RequestMethod.GET}, produces = "application/zip")
+	public ResponseEntity<byte[]> getFDRConfiguration(
+			@RequestHeader("Authorization") String authToken,
+			@RequestHeader(name = "lastUpdated", required = false) Date lastUpdated) throws IOException, NoSuchAlgorithmException, TspConfigLogException, FileDownloadException {
+
+		final User user = azureADClientService.getUserInfoFromJwtAccessToken(authToken);
+		logger.info("IN FDR GET FDRCONFIGURATION");
+		List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
+		if (airlineGroups.size() != 1) {
+			throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", "Failed to associate user with an airline", Constants.RequestFailureReason.UNAUTHORIZED));
+		}
+		String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, org.apache.commons.lang3.StringUtils.EMPTY);
+
+		AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"), this.appProps.get("StorageKey"));
+
+		String container = "fdr-config";
+
+		// file path name to retrieve from blob - it is not truly a real directory
+		String fileName = new StringBuilder(airlineGroup).append("/").append("cert.zip").toString();
+		boolean tspExists = asu.blobExistsOnCloud(container, fileName);
+
+		logger.error("FDR File Name: " + fileName);
+		logger.error("FDR File Exists: " + ((tspExists == true) ? "Yes" : "No" ));
+		if(lastUpdated != null) {
+			logger.error("FDR last updated: " + lastUpdated.toString());
+		} else {
+			logger.error("FDR last updated: never");
+		}
+
+		//if lastUpdated is null or older than last modified then return the existing package
+		if (lastUpdated != null && tspExists) {
+			Date lastModified = fileManagementService.getBlobLastModifiedTimeStamp(container, fileName);
+			logger.debug("retrieved timestamp: " + lastModified.toString());
+
+			// lastUpdated is newer or the same as the last time it was modified
+			if (false) {//(lastUpdated.compareTo(lastModified) >= 0) {
+				// do nothing, return
+				logger.debug("Date passed in [{}] is equal or newer than lastModified: [{}]", lastUpdated.toString(), ((lastUpdated.compareTo(lastModified) >= 0) ? "True" : "False"));
+				return new ResponseEntity<>(HttpStatus.OK);
+			} else {
+				logger.debug("Date passed in [{}] is older than lastModified: [{}]", lastUpdated.toString(), ((lastUpdated.compareTo(lastModified) >= 0) ? "False" : "True"));
+				return aircraftPropertyService.getExistingFDRConfig(authToken, container, fileName);
+			}
+		} else if (lastUpdated == null) {
+			// no date passed in, send the existing package
+			logger.debug("NO DATE passed in, fdr exists for that airline in blob");
+
+			return aircraftPropertyService.getExistingFDRConfig(authToken, container, fileName);
+		}
+		// should not get here, but if so need to run manual update (we didn't want a package that wasn't approved to be created)
+		logger.debug("fdr file does not exist and last updated was passed in");
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
     @RequestMapping(path = "/getAircraftProperty", method = {RequestMethod.GET})
     public ResponseEntity<Object> getAircraftProperty(@RequestHeader("Authorization") String authToken,
                                                       @RequestHeader(name = "tailNumber", required = true) String tailNumber) throws IOException {
