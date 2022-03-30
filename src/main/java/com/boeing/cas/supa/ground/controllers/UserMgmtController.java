@@ -20,7 +20,6 @@ import com.boeing.cas.supa.ground.exceptions.TspConfigLogException;
 import com.boeing.cas.supa.ground.exceptions.UserAccountRegistrationException;
 import com.boeing.cas.supa.ground.pojos.*;
 
-@CrossOrigin
 @RequestMapping(path = "/userMgmt")
 @Controller
 public class UserMgmtController {

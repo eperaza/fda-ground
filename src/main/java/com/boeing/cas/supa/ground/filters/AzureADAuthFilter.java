@@ -1,5 +1,6 @@
 package com.boeing.cas.supa.ground.filters;
 
+import java.applet.AudioClip;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.cert.X509Certificate;
@@ -43,6 +44,9 @@ public class AzureADAuthFilter implements Filter {
 
 	@Value("${api.azuread.uri}")
 	private String azureadApiUri;
+
+	@Value("${api.azuread.guid}")
+	private String azureadApiGuid;
 	
 	@Autowired
 	private Map<String, String> appProps;
@@ -57,6 +61,10 @@ public class AzureADAuthFilter implements Filter {
 	// include any path which uses the (one-time) registration cert
 	private static final Set<String> REGISTRATION_PATH = Collections.unmodifiableSet(
 			new HashSet<>(Arrays.asList("/getclientcert")));
+
+	// include any path which uses actuator endpoints
+	private static final Set<String> HEALTH_PATH = Collections.unmodifiableSet(
+			new HashSet<>(Arrays.asList("/health", "/metrics", "/info", "/trace")));
 
 	@Autowired
 	private CertificateVerifierUtil certVerify;
@@ -73,9 +81,6 @@ public class AzureADAuthFilter implements Filter {
 		if (!(request instanceof HttpServletRequest)) {
 			return;
 		}
-
-		// ignore the code to validate the token to run in local
-		chain.doFilter(request, response);
 		
 		HttpServletRequest httpRequest = (HttpServletRequest) request;
 		HttpServletResponse httpResponse = (HttpServletResponse) response;
@@ -86,10 +91,13 @@ public class AzureADAuthFilter implements Filter {
 		boolean registrationPath = REGISTRATION_PATH.contains(path);
 		logger.debug("registration path? {}", registrationPath?"yes":"no");
 
+		boolean healthPath = HEALTH_PATH.contains(path);
+		logger.debug("health path? {}", healthPath?"yes":"no");
+
 		int responseCode = 400;
 		ApiError responseException = null;
-		/*
-		//need to remove hard-coded names, and use keyvault entries instead
+
+		// need to remove hard-coded names, and use keyvault entries instead
 		if (registrationPath) {
 			if (this.isValidClientCertInReqHeader("fdadvisor2z", httpRequest, true)) {
 				logger.debug("{} cert is valid, moving request along", "fdadvisor2z");
@@ -100,6 +108,12 @@ public class AzureADAuthFilter implements Filter {
 			responseCode = 403;
 			responseException = new ApiError("registration certificate missing", "Must provide a valid client registration certificate");
 			sendResponse(responseCode, responseException, httpResponse);
+			return;
+		}
+		// validate certificate exclusion health path
+		if (healthPath) {
+			logger.debug("health path is valid, moving request along");
+			chain.doFilter(request, response);
 			return;
 		}
 		boolean isUsingPrimaryCert = this.isValidClientCertInReqHeader(appProps.get("FDAdvisorClientCertName"), httpRequest, false);
@@ -172,7 +186,7 @@ public class AzureADAuthFilter implements Filter {
 			if (responseException != null) {
 				sendResponse(responseCode, responseException, httpResponse);
 			}
-		}*/
+		}
 	}
 
 	private void sendResponse(int responseCode, ApiError responseException, HttpServletResponse httpResponse) throws IOException {
@@ -187,7 +201,8 @@ public class AzureADAuthFilter implements Filter {
         ObjectMapper mapper = new ObjectMapper();
         PrintWriter out = httpResponse.getWriter();
         out.print(mapper.writeValueAsString(responseException));
-        out.flush();
+		out.flush();
+        out.close();
 	}
 
 	private boolean isValidClientCertInReqHeader(String certHolder, HttpServletRequest httpRequest,
@@ -240,7 +255,8 @@ public class AzureADAuthFilter implements Filter {
 								.map(Object::toString)
 								.collect(Collectors.toSet());
 			logger.debug("aud Claims: {}", set.toString());
-			if (!set.contains(this.azureadApiUri)) {
+
+			if (!set.contains(this.azureadApiUri) && !set.contains(this.azureadApiGuid) ) {
 				logger.error("Aud does not exist");
 				throw new SecurityException("Not a valid Authorization token: Aud does not exist");
 			}
@@ -250,10 +266,24 @@ public class AzureADAuthFilter implements Filter {
             logger.error("TenantId doesn't exist");
             throw new SecurityException("Not a valid Authorization token: TenantId doesn't exist");
         }
-        if (!this.appProps.get("AzureADAppClientID").equals(claimsMap.get("appid"))) {
-            logger.error("Not part of approved apps");
+
+		//Validate token appid claim against list of approved apps
+		Map<Integer, String> approvedApps = new HashMap<>();
+		approvedApps.put(1, this.appProps.get("AzureADAppClientID"));
+		approvedApps.put(2, this.appProps.get("AzureADPortalClientId"));
+		boolean approved = false;
+
+		for (Map.Entry<Integer, String> app : approvedApps.entrySet()) {
+			if (app.getValue().equals(claimsMap.get("appid"))) {
+				approved = true;
+			}
+		}
+		
+		if (!approved) {
+			logger.error("Not part of approved apps");
             throw new SecurityException("Not a valid Authorization token: Not part of approved apps");
-        }
+       }
+			
         if (!((Date) claimsMap.get("exp")).after(new Date())) {
             logger.error("Expired token");
             throw new SecurityException("Not a valid Authorization token: expired token");
