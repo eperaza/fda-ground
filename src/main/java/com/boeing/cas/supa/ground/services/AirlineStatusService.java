@@ -47,13 +47,12 @@ public class AirlineStatusService {
     /**
      * checkAutoConfig - gets the airline TSP package status
      * 
-     * @param authToken access token
      * @param airline   airline code
      * @return airline TSP status
      * @throws IOException
      */
     @Async("asyncExecutor")
-    public CompletableFuture<Map<List<AirlineStatusChecklistItem>, HttpStatus>> checkAutoConfig(String authToken,
+    public CompletableFuture<Map<List<AirlineStatusChecklistItem>, HttpStatus>> checkAutoConfig(
             String airline) throws IOException, NoSuchAlgorithmException, TspConfigLogException,
             InterruptedException {
         logger.info("Auto Config package check starting..");
@@ -121,14 +120,13 @@ public class AirlineStatusService {
     /**
      * checkFlightPlan - gets the Flight Plan source-file status
      * 
-     * @param authToken access token
      * @param airline   airline code
      * @return status of flight plan source
      * @throws InterruptedException
 
      */
     @Async("asyncExecutor")
-    public CompletableFuture<Map<List<AirlineStatusChecklistItem>, HttpStatus>> checkFlightPlan(String authToken,
+    public CompletableFuture<Map<List<AirlineStatusChecklistItem>, HttpStatus>> checkFlightPlan(
             String airline) throws InterruptedException {
         logger.info("Flight Plan source file check starting..");
         AirlineStatusChecklistItem checklistItem = new AirlineStatusChecklistItem();
@@ -182,14 +180,13 @@ public class AirlineStatusService {
     /**
      * checkPreferences - retrieves the Airline Preferences
      * 
-     * @param authToken access token
      * @param airline   airline code
      * @return status of airline preferences
      * @throws InterruptedException
      */
     @Async("asyncExecutor")
     public CompletableFuture<Map<List<AirlineStatusChecklistItem>, HttpStatus>> checkAirlinePreferences(
-            String authToken, String airline) throws InterruptedException {
+            String airline) throws InterruptedException {
         logger.info("Airline Preferences check starting..");
         AirlineStatusChecklistItem checklistItem = new AirlineStatusChecklistItem();
         List<AirlineStatusChecklistItem> list = new ArrayList<>();

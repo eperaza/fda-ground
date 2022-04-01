@@ -55,8 +55,7 @@ public class AirlineStatusController {
 
     @GetMapping(path = "/get")
     public ResponseEntity<Object> getStatusByAirline(
-            @RequestParam String airline,
-            @RequestHeader("Authorization") String authToken) throws NoSuchAlgorithmException, IOException,
+            @RequestParam String airline) throws NoSuchAlgorithmException, IOException,
             TspConfigLogException, FileDownloadException, InterruptedException, ExecutionException,
             CancellationException, CompletionException, AirlineStatusUnauthorizedException {
 
@@ -66,36 +65,16 @@ public class AirlineStatusController {
         CompletableFuture<Map<List<AirlineStatusChecklistItem>, HttpStatus>> preferencesReport = null;
         Object resultObj;
 
-        User requestorUser = aadClient.getUserInfoFromJwtAccessToken(authToken);
-
-        try {
-            if (requestorUser.getGroups() != null) {
-                List<Group> groups = requestorUser.getGroups().stream()
-                        .filter(g -> g.getDisplayName().toLowerCase().contains("role-"))
-                        .collect(Collectors.toList());
-
-                if (groups.size() != 0) {
-                    for (Group group : groups) {
-                        if (!Arrays.stream(ALLOWED_ROLES).anyMatch(group.getDisplayName()::equals)) {
-                            logger.error("Unauthorized: not efb admin or focal");
-                            throw new AirlineStatusUnauthorizedException(HttpStatus.UNAUTHORIZED);
-                        }
-                    }
-
-                } else {
-                    logger.error("Unauthorized: no group membership");
-                    throw new AirlineStatusUnauthorizedException(HttpStatus.UNAUTHORIZED);
-                }
-            }
+        try{
 
             // Auto Config package setup status
-            tspReport = service.checkAutoConfig(authToken, airline);
+            tspReport = service.checkAutoConfig(airline);
 
             // Flight Plan setup status
-            flightPlanReport = service.checkFlightPlan(authToken, airline);
+            flightPlanReport = service.checkFlightPlan(airline);
 
             // Airline Preferences status
-            preferencesReport = service.checkAirlinePreferences(authToken, airline);
+            preferencesReport = service.checkAirlinePreferences(airline);
 
             // Wait until all async services are done
             CompletableFuture.allOf(tspReport, flightPlanReport, preferencesReport).join();
