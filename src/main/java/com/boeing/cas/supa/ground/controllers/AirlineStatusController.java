@@ -55,7 +55,8 @@ public class AirlineStatusController {
 
     @GetMapping(path = "/get")
     public ResponseEntity<Object> getStatusByAirline(
-            @RequestParam String airline) throws NoSuchAlgorithmException, IOException,
+            @RequestParam String airline,
+            @RequestHeader("Authorization") String authToken) throws NoSuchAlgorithmException, IOException,
             TspConfigLogException, FileDownloadException, InterruptedException, ExecutionException,
             CancellationException, CompletionException, AirlineStatusUnauthorizedException {
 
@@ -68,13 +69,13 @@ public class AirlineStatusController {
         try{
 
             // Auto Config package setup status
-            tspReport = service.checkAutoConfig(airline);
+            tspReport = service.checkAutoConfig(authToken, airline);
 
             // Flight Plan setup status
-            flightPlanReport = service.checkFlightPlan(airline);
+            flightPlanReport = service.checkFlightPlan(authToken, airline);
 
             // Airline Preferences status
-            preferencesReport = service.checkAirlinePreferences(airline);
+            preferencesReport = service.checkAirlinePreferences(authToken, airline);
 
             // Wait until all async services are done
             CompletableFuture.allOf(tspReport, flightPlanReport, preferencesReport).join();
