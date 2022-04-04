@@ -16,20 +16,10 @@ import com.boeing.cas.supa.ground.exceptions.FeatureManagementException;
 import com.boeing.cas.supa.ground.exceptions.TspConfigLogException;
 import com.boeing.cas.supa.ground.pojos.AirlinePreferences;
 import com.boeing.cas.supa.ground.pojos.AirlineStatusChecklistItem;
-import com.boeing.cas.supa.ground.pojos.ApiError;
 import com.boeing.cas.supa.ground.pojos.CosmosDbFlightPlanSource;
 import com.boeing.cas.supa.ground.utils.AzureStorageUtil;
-import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
 import org.apache.commons.configuration.ConfigurationException;
-import org.bson.Document;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -241,8 +231,6 @@ public class AirlineStatusService {
         List<AirlineStatusChecklistItem> list = new ArrayList<>();
         Map<List<AirlineStatusChecklistItem>, HttpStatus> response = new LinkedHashMap<>();
 
-        String userGroup = null;
-
         try {
 
             StringBuilder airlineGroup = new StringBuilder("airline-");
@@ -279,108 +267,5 @@ public class AirlineStatusService {
         logger.info("Airline Preferences check completed..");
         return CompletableFuture.completedFuture(response);
     }
-
-    public Object getAllFlightObjectsFromCosmosDB(CosmosDbFlightPlanSource source)
-    {
-        Map<String, String> query = new HashMap<String, String>();
-
-        logger.debug("get flights for [{}]", source.getAirline());
-    
-        try {
-            return searchGeneric(query, source);
-        }
-        catch (Exception ex)
-        {
-            logger.error("Request all flight objects from CosmosDB failed: {}", ex.getMessage(), ex);
-            return new ApiError("FLIGHT_OBJECTS_REQUEST", ex.getMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    private Object searchGeneric(Map<String, String> query, CosmosDbFlightPlanSource source) {
-
-        Map<String, Integer> labels = new HashMap<String, Integer>();
-        labels.put("id", 1);
-        labels.put("flightPlanId", 1);
-        labels.put("flightId", 1);
-        labels.put("estDepartureTime", 1);
-        labels.put("departureAirport", 1);
-        labels.put("arrivalAirport", 1);
-        labels.put("planCI", 1);
-        labels.put("planRevNum", 1);
-
-        Map<String, Integer> sortBy = new HashMap<>();
-        sortBy.put("estDepartureTime", -1);
-
-        BasicDBObject searchLabels = new BasicDBObject();
-        BasicDBObject sortLabels = new BasicDBObject();
-
-        for (Map.Entry<String, Integer> entry : labels.entrySet()) {
-            searchLabels.put(entry.getKey(), entry.getValue());
-        }
-        for (Map.Entry<String, Integer> entry : sortBy.entrySet()) {
-            sortLabels.put(entry.getKey(), entry.getValue());
-        }
-
-        String password = source.getPrimaryPassword();
-        if (password == null) {
-            return new ApiError("FLIGHT_OBJECTS_REQUEST", "CosmosDb Primary Password missing for " + source.getAirline(), RequestFailureReason.INTERNAL_SERVER_ERROR);
-        }
-
-        StringBuilder cosmosDbUrl = new StringBuilder("mongodb://")
-                .append(source.getUserName()).append(":")
-                .append(password)
-                .append("@")
-                .append(source.getServerName())
-                .append(":10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@")
-                .append(source.getUserName())
-                .append("@");
-
-        logger.debug("ConnectionString=[" + cosmosDbUrl.toString() + "]");
-        StringBuilder response = new StringBuilder();
-        response.append("{\"data\":{\"perfectFlights\":[");
-
-        MongoClient mongoClient = null;
-        MongoCursor<Document> cursor = null;
-        try {
-            MongoClientURI uri = new MongoClientURI(cosmosDbUrl.toString());
-            mongoClient = new MongoClient(uri);
-            MongoDatabase database = mongoClient.getDatabase(source.getDatabaseName());
-
-            MongoCollection<Document> collection = database.getCollection(source.getCollectionName());
-
-            BasicDBObject searchQuery = new BasicDBObject();
-
-
-            for (Map.Entry<String, String> entry : query.entrySet()) {
-                searchQuery.put(entry.getKey(), entry.getValue());
-            }
-
-            logger.info("MongoDb: sort by estDepartureTime");
-            //MongoCursor<Document> cursor = collection.find(searchQuery).projection(searchLabels).iterator();
-            cursor = collection.find(searchQuery).projection(searchLabels).sort(sortLabels).limit(10).iterator();
-
-
-            while (cursor.hasNext()) {
-                //logger.debug("Found a doc");
-                Document dbo = cursor.next();
-                if (dbo.containsKey("_id")) {
-                    dbo.remove("_id");
-                }
-                response.append(dbo.toJson().replace("+00:00", "") + ",");
-            }
-
-        } catch(NullPointerException ex){
-            logger.debug("NullPointer Ex with Cursor or MongoClient: {}", ex.getMessage());
-        } finally{
-            cursor.close();
-            mongoClient.close();
-        }
-        // need to strip-off last comma, if there is one.
-        if (response.toString().endsWith(",")) {
-            response = new StringBuilder(response.toString().substring(0, response.toString().length() - 1));
-        }
-		response.append("]}}");
-		return response.toString();
-	}
 
 }
