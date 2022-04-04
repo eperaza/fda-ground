@@ -149,6 +149,9 @@ public class AirlineStatusService {
 
         checklistItem.setItem("Flight Plan");
 
+        List<Object> content = new ArrayList<>();
+        Map<String, Object> description = new HashMap<>();
+
         try {
             AzureStorageUtil asu = new AzureStorageUtil(this.appProps.get("StorageAccountName"),
                     this.appProps.get("StorageKey"));
@@ -159,8 +162,15 @@ public class AirlineStatusService {
                 logger.debug("getting the airline source " + flightPlanSource);
 
                 Object flightObjects = null;
+                ObjectMapper objectMapper = new ObjectMapper();
+                Object json;
 
                 if (flightPlanSource != null ) {
+                    //add flight plan source
+                    description.put("source", flightPlanSource);
+                    json = objectMapper.convertValue(description, Object.class);
+                    content.add(json);
+
                     logger.debug("Use CosmosDb to obtain the flight plan.");
                     Optional<Integer> limit = Optional.of(new Integer(1));
                     Optional<String> flightId = Optional.empty();
@@ -170,22 +180,13 @@ public class AirlineStatusService {
                     logger.info("got flight objects..");
                 }
 
-                List<Object> content = new ArrayList<>();
                 String x = flightObjects.toString().replace("{\"data\":{\"perfectFlights\":[", "[");
                 x = x.replace("]}}", "]");
-
-                ObjectMapper objectMapper = new ObjectMapper();
-
-                //add flight plan source
-                Map<String, Object> description = new HashMap<>();
-                description.put("source", flightPlanSource);
-                Object json = objectMapper.convertValue(description, Object.class);
-                content.add(json);
 
                 //add flight objects
                 json = objectMapper.readValue(x, Object.class);
                 description = new HashMap<>();
-                description.put("sampleObject", json);
+                description.put("lastFlight", json);
                 json = objectMapper.convertValue(description, Object.class);
                 content.add(json);
 
@@ -204,7 +205,11 @@ public class AirlineStatusService {
                         npe.getMessage());
             }
         } catch (IOException ioe) {
-            checklistItem.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            checklistItem.setStatus(HttpStatus.MULTI_STATUS);
+            description = new HashMap<>();
+            description.put("lastFlight", null);
+            content.add(description);
+            checklistItem.setContent(content);
             list.add(checklistItem);
             response.put(list, HttpStatus.INTERNAL_SERVER_ERROR);
             logger.error("Failed to retrieve flight plan [{}] from [{}]: {}", fileName, FLIGHT_PLAN_CONTAINER,

@@ -37,7 +37,6 @@ public class MongoFlightManagerService {
         logger.debug("get flights for [{}]", source.getAirline());
         
         if (flightId.isPresent() || departureAirport.isPresent() || arrivalAirport.isPresent() || limit.isPresent()) {
-            logger.info("entra");
 
             if (flightId.isPresent()) {
                 query.put("flightId", flightId.get());
