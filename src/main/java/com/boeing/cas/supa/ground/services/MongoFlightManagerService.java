@@ -29,12 +29,15 @@ public class MongoFlightManagerService {
 	private Map<String, String> appProps;
 
     public Object getAllFlightObjectsFromCosmosDB(Optional<String> flightId, Optional<String> departureAirport,
-                                                   Optional<String> arrivalAirport, CosmosDbFlightPlanSource source)
+                                                   Optional<String> arrivalAirport, CosmosDbFlightPlanSource source, Optional<Integer> limit)
     {
+        Integer resultLimit = 0;
         Map<String, String> query = new HashMap<String, String>();
 
         logger.debug("get flights for [{}]", source.getAirline());
-        if (flightId.isPresent() || departureAirport.isPresent() || arrivalAirport.isPresent()) {
+        
+        if (flightId.isPresent() || departureAirport.isPresent() || arrivalAirport.isPresent() || limit.isPresent()) {
+            logger.info("entra");
 
             if (flightId.isPresent()) {
                 query.put("flightId", flightId.get());
@@ -59,10 +62,17 @@ public class MongoFlightManagerService {
                 // parameter not passed
                 logger.info("arrivalAirport not present");
             }
+
+            if (limit.isPresent()) {
+                resultLimit = limit.get();
+                logger.info("limit query results to: [{}]", resultLimit);
+            } else {
+                logger.info("no limit on query results");
+            }
         }
 
         try {
-            return searchGeneric(query, source);
+            return searchGeneric(query, source, resultLimit);
         }
         catch (Exception ex)
         {
@@ -70,7 +80,6 @@ public class MongoFlightManagerService {
             return new ApiError("FLIGHT_OBJECTS_REQUEST", ex.getMessage(), RequestFailureReason.INTERNAL_SERVER_ERROR);
         }
     }
-
 
     public Object getFlightObjectByIdFromCosmosDB(String id, CosmosDbFlightPlanSource source)
     {
@@ -105,7 +114,7 @@ public class MongoFlightManagerService {
     }
 
 
-	private Object searchGeneric(Map<String, String> query, CosmosDbFlightPlanSource source) {
+	private Object searchGeneric(Map<String, String> query, CosmosDbFlightPlanSource source, int limit) {
 
         Map<String, Integer> labels = new HashMap<String, Integer>();
         labels.put("id", 1);
@@ -166,7 +175,7 @@ public class MongoFlightManagerService {
 
             logger.info("MongoDb: sort by estDepartureTime");
             //MongoCursor<Document> cursor = collection.find(searchQuery).projection(searchLabels).iterator();
-            cursor = collection.find(searchQuery).projection(searchLabels).sort(sortLabels).iterator();
+            cursor = collection.find(searchQuery).projection(searchLabels).sort(sortLabels).limit(limit).iterator();
 
 
             while (cursor.hasNext()) {

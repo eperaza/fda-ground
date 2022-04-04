@@ -3,29 +3,24 @@ package com.boeing.cas.supa.ground.controllers;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import com.boeing.cas.supa.ground.exceptions.AirlineStatusUnauthorizedException;
 import com.boeing.cas.supa.ground.exceptions.FileDownloadException;
 import com.boeing.cas.supa.ground.exceptions.TspConfigLogException;
 import com.boeing.cas.supa.ground.pojos.AirlineStatusChecklistItem;
 import com.boeing.cas.supa.ground.pojos.ApiError;
-import com.boeing.cas.supa.ground.pojos.Group;
-import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.services.AirlineStatusService;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
 import com.boeing.cas.supa.ground.utils.Constants.RequestFailureReason;
 
+import org.apache.commons.configuration.ConfigurationException;
+import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,14 +46,12 @@ public class AirlineStatusController {
 
     private final Logger logger = LoggerFactory.getLogger(AirlineStatusController.class);
 
-    private final String[] ALLOWED_ROLES = {"role-airlineefbadmin", "role-airlinefocal"};
-
     @GetMapping(path = "/get")
     public ResponseEntity<Object> getStatusByAirline(
             @RequestParam String airline,
             @RequestHeader("Authorization") String authToken) throws NoSuchAlgorithmException, IOException,
             TspConfigLogException, FileDownloadException, InterruptedException, ExecutionException,
-            CancellationException, CompletionException, AirlineStatusUnauthorizedException {
+            CancellationException, CompletionException, AirlineStatusUnauthorizedException, ConfigurationException, JSONException {
 
         List<AirlineStatusChecklistItem> checklist = new ArrayList<>();
         CompletableFuture<Map<List<AirlineStatusChecklistItem>, HttpStatus>> tspReport = null;
