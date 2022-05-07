@@ -1,7 +1,9 @@
 package com.boeing.cas.supa.ground.controllers;
 
+import com.boeing.cas.supa.ground.dao.TspDao;
 import com.boeing.cas.supa.ground.exceptions.FileDownloadException;
 import com.boeing.cas.supa.ground.exceptions.TspConfigLogException;
+import com.boeing.cas.supa.ground.exceptions.UserTspUpdateException;
 import com.boeing.cas.supa.ground.pojos.*;
 import com.boeing.cas.supa.ground.services.AircraftPropertyService;
 import com.boeing.cas.supa.ground.services.AzureADClientService;
@@ -46,6 +48,9 @@ public class AircraftPropertyController {
 
     @Autowired
     private FileManagementService fileManagementService;
+
+    @Autowired 
+    private TspDao tspDao;
     
     @RequestMapping(path = "/getAllAirlineLastUpdated", method = {RequestMethod.GET})
 	public List<AirlineUpdate> getAllAirlineLastUpdated(String authToken, String airline) throws FileDownloadException,IOException {
@@ -61,7 +66,7 @@ public class AircraftPropertyController {
     @RequestMapping(path = "/getAircraftConfiguration", method = {RequestMethod.GET}, produces = "application/zip")
     public ResponseEntity<byte[]> getAircraftConfiguration(
             @RequestHeader("Authorization") String authToken,
-            @RequestHeader(name = "lastUpdated", required = false) Date lastUpdated) throws IOException, NoSuchAlgorithmException, TspConfigLogException, FileDownloadException {
+            @RequestHeader(name = "lastUpdated", required = false) Date lastUpdated) throws IOException, NoSuchAlgorithmException, TspConfigLogException, FileDownloadException, UserTspUpdateException {
 
         final User user = azureADClientService.getUserInfoFromJwtAccessToken(authToken);
         List<Group> airlineGroups = user.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
@@ -95,6 +100,11 @@ public class AircraftPropertyController {
             if (lastUpdated.compareTo(lastModified) >= 0) {
                 // do nothing, return
                 logger.debug("Date passed in [{}] is equal or newer than lastModified: [{}]", lastUpdated.toString(), ((lastUpdated.compareTo(lastModified) >= 0) ? "True" : "False"));
+                
+                //log user tsp lastUpdated into db even if it's newer than lastModified
+                tspDao.updateUserTSPVersion(user, lastUpdated.toString());
+
+                logger.debug("logged last updated [{}] into db: ", lastUpdated.toString());
                 return new ResponseEntity<>(HttpStatus.OK);
             } else {
                 logger.debug("Date passed in [{}] is older than lastModified: [{}]", lastUpdated.toString(), ((lastUpdated.compareTo(lastModified) >= 0) ? "False" : "True"));

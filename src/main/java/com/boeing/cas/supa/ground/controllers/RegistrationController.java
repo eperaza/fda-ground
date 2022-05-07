@@ -164,6 +164,8 @@ public class RegistrationController {
 	public ResponseEntity<Object> registerUserAccount(@RequestBody UserAccountActivation userAccountActivation) throws UserAccountRegistrationException {
 
 		logger.debug("Received registration request from user: {}", ControllerUtils.sanitizeString(userAccountActivation.getUsername()));
+		logger.debug("Params are: {}", userAccountActivation);
+
 		Object result = aadClient.enableRepeatableUserRegistration(userAccountActivation);
 
 		if (result instanceof ApiError) {
