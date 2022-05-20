@@ -99,15 +99,16 @@ public class AircraftPropertyController {
             // lastUpdated is newer or the same as the last time it was modified
             if (lastUpdated.compareTo(lastModified) >= 0) {
                 // do nothing, return
-                logger.debug("Date passed in [{}] is equal or newer than lastModified: [{}]", lastUpdated.toString(), ((lastUpdated.compareTo(lastModified) >= 0) ? "True" : "False"));
-                
+                logger.debug("Date passed in [{}] is equal or newer than lastModified", lastUpdated.toString());
+                logger.debug("Do not download TSP");
+
                 //log user tsp lastUpdated into db even if it's newer than lastModified
                 tspDao.updateUserTSPVersion(user, lastUpdated.toString());
 
                 logger.debug("logged last updated [{}] into db: ", lastUpdated.toString());
-                return new ResponseEntity<>(HttpStatus.OK);
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             } else {
-                logger.debug("Date passed in [{}] is older than lastModified: [{}]", lastUpdated.toString(), ((lastUpdated.compareTo(lastModified) >= 0) ? "False" : "True"));
+                logger.debug("Date passed in [{}] is older than lastModified", lastUpdated.toString());
                 return aircraftPropertyService.getExistingTspPackage(authToken, container, fileName, user);
             }
         } else if (lastUpdated == null) {
