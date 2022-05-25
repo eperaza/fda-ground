@@ -106,7 +106,7 @@ public class AircraftPropertyController {
                 tspDao.updateUserTSPVersion(user, lastUpdated.toString());
 
                 logger.debug("logged last updated [{}] into db: ", lastUpdated.toString());
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                return new ResponseEntity<>(HttpStatus.OK);
             } else {
                 logger.debug("Date passed in [{}] is older than lastModified", lastUpdated.toString());
                 return aircraftPropertyService.getExistingTspPackage(authToken, container, fileName, user);
