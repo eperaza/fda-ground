@@ -72,7 +72,8 @@ public class FlightObjectManagerService {
 			}
 			else if (airlineGroup.equalsIgnoreCase("amx")
 					|| airlineGroup.equalsIgnoreCase("fda")
-					|| airlineGroup.equalsIgnoreCase("bgs")){
+					|| airlineGroup.equalsIgnoreCase("bgs")
+					|| airlineGroup.equalsIgnoreCase("tav")) {
 				logger.debug("Use [AMX] Route Sync to obtain the flight plan.");
 				int counter = 1;
 				Object obj = getAllFlightObjectsFromRS(flightId, departureAirport, arrivalAirport, authToken);
