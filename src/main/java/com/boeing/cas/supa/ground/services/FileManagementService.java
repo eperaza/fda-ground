@@ -214,17 +214,6 @@ public class FileManagementService {
                         throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("No file corresponding to specified name %s and type %s", file, type), RequestFailureReason.NOT_FOUND));
                     }
                 }
-            } else if ("fdr-config".equals(type)) {
-                container = "fdr-config";
-                filePath = file;
-                logger.debug("fdr zip container  " + container + "|" + filePath);
-
-                if (asu.blobExistsOnCloud(container, filePath) != true) {
-
-                    if (asu.blobExistsOnCloud(container, filePath) != true) {
-                        throw new FileDownloadException(new ApiError("FILE_DOWNLOAD_FAILURE", String.format("No file corresponding to specified name %s and type %s", file, type), RequestFailureReason.NOT_FOUND));
-                    }
-                }
             } else if (MOBILECONFIG_STORAGE_CONTAINER.equals(type)) {
                 container = MOBILECONFIG_STORAGE_CONTAINER;
                 filePath = file;
