@@ -5,7 +5,7 @@ public class Group extends DirectoryObject {
 	protected String description;
     protected String mail;
 
-    private Group() {}
+    public Group() {}
 
     public String getDescription() {
         return this.description;

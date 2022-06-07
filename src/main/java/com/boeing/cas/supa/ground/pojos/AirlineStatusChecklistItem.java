@@ -2,13 +2,15 @@ package com.boeing.cas.supa.ground.pojos;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
+
 public class AirlineStatusChecklistItem {
 
     private String item;
     private List<Object> content;
-    private String status;
+    private HttpStatus status;
     
-    public AirlineStatusChecklistItem(String item, List<Object> content, String status) {
+    public AirlineStatusChecklistItem(String item, List<Object> content, HttpStatus status) {
         this.item = item;
         this.content = content;
         this.status = status;
@@ -32,11 +34,11 @@ public class AirlineStatusChecklistItem {
         this.content = content;
     }
 
-    public String getStatus() {
+    public HttpStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(HttpStatus status) {
         this.status = status;
     }
     

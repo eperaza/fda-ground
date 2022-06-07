@@ -50,7 +50,7 @@ public class FlightObjectManagerService {
 
 
 	public Object getAllFlightObjects(Optional<String> flightId, Optional<String> departureAirport,
-			Optional<String> arrivalAirport, String authToken)
+			Optional<String> arrivalAirport, String authToken, Optional<Integer> limit)
 	{
 			final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
 			List<Group> airlineGroups = user.getGroups().stream()
@@ -65,10 +65,12 @@ public class FlightObjectManagerService {
 			logger.debug("getting the airline flightId "+flightId);
 			logger.debug("getting the airline departureAirport "+departureAirport);
 			logger.debug("getting the airline arrivalAirport "+arrivalAirport);
+			logger.debug("getting the query limit "+limit);
+
 			// if the CosmosDB flight plan is available, use it - otherwise use RS.
 			if (source != null ) {
 				logger.debug("Use CosmosDb to obtain the flight plan.");
-				return mongoFlightManagerService.getAllFlightObjectsFromCosmosDB(flightId, departureAirport, arrivalAirport, source);
+				return mongoFlightManagerService.getAllFlightObjectsFromCosmosDB(flightId, departureAirport, arrivalAirport, source, limit);
 			}
 			else if (airlineGroup.equalsIgnoreCase("amx")
 					|| airlineGroup.equalsIgnoreCase("fda")

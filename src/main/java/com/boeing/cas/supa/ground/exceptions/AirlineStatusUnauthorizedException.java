@@ -17,7 +17,7 @@ public class AirlineStatusUnauthorizedException extends Exception{
 
 	public AirlineStatusUnauthorizedException(HttpStatus status) {
 		super();
-		this.message = "You are not authorized to see this content. You don't have FDA group membership.";
+		this.message = "You are not authorized to see this content.";
 		this.status = status;
 	}
 	

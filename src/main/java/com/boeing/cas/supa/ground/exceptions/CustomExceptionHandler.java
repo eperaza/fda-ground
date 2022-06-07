@@ -14,7 +14,7 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler{
 
 	@ExceptionHandler(AirlineStatusUnauthorizedException.class)
     public ResponseEntity<Object> airlineStatusUnauthorizedExceptionHandle(AirlineStatusUnauthorizedException ex, WebRequest request) {
-        Object resultObj = new ApiError("Not Authorized", "You don't have FDA group membership.", RequestFailureReason.UNAUTHORIZED);
+        Object resultObj = new ApiError("Not Authorized", "Your role doesn't have enough permissions.", RequestFailureReason.UNAUTHORIZED);
         return new ResponseEntity<>(resultObj, ex.getStatus());
     }
     

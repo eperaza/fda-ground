@@ -62,6 +62,10 @@ public class UserMgmtService {
 
     private final Logger logger = LoggerFactory.getLogger(UserMgmtService.class);
 
+    // include any path which uses actuator endpoints
+    private static final Set<String> ALLOWED_ROLES = Collections.unmodifiableSet(
+        new HashSet<>(Arrays.asList("role-airlinefocal", "role-airlineefbadmin", "role-airlinesuperadmin")));
+
     @Value("${api.azuread.version}")
     private String azureadApiVersion;
 
@@ -205,7 +209,7 @@ public class UserMgmtService {
 
     public Object deleteUser(String userId, String objectId, boolean isSuperAdmin, String membership,
             String role) {
-
+        
         Object resultObj = null;
         StringBuilder progressLog = new StringBuilder("Delete user -");
 
@@ -216,12 +220,9 @@ public class UserMgmtService {
                 return new ApiError("USER_DELETE_FAILED", "User cannot delete self", RequestFailureReason.BAD_REQUEST);
             }
 
-            // Validate user privileges by checking group membership. User must either:
-            // - perform operation in superadmin mode and have User Account Administrator
-            // directory role
-            // -or-
-            // - belong to Role-AirlineFocal group and a single Airline group
-            if (!role.equals("role-airlinefocal") || membership.isEmpty()) {
+            // - belong to Role-AirlineFocal or Role-EFBAdmin group and a single Airline group
+            if (!ALLOWED_ROLES.contains(role) || membership.isEmpty()) {
+                logger.error("Role not allowed to delete users: [{}]", role);
                 return new ApiError("USER_DELETE_FAILED", "User has insufficient privileges",
                         RequestFailureReason.UNAUTHORIZED);
             }
@@ -411,4 +412,25 @@ public class UserMgmtService {
 
     }
 
+    public void updateUser(UserAccount newUserPayload, String airline) throws UserAccountRegistrationException {
+        // Register new user in the account registration database
+        Group membership = new Group();
+        membership.setDescription("airline");
+        membership.setDisplayName(airline);
+
+        Group role = new Group();
+        role.setDescription("role");
+        role.setDisplayName(newUserPayload.getUserRole());
+
+        List<Group> groups = new ArrayList<>();
+        groups.add(membership);
+        groups.add(role);
+
+        newUserPayload.setGroups(groups);
+        
+        userAccountRegister.updateUserAccount(newUserPayload);
+        
+        logger.info("Updated [{}] in database", newUserPayload.getMailNickname());
+    
+    }
 }

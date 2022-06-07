@@ -2,9 +2,11 @@ package com.boeing.cas.supa.ground.services;
 
 import com.boeing.cas.supa.ground.dao.AircraftInfoDao;
 import com.boeing.cas.supa.ground.dao.AirlineDao;
+import com.boeing.cas.supa.ground.dao.TspDao;
 import com.boeing.cas.supa.ground.exceptions.TspConfigLogException;
 import com.boeing.cas.supa.ground.pojos.AircraftConfiguration;
 import com.boeing.cas.supa.ground.pojos.FileManagementMessage;
+import com.boeing.cas.supa.ground.pojos.User;
 import com.boeing.cas.supa.ground.utils.CheckSumUtil;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
@@ -45,6 +47,9 @@ public class AircraftPropertyService {
 
     @Autowired
     private AzureADClientService azureADClientService;
+
+    @Autowired 
+    private TspDao tspDao;
     
     public Date getLastModifedAirline(String authToken,String airline)
     {
@@ -212,7 +217,7 @@ public class AircraftPropertyService {
         return null;
     }
 
-    public ResponseEntity<byte[]> getExistingTspPackage(@RequestHeader("Authorization") String authToken, String container, String fileName) {
+    public ResponseEntity<byte[]> getExistingTspPackage(@RequestHeader("Authorization") String authToken, String container, String fileName, User user) {
         try {
             logger.error("get existing tsp");
             byte[] zipFile = getAircraftConfigFromBlob(authToken, fileName);
@@ -220,8 +225,12 @@ public class AircraftPropertyService {
             logger.debug("after zip array size: " + logging);
             Date lastModifiedTimeStamp = fileManagementService.getBlobLastModifiedTimeStamp(container, fileName);
 
-            logger.debug("last motified in get existing" + lastModifiedTimeStamp);
+            logger.debug("last modified in get existing: " + lastModifiedTimeStamp);
             String lastModifiedStamp = lastModifiedTimeStamp.toString();
+
+            //log user tsp version into db
+            tspDao.updateUserTSPVersion(user, lastModifiedStamp);
+            
             String checkSum = checkSumUtil.generateCheckSum(zipFile);
 
 			HttpHeaders header = getHttpHeaders(fileName, checkSum, lastModifiedStamp);
@@ -248,6 +257,45 @@ public class AircraftPropertyService {
 
 		return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
     }
+
+    public ResponseEntity<byte[]> getExistingFDRConfig(@RequestHeader("Authorization") String authToken, String container, String fileName) {
+		try {
+			logger.error("FDR get existing fdr");
+			byte[] zipFile = getFDRConfigFromBlob(authToken, fileName);
+			int logging = zipFile != null ? zipFile.length : -13;
+			logger.debug("FDR after zip array size: " + logging);
+			Date lastModifiedTimeStamp = fileManagementService.getBlobLastModifiedTimeStamp(container, fileName);
+
+			logger.debug("FDR last modified in get existing" + lastModifiedTimeStamp);
+			String lastModifiedStamp = lastModifiedTimeStamp.toString();
+			String checkSum = checkSumUtil.generateCheckSum(zipFile);
+
+			HttpHeaders header = getHttpHeaders(fileName, checkSum, lastModifiedStamp);
+
+			logger.error("FDR filename: " + fileName);
+			//logger.error("FDR header: " + header.);
+			return new ResponseEntity<>(zipFile, header, HttpStatus.OK);
+		} catch (Exception ex) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+	}
+
+	public byte[] getFDRConfigFromBlob(String authToken, String fileName) {
+		try {
+			String airlineName = azureADClientService.validateAndGetAirlineName(authToken);
+			if (Strings.isNullOrEmpty(airlineName)) {
+				throw new IllegalArgumentException("Bad Input");
+			}
+			byte[] fdrConfig = fileManagementService.getFileFromStorage(fileName, "fdr-config", authToken);
+
+			logger.debug(" GOOD - Zip package Downloaded");
+
+			return fdrConfig;
+		} catch (Exception ex) {
+			logger.error("Failed to Download Zip Package" + ex);
+		}
+		return null;
+	}
 
 	public HttpHeaders getHttpHeaders(String fileName, String checkSum, String lastModifiedStamp) {
 		HttpHeaders header = new HttpHeaders();

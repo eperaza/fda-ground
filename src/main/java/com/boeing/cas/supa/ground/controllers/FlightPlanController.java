@@ -31,11 +31,12 @@ public class FlightPlanController {
 			@RequestParam("flightId") Optional<String> flightId,
 			@RequestParam("departureAirport") Optional<String> departureAirport,
 			@RequestParam("arrivalAirport") Optional<String> arrivalAirport,
-			@RequestHeader("Authorization") String authToken) {
+			@RequestHeader("Authorization") String authToken,
+			@RequestParam("limit") Optional<Integer> limit) {
 
 		logger.debug("Get all flight_objects request");
 
-		Object allFlightObjectsResponse = this.flightObjectManagerService.getAllFlightObjects(flightId, departureAirport, arrivalAirport, authToken);
+		Object allFlightObjectsResponse = this.flightObjectManagerService.getAllFlightObjects(flightId, departureAirport, arrivalAirport, authToken, limit);
 		if (allFlightObjectsResponse instanceof ApiError) {
 			ApiError errorResponse = (ApiError) allFlightObjectsResponse;
 			return new ResponseEntity<>(errorResponse, ControllerUtils.translateRequestFailureReasonToHttpErrorCode(errorResponse.getFailureReason()));

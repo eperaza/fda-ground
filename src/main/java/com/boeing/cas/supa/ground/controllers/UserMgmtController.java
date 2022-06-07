@@ -20,7 +20,6 @@ import com.boeing.cas.supa.ground.exceptions.TspConfigLogException;
 import com.boeing.cas.supa.ground.exceptions.UserAccountRegistrationException;
 import com.boeing.cas.supa.ground.pojos.*;
 
-@CrossOrigin
 @RequestMapping(path = "/userMgmt")
 @Controller
 public class UserMgmtController {
@@ -123,7 +122,7 @@ public class UserMgmtController {
 					ControllerUtils.translateRequestFailureReasonToHttpErrorCode(error.getFailureReason()));
 		}
 
-		return new ResponseEntity<>(result, HttpStatus.CREATED);
+		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
 
 	@RequestMapping(path = "/deletePreUser/{userId:.+}/", method = { RequestMethod.DELETE })
@@ -195,6 +194,30 @@ public class UserMgmtController {
 
 		return new ResponseEntity<>(result, HttpStatus.OK);
 
+	}
+
+	@RequestMapping(path = "/updateUser", method = { RequestMethod.PUT })
+	public ResponseEntity<Object> updateUser(@RequestBody UserAccount userPayload,
+			@RequestHeader("Authorization") String authToken, @RequestHeader("Airline") String airline) throws UserAccountRegistrationException {
+
+		Object result = "";
+
+		try{
+			umClient.updateUser(userPayload, airline);
+		}
+		catch(UserAccountRegistrationException uare){
+			logger.info("Failed to update user in database", uare.getMessage());
+            result = new ApiError("USER_UPDATE_FAILED", "Failed to update user.");
+		}
+
+		if (result instanceof ApiError) {
+			ApiError error = (ApiError) result;
+			logger.error(error.getErrorLabel(), error.getErrorDescription());
+			return new ResponseEntity<>(result,
+					ControllerUtils.translateRequestFailureReasonToHttpErrorCode(error.getFailureReason()));
+		}
+
+		return new ResponseEntity<>(result, HttpStatus.NO_CONTENT);
 	}
 
 }
