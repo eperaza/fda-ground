@@ -30,7 +30,6 @@ import com.boeing.cas.supa.ground.utils.ControllerUtils;
 import com.boeing.cas.supa.ground.utils.IOUtils;
 import com.boeing.cas.supa.ground.utils.KeyVaultRetriever;
 
-
 @Service
 public class SupaReleaseManagementService {
 
@@ -176,43 +175,6 @@ public class SupaReleaseManagementService {
 
 		} catch (Exception exception) {
 			logger.error("Get Zuppa exception: {}", exception.getMessage(), exception);
-			resultObj = new ApiError("SUPA_RELEASE_MGMT", exception.getMessage());
-		} finally {
-
-			if (resultObj instanceof ApiError) {
-				logger.error("FDAGndSvcLog> {}", ControllerUtils.sanitizeString(progressLog.toString()));
-			}
-		}
-		return resultObj;
-	}
-
-	public Object getZuppa2(String accessTokenInRequest) {
-
-		Object resultObj = null;
-		StringBuilder progressLog = new StringBuilder("Get zuppa2");
-		try {
-			User currentUser = aadClient.getUserInfoFromJwtAccessToken(accessTokenInRequest);
-			String airline = "unknown";
-
-			// Validate user privileges by checking group membership. Must belong to Role-AirlineFocal group and a single Airline group.
-			List<Group> airlineGroups = currentUser.getGroups().stream().filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX)).collect(Collectors.toList());
-			if (airlineGroups.size() != 1) {
-				return new ApiError("SUPA_RELEASE_MGMT", "User membership is ambiguous, airlines[" + airlineGroups.size() + "]", RequestFailureReason.UNAUTHORIZED);
-			}
-
-			airline = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX, StringUtils.EMPTY);
-
-			logger.info("Getting raw zupa for zuppa-" + airline);
-			StringBuilder zuppa = new StringBuilder(appProps.get("zuppa-" + airline));
-
-			resultObj = zuppa.toString();
-
-			ObjectMapper mapper = new ObjectMapper()
-					.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-					.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-
-		} catch (Exception exception) {
-			logger.error("Get Zuppa2 exception: {}", exception.getMessage(), exception);
 			resultObj = new ApiError("SUPA_RELEASE_MGMT", exception.getMessage());
 		} finally {
 
