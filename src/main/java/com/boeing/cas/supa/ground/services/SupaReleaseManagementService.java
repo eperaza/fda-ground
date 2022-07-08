@@ -403,7 +403,7 @@ public class SupaReleaseManagementService {
 
 	private void getWarReleaseContent(String airlineName, Boolean forceUnencrypted, SupaRelease supaRelease, ByteArrayOutputStream warFileContent) throws IOException {
 
-		if (forceUnencrypted) {
+		if (true) {
 			logger.info("Sending unencrypted file");
 			supaRelease.setFile(warFileContent.toByteArray());
 			return;
