@@ -1,5 +1,3 @@
 {
-    "java.configuration.updateBuildConfiguration": "automatic",
-    "java.compile.nullAnalysis.nonnull": [],
-    "java.compile.nullAnalysis.nullable": []
+    "java.configuration.updateBuildConfiguration": "automatic"
 }
