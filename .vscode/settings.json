@@ -1,5 +1,7 @@
 {
     "java.configuration.updateBuildConfiguration": "automatic",
+    // Disable NonNull analysis for VS Code version 7.72.2 and up. Remove lines below if using an older version.
+    // org.springframework.lang.NonNull indirectly referenced from required .class files on com.boeing.cas.supa.ground.services.UploadService.
     "java.compile.nullAnalysis.nonnull": [],
     "java.compile.nullAnalysis.nullable": []
 }
