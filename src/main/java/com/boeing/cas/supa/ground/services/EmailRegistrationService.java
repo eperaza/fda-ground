@@ -97,11 +97,20 @@ public class EmailRegistrationService {
             emailMessageBody.append("   2. Go to the attached registration instructions PDF and follow the instructions.");
 
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("If you experience any issues or have any questions, please contact our representative and our support group through the following email:");
-            emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("FDA Group support - <a href=\"mailto:FliteDeckAdvisorSupport@Boeing.com\">FliteDeckAdvisorSupport@Boeing.com</a>");
-            emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("Thank you, ").append(Constants.HTML_LINE_BREAK).append("FliteDeck Advisor Support");
+            if(airline.equals("QTR")){
+                emailMessageBody.append("If you experience and issues or have any questions, please contact the EFB Admin group thru the following email:");
+                emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+                emailMessageBody.append("EFB Administrator: <a href=\"mailto:efbadministrator@qatarairways.com.qa\">efbadministrator@qatarairways.com.qa</a>");
+                emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+                emailMessageBody.append("Thank you, ").append(Constants.HTML_LINE_BREAK).append("EFB Admin group");    
+            }
+            else{
+                emailMessageBody.append("If you experience any issues or have any questions, please contact our representative and our support group through the following email:");
+                emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+                emailMessageBody.append("FDA Group support - <a href=\"mailto:FliteDeckAdvisorSupport@Boeing.com\">FliteDeckAdvisorSupport@Boeing.com</a>");
+                emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+                emailMessageBody.append("Thank you, ").append(Constants.HTML_LINE_BREAK).append("FliteDeck Advisor Support");    
+            }
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
         }
         try{
