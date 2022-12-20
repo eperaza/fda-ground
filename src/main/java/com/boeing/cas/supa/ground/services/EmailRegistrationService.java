@@ -88,7 +88,7 @@ public class EmailRegistrationService {
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
         } else {
             if (airline.equals("OMA")) {
-                emailMessageBody.append("Hi Captain ").append(newUser.getDisplayName()).append(' ')
+                emailMessageBody.append("Hi ").append(newUser.getDisplayName()).append(' ')
                         .append(String.format("(%s),", airline));
             }
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
