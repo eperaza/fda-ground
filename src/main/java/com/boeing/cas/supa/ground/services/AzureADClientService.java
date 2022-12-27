@@ -601,9 +601,8 @@ public class AzureADClientService {
 					logger.debug("Using old Process, attach mp email [{}]", emailMpAttachment.getAbsolutePath());
 					helper.addAttachment(emailMpAttachment.getName(), emailMpAttachment);
 				}
-				
 				emailSender.send(message);
-				logger.info("Sent account activation email to new user {}", newlyCreatedUser.getUserPrincipalName());
+				logger.debug("Sent account activation email to new user {}", newlyCreatedUser.getUserPrincipalName());
 				progressLog.append("\nSuccessfully queued email for delivery");
 			} else {
 				JsonNode errorNode = mapper.readTree(responseStr).path("odata.error");
@@ -1254,6 +1253,7 @@ public class AzureADClientService {
 		// Validate the password provided by the admin; if invalid, return appropriate
 		// error key/description
 		if (!PasswordPolicyEnforcer.validate(userAccountActivation.getPassword())) {
+			logger.debug("Registration failed (doesn't meet Password Policy Enforcer standards)");
 			return new ApiError("ACTIVATE_USER_ACCOUNT_FAILURE", PasswordPolicyEnforcer.ERROR_PSWD_FAILED_DESCRIPTION,
 					RequestFailureReason.BAD_REQUEST);
 		}
