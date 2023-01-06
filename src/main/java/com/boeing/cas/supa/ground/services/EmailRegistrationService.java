@@ -52,7 +52,7 @@ public class EmailRegistrationService {
                 .map(group -> group.getDisplayName().replace("airline-", StringUtils.EMPTY).toUpperCase())
                 .collect(Collectors.joining(","));
         if (!airline.equals("ETD") && !airline.equals("OMA")) {
-            emailMessageBody.append("Hi ").append(newUser.getDisplayName()).append(' ')
+            emailMessageBody.append("Hi ").append(newUser.getGivenName()).append(' ').append(newUser.getSurname()).append(' ')
                     .append(String.format("(%s),", airline));
         }
         String role = newUser.getGroups().stream()
@@ -88,8 +88,8 @@ public class EmailRegistrationService {
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
         } else {
             if (airline.equals("OMA")) {
-                emailMessageBody.append("Hi ").append(newUser.getDisplayName()).append(' ')
-                        .append(String.format("(%s),", airline));
+                emailMessageBody.append("Hi ").append(newUser.getGivenName()).append(' ').append(newUser.getSurname()).append(' ')
+                .append(String.format("(%s),", airline));
             }
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
             emailMessageBody
@@ -100,12 +100,13 @@ public class EmailRegistrationService {
 
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("To get started with your new account registration,");
-
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("   1. Copy this ONE-TIME code: \"" + activationCode + "\"")
+            emailMessageBody.append("1. In the Registration screen, enter your email address [").append(emailAddress).append("]")
+                    .append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("   2. Copy this ONE-TIME code: \"" + activationCode + "\"")
                     .append(Constants.HTML_LINE_BREAK);
             emailMessageBody
-                    .append("   2. Go to the attached registration instructions PDF and follow the instructions.");
+                    .append("   3. Go to the attached registration instructions PDF and follow the instructions.");
 
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
             if (airline.equals("QTR")) {
