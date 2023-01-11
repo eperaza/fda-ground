@@ -51,8 +51,8 @@ public class EmailRegistrationService {
                 .filter(group -> group.getDisplayName().startsWith("airline-"))
                 .map(group -> group.getDisplayName().replace("airline-", StringUtils.EMPTY).toUpperCase())
                 .collect(Collectors.joining(","));
-        if (!airline.equals("ETD")) {
-            emailMessageBody.append("Hi ").append(newUser.getDisplayName()).append(' ')
+        if (!airline.equals("ETD") && !airline.equals("OMA")) {
+            emailMessageBody.append("Hi ").append(newUser.getGivenName()).append(' ').append(newUser.getSurname()).append(' ')
                     .append(String.format("(%s),", airline));
         }
         String role = newUser.getGroups().stream()
@@ -70,64 +70,91 @@ public class EmailRegistrationService {
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("To get started with your new account registration:");
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("1. Install FliteDeck Advisor on the company iPad.").append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("1. Install FliteDeck Advisor on the company iPad.")
+                    .append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("2. Open FDA-Lite application.").append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("3. In the Registration screen, enter your email address.").append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("4. Enter the Activation code: \"" + activationCode + "\"").append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("3. In the Registration screen, enter your email address.")
+                    .append(Constants.HTML_LINE_BREAK);
+            emailMessageBody.append("4. Enter the Activation code: \"" + activationCode + "\"")
+                    .append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("5. Enter a password and tap Register.").append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("After completing the registration, reopen the FliteDeck Advisor to start using it.");
+            emailMessageBody
+                    .append("After completing the registration, reopen the FliteDeck Advisor to start using it.");
             emailMessageBody.append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("If you experience any issues, please contact your EFB Support.");
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("This email was generated automatically; please do not reply to this message.");
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-
         } else {
+            if (airline.equals("OMA")) {
+                emailMessageBody.append("Hi ").append(newUser.getGivenName()).append(' ').append(newUser.getSurname()).append(' ')
+                .append(String.format("(%s),", airline));
+            }
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("Your new account for FliteDeck Advisor has been successfully created. The Airline ").append(String.format("%s",
-                    StringUtils.capitalize(role))).append(" role is assigned to your account.");
+            emailMessageBody
+                    .append("Your new account for FliteDeck Advisor has been successfully created. The Airline ")
+                    .append(String.format("%s",
+                            StringUtils.capitalize(role)))
+                    .append(" role is assigned to your account.");
 
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
             emailMessageBody.append("To get started with your new account registration,");
-
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("   1. Copy this ONE-TIME code: \"" + activationCode + "\"")
+            emailMessageBody.append("1. In the Registration screen, enter your email address [").append(emailAddress).append("]")
                     .append(Constants.HTML_LINE_BREAK);
-            emailMessageBody.append("   2. Go to the attached registration instructions PDF and follow the instructions.");
+            emailMessageBody.append("   2. Copy this ONE-TIME code: \"" + activationCode + "\"")
+                    .append(Constants.HTML_LINE_BREAK);
+            emailMessageBody
+                    .append("   3. Go to the attached registration instructions PDF and follow the instructions.");
 
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-            if(airline.equals("QTR")){
-                emailMessageBody.append("If you experience and issues or have any questions, please contact the EFB Admin group through the following email:");
+            if (airline.equals("QTR")) {
+                emailMessageBody.append(
+                        "If you experience any issues or have any questions, please contact the EFB Admin group through the following email:");
                 emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-                emailMessageBody.append("EFB Administrator: <a href=\"mailto:efbadministrator@qatarairways.com.qa\">efbadministrator@qatarairways.com.qa</a>");
+                emailMessageBody.append(
+                        "EFB Administrator: <a href=\"mailto:efbadministrator@qatarairways.com.qa\">efbadministrator@qatarairways.com.qa</a>");
                 emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-                emailMessageBody.append("Thank you, ").append(Constants.HTML_LINE_BREAK).append("EFB Admin Group");    
-            }
-            else if(airline.equals("QFA")){
-                emailMessageBody.append("If you experience any issues or have any questions, please contact our representative and our support group through the following email:");
+                emailMessageBody.append("Thank you, ").append(Constants.HTML_LINE_BREAK).append("EFB Admin Group");
+            } else if (airline.equals("QFA")) {
+                emailMessageBody.append(
+                        "If you experience any issues or have any questions, please contact our representative and our support group through the following email:");
                 emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-                emailMessageBody.append("Flight Ops Mobility: <a href=\"mailto:fltopsmobility@qantas.com.au\">fltopsmobility@qantas.com.au</a>");
+                emailMessageBody.append(
+                        "Flight Ops Mobility: <a href=\"mailto:fltopsmobility@qantas.com.au\">fltopsmobility@qantas.com.au</a>");
                 emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-                emailMessageBody.append("Thank you, ").append(Constants.HTML_LINE_BREAK).append("Flight Ops Mobility Support");    
-            }
-            else{
-                emailMessageBody.append("If you experience any issues or have any questions, please contact our representative and our support group through the following email:");
+                emailMessageBody.append("Thank you, ").append(Constants.HTML_LINE_BREAK)
+                        .append("Flight Ops Mobility Support");
+            } else if (airline.equals("OMA")) {
+                emailMessageBody.append(
+                        "If you experience any issues or have any questions, please contact Oman Air Performance Engineering through the following email:");
                 emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-                emailMessageBody.append("FDA Group support: <a href=\"mailto:FliteDeckAdvisorSupport@Boeing.com\">FliteDeckAdvisorSupport@Boeing.com</a>");
+                emailMessageBody.append(
+                        "Oman Air Performance Engineering: <a href=\"mailto:fltopsperformanceengineering@omanair.com\">fltopsperformanceengineering@omanair.com</a>");
                 emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
-                emailMessageBody.append("Thank you, ").append(Constants.HTML_LINE_BREAK).append("FliteDeck Advisor Support");    
+                emailMessageBody.append("Thank you, ").append(Constants.HTML_LINE_BREAK)
+                        .append("FliteDeck Advisor Support");
+            } else {
+                emailMessageBody.append(
+                        "If you experience any issues or have any questions, please contact our representative and our support group through the following email:");
+                emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+                emailMessageBody.append(
+                        "FDA Group support: <a href=\"mailto:FliteDeckAdvisorSupport@Boeing.com\">FliteDeckAdvisorSupport@Boeing.com</a>");
+                emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
+                emailMessageBody.append("Thank you, ").append(Constants.HTML_LINE_BREAK)
+                        .append("FliteDeck Advisor Support");
             }
             emailMessageBody.append(Constants.HTML_LINE_BREAK).append(Constants.HTML_LINE_BREAK);
         }
-        try{
+        try {
             logger.debug("NewRegistrationProcess: emailAddress [{}]", emailAddress);
             logger.debug("NewRegistrationProcess: activationCode [{}]", activationCode);
             logger.debug("NewRegistrationProcess: token length [{}]", base64EncodedPayload.length());
             logger.debug("NewRegistrationProcess: airline [{}]", airline);
             userAccountRegister.insertActivationCode(emailAddress, activationCode, base64EncodedPayload, airline);
 
-        }catch(Exception ex){
+        } catch (Exception ex) {
             logger.debug("!!! New Email Registration Failed: {}", ex.getMessage());
         }
 
