@@ -1,5 +1,6 @@
 package com.boeing.cas.supa.ground.controllers;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.boeing.cas.supa.ground.exceptions.OnsCertificateException;
@@ -35,6 +36,19 @@ public class FlightRecordController {
 
 	@Autowired
 	private FileManagementService fileManagementService;
+
+	@RequestMapping(path = "/uploadLiteRecord", method = { RequestMethod.POST })
+	public ResponseEntity<Object> uploadLiteRecord(final @RequestParam("file") MultipartFile flightRecord,
+			@RequestHeader("Authorization") String authToken) throws FlightRecordException, IOException {
+		FileManagementMessage flightRecordUploadResponse = null;
+		try {
+			flightRecordUploadResponse = this.fileManagementService.uploadLiteRecord(flightRecord, authToken);
+			return new ResponseEntity<>(flightRecordUploadResponse, HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>(e, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+
+	}
 
 	@RequestMapping(path = "/uploadFlightRecord", method = { RequestMethod.POST })
 	public ResponseEntity<Object> uploadFlightRecord(final @RequestParam("file") MultipartFile uploadFlightRecord,

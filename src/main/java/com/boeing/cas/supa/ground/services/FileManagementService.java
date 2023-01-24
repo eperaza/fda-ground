@@ -38,6 +38,7 @@ public class FileManagementService {
     private final Logger logger = LoggerFactory.getLogger(FileManagementService.class);
 
     private final static String FLIGHT_RECORDS_STORAGE_CONTAINER = "flight-records";
+    private final static String FLIGHT_RECORDS_LITE_STORAGE_CONTAINER = "lite-flight-records";
     private final static String SUPA_SYSTEM_LOGS_STORAGE_CONTAINER = "supa-system-logs";
     private final static String PILOT_NOTES_STORAGE_CONTAINER = "pilot-notes";
 	public final static String TSP_CONFIG_ZIP_CONTAINER = "aircraft-config-package";
@@ -322,6 +323,70 @@ public class FileManagementService {
         OnsCertificate onsCertificate = new OnsCertificate(base64EncodedPayload, fileInBytes);
         certificates.add(onsCertificate);
         return certificates;
+    }
+
+    public FileManagementMessage uploadLiteRecord(final MultipartFile flightRecord, String authToken) throws FlightRecordException, IOException {
+        FileManagementMessage flightRecordUploadResponse = null;
+        try {
+            logger.debug("Upload flight record request received for processing");
+            flightRecordUploadResponse = new FileManagementMessage(flightRecord.getOriginalFilename());
+            logger.debug("File name {}", flightRecord.getOriginalFilename());
+
+            // Determine the airline from the user's membership.
+            final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
+            List<Group> airlineGroups = user.getGroups().stream()
+                    .filter(g -> g.getDisplayName().toLowerCase().startsWith(Constants.AAD_GROUP_AIRLINE_PREFIX))
+                    .collect(Collectors.toList());
+            if (airlineGroups.size() != 1) {
+                throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPLOAD_FAILURE",
+                        "Failed to associate user with an airline", RequestFailureReason.UNAUTHORIZED));
+            }
+            String airlineGroup = airlineGroups.get(0).getDisplayName().replace(Constants.AAD_GROUP_AIRLINE_PREFIX,
+                    StringUtils.EMPTY);
+            logger.debug("Upload flight record for {}", airlineGroup.toUpperCase());
+
+            final Map<String, String> properties = this.appProps;
+            String uploadFolder = null;
+            Path uploadPath = null;
+            String storagePath = null;
+
+            uploadFolder = ControllerUtils.saveUploadedFiles(Arrays.asList(flightRecord));
+            logger.debug("Upload folder to temp dir {}", uploadFolder);
+
+            if (StringUtils.isBlank(uploadFolder)) {
+                throw new IOException("Failed to establish upload folder");
+            }
+
+            uploadPath = Paths.get(new StringBuilder(uploadFolder)
+                    .append(File.separator)
+                    .append(flightRecord.getOriginalFilename())
+                    .toString());
+            logger.debug("Upload path is {}", uploadPath);
+
+            storagePath = new StringBuilder(airlineGroup).append('/').append(flightRecord.getOriginalFilename())
+                    .toString();
+            logger.debug("Storage path is {}", storagePath);
+
+            Boolean upload = false;
+            try {
+                logger.info("Starting Azure upload...");
+                AzureStorageUtil asu = new AzureStorageUtil(properties.get("StorageAccountName"),
+                        properties.get("StorageKey"));
+                upload = asu.uploadFlightRecord(FLIGHT_RECORDS_LITE_STORAGE_CONTAINER, storagePath, uploadPath.toFile().getAbsolutePath(), user);
+                flightRecordUploadResponse.setUploaded(upload);
+                flightRecordUploadResponse.setMessage(new StringBuilder(flightRecord.getOriginalFilename())
+                        .append(" uploaded successfuly!").toString());
+                logger.info("Upload to Azure complete: {}", upload);
+            } catch (FlightRecordException fre) {
+                logger.error("Failed to upload to Azure Storage: {}", fre.getMessage());
+                flightRecordUploadResponse.setMessage(fre.getMessage());
+            } catch (Exception e) {
+                logger.error("ApiError in Azure upload: {}", e.getMessage(), e);
+            }
+        } catch (Exception e) {
+            logger.error("ApiError in Azure upload: {}", e.getMessage(), e);
+        }
+        return flightRecordUploadResponse;
     }
 
 
