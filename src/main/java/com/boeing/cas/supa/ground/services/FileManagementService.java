@@ -38,7 +38,7 @@ public class FileManagementService {
     private final Logger logger = LoggerFactory.getLogger(FileManagementService.class);
 
     private final static String FLIGHT_RECORDS_STORAGE_CONTAINER = "flight-records";
-    private final static String FLIGHT_RECORDS_LITE_STORAGE_CONTAINER = "lite-flight-records";
+    private final static String FLIGHT_RECORDS_LITE_STORAGE_CONTAINER = "flight-records-lite";
     private final static String SUPA_SYSTEM_LOGS_STORAGE_CONTAINER = "supa-system-logs";
     private final static String PILOT_NOTES_STORAGE_CONTAINER = "pilot-notes";
 	public final static String TSP_CONFIG_ZIP_CONTAINER = "aircraft-config-package";
