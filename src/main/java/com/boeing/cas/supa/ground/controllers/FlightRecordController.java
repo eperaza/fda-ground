@@ -1,5 +1,6 @@
 package com.boeing.cas.supa.ground.controllers;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.boeing.cas.supa.ground.exceptions.OnsCertificateException;
@@ -35,6 +36,26 @@ public class FlightRecordController {
 
 	@Autowired
 	private FileManagementService fileManagementService;
+
+	@RequestMapping(path = "/uploadLiteRecord", method = { RequestMethod.POST })
+	public ResponseEntity<Object> uploadLiteRecord(final @RequestParam("file") MultipartFile flightRecord,
+			@RequestHeader("Authorization") String authToken) throws FlightRecordException, IOException {
+		FileManagementMessage flightRecordUploadResponse = null;
+		try {
+			if (flightRecord.isEmpty()) {
+				logger.warn("The flight record payload is empty");
+				throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPLOAD_FAILURE",
+						"Empty or invalid file submitted", RequestFailureReason.BAD_REQUEST));
+			}
+			flightRecordUploadResponse = this.fileManagementService.uploadLiteRecord(flightRecord, authToken);
+			return new ResponseEntity<>(flightRecordUploadResponse, HttpStatus.OK);
+		} catch (FlightRecordException fre) {
+			logger.error("Upload flight record failed: {}", fre.getMessage());
+			return new ResponseEntity<>(fre.getError(),
+					ControllerUtils.translateRequestFailureReasonToHttpErrorCode(fre.getError().getFailureReason()));
+		}
+
+	}
 
 	@RequestMapping(path = "/uploadFlightRecord", method = { RequestMethod.POST })
 	public ResponseEntity<Object> uploadFlightRecord(final @RequestParam("file") MultipartFile uploadFlightRecord,
