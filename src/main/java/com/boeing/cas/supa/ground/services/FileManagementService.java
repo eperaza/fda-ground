@@ -325,12 +325,23 @@ public class FileManagementService {
         return certificates;
     }
 
-    public FileManagementMessage uploadLiteRecord(final MultipartFile flightRecord, String authToken) throws FlightRecordException, IOException {
+    public FileManagementMessage uploadLiteRecord(final MultipartFile flightRecord, String authToken)
+            throws FlightRecordException, IOException {
         FileManagementMessage flightRecordUploadResponse = null;
+        
         try {
+            String fileName = flightRecord.getOriginalFilename();
+            List<String> flightRecordNameTokens = Arrays.asList(fileName.split("_"));
+            String _tail = flightRecordNameTokens.get(1);
+            String _date = flightRecordNameTokens.get(3);
+
+            List<String> _dateTokens = Arrays.asList(_date.split("-"));
+            String _year = _dateTokens.get(0);
+            String _month = _dateTokens.get(1);
+
             logger.debug("Upload flight record request received for processing");
-            flightRecordUploadResponse = new FileManagementMessage(flightRecord.getOriginalFilename());
-            logger.debug("File name {}", flightRecord.getOriginalFilename());
+            flightRecordUploadResponse = new FileManagementMessage(fileName);
+            logger.debug("File name is {}", flightRecord.getOriginalFilename());
 
             // Determine the airline from the user's membership.
             final User user = aadClient.getUserInfoFromJwtAccessToken(authToken);
@@ -363,16 +374,20 @@ public class FileManagementService {
                     .toString());
             logger.debug("Upload path is {}", uploadPath);
 
-            storagePath = new StringBuilder(airlineGroup).append('/').append(flightRecord.getOriginalFilename())
+            storagePath = new StringBuilder(airlineGroup.toUpperCase()).append('/')
+                    .append(_tail).append("/")
+                    .append(_year).append(_month).append("/")
+                    .append(flightRecord.getOriginalFilename())
                     .toString();
-            logger.debug("Storage path is {}", storagePath);
+            logger.debug("Storage path will be {}", storagePath);
 
             Boolean upload = false;
             try {
                 logger.info("Starting Azure upload...");
                 AzureStorageUtil asu = new AzureStorageUtil(properties.get("StorageAccountName"),
                         properties.get("StorageKey"));
-                upload = asu.uploadFlightRecord(FLIGHT_RECORDS_LITE_STORAGE_CONTAINER, storagePath, uploadPath.toFile().getAbsolutePath(), user);
+                upload = asu.uploadFlightRecord(FLIGHT_RECORDS_LITE_STORAGE_CONTAINER, storagePath,
+                        uploadPath.toFile().getAbsolutePath(), user);
                 flightRecordUploadResponse.setUploaded(upload);
                 flightRecordUploadResponse.setMessage(new StringBuilder(flightRecord.getOriginalFilename())
                         .append(" uploaded successfuly!").toString());
@@ -383,6 +398,14 @@ public class FileManagementService {
             } catch (Exception e) {
                 logger.error("ApiError in Azure upload: {}", e.getMessage(), e);
             }
+        } catch (IndexOutOfBoundsException ioobe) {
+            throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPLOAD_FAILURE",
+                    "Failed to extract identifying tokens from flight record filename",
+                    RequestFailureReason.BAD_REQUEST));
+        } catch (IOException ioe) {
+            throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPLOAD_FAILURE",
+                    String.format("I/O exception encountered %s", ioe.getMessage()),
+                    RequestFailureReason.INTERNAL_SERVER_ERROR));
         } catch (Exception e) {
             logger.error("ApiError in Azure upload: {}", e.getMessage(), e);
         }

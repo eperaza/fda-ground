@@ -42,10 +42,17 @@ public class FlightRecordController {
 			@RequestHeader("Authorization") String authToken) throws FlightRecordException, IOException {
 		FileManagementMessage flightRecordUploadResponse = null;
 		try {
+			if (flightRecord.isEmpty()) {
+				logger.warn("The flight record payload is empty");
+				throw new FlightRecordException(new ApiError("FLIGHT_RECORD_UPLOAD_FAILURE",
+						"Empty or invalid file submitted", RequestFailureReason.BAD_REQUEST));
+			}
 			flightRecordUploadResponse = this.fileManagementService.uploadLiteRecord(flightRecord, authToken);
 			return new ResponseEntity<>(flightRecordUploadResponse, HttpStatus.OK);
-		} catch (Exception e) {
-			return new ResponseEntity<>(e, HttpStatus.INTERNAL_SERVER_ERROR);
+		} catch (FlightRecordException fre) {
+			logger.error("Upload flight record failed: {}", fre.getMessage());
+			return new ResponseEntity<>(fre.getError(),
+					ControllerUtils.translateRequestFailureReasonToHttpErrorCode(fre.getError().getFailureReason()));
 		}
 
 	}
