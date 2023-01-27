@@ -357,24 +357,21 @@ public class FileManagementService {
             logger.debug("Upload flight record for {}", airlineGroup.toUpperCase());
 
             final Map<String, String> properties = this.appProps;
-            String uploadFolder = null;
-            Path uploadPath = null;
-            String storagePath = null;
 
-            uploadFolder = ControllerUtils.saveUploadedFiles(Arrays.asList(flightRecord));
+            String uploadFolder = ControllerUtils.saveUploadedFiles(Arrays.asList(flightRecord));
             logger.debug("Upload folder to temp dir {}", uploadFolder);
 
             if (StringUtils.isBlank(uploadFolder)) {
                 throw new IOException("Failed to establish upload folder");
             }
 
-            uploadPath = Paths.get(new StringBuilder(uploadFolder)
+            Path uploadPath = Paths.get(new StringBuilder(uploadFolder)
                     .append(File.separator)
                     .append(flightRecord.getOriginalFilename())
                     .toString());
             logger.debug("Upload path is {}", uploadPath);
 
-            storagePath = new StringBuilder(airlineGroup.toUpperCase()).append('/')
+            String storagePath = new StringBuilder(airlineGroup.toUpperCase()).append('/')
                     .append(_tail).append("/")
                     .append(_year).append(_month).append("/")
                     .append(flightRecord.getOriginalFilename())
